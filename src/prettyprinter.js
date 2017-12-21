@@ -6,6 +6,8 @@
 
 const astbuilder = require("./astbuilder.js");
 const tokenprinter = require("./tokenprinter.js");
+const prettierPrintDocToString = require("./prettier/doc-printer.js").printDocToString;
+const prettierNormalizeOptions = require("./prettier/options.js").normalize;
 
 var {
         ASTNodeList,
@@ -96,6 +98,10 @@ function print(str) {
 
 module.exports = astbuilder;
 module.exports.print = print;
+module.exports.prettierPrintDoc = (doc, opts) => {
+    opts = prettierNormalizeOptions(opts);
+    return prettierPrintDocToString(doc, opts);
+};
 
 if (typeof window !== 'undefined') {
     window.exports = module.exports

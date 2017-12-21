@@ -25,6 +25,11 @@
     "playground": "npm run build; cp playground/index.html dist/; cp playground/css/playground.css dist/css/"
   },
   "dependencies": {
+    "cjk-regex": "1.0.2",
+    "emoji-regex": "6.5.1",
+    "escape-string-regexp": "1.0.5",
+    "string-width": "2.1.1",
+    "unicode-regex": "1.0.1"
   },
   "devDependencies": {
     "pegjs": "0.10.x",
