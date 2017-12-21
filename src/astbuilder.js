@@ -28,14 +28,6 @@ function type(x) {
     return "object";
 }
 
-function flatten(arr) {
-    return arr.reduce(function(flat, toFlatten) {
-        return flat.concat(
-            Array.isArray(toFlatten) ? flatten(toFlatten) : toFlatten
-        );
-    }, []);
-}
-
 /*
  * Classes for the AST types
  */
@@ -210,7 +202,7 @@ var Parbreak = class Parbreak extends ASTNode {
         return [TOKENS.parbreak];
     }
     toPrettierDoc() {
-        return concat([PRETTIER.hardline, PRETTIER.hardline]);
+        return PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]);
     }
 };
 
@@ -287,13 +279,13 @@ var DisplayMath = class DisplayMath extends ContentOnlyNode {
         );
     }
     toPrettierDoc() {
-        return concat([
+        return PRETTIER.concat([
             PRETTIER.hardline,
             ESCAPE + "[",
-            indent(
-                concat([
+            PRETTIER.indent(
+                PRETTIER.concat([
                     PRETTIER.hardline,
-                    fill([this.content.toPrettierDoc()])
+                    PRETTIER.fill([this.content.toPrettierDoc()])
                 ])
             ),
             PRETTIER.hardline,
@@ -346,7 +338,7 @@ var Verb = class Verb extends ASTNode {
         this.content = content;
     }
     toString() {
-        return ESCAPE + "verb" + node["escape"] + node.content + node["escape"];
+        return ESCAPE + "verb" + this["escape"] + this.content + this["escape"];
     }
     toTokens() {
         // Verbatim blocks are a single token
@@ -395,7 +387,7 @@ var CommentNode = class CommentNode extends ASTNode {
         if (this.sameline) {
             return PRETTIER.concat(["%", "" + this.content, PRETTIER.hardline]);
         }
-        return concat([
+        return PRETTIER.concat([
             PRETTIER.hardline,
             "%",
             "" + this.content,
