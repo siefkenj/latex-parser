@@ -27,3 +27,9 @@ for development, you can run
 	webpack --watch
 
 to automatically rebuild files as they change.
+
+## Related Projects
+
+  * Some code was borrowed from Michael Brade's `LaTeX.js` project https://github.com/michael-brade/LaTeX.js
+  * Prettier is a code-formatting library https://prettier.io/
+
