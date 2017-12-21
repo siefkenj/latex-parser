@@ -1,0 +1,53 @@
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="css/playground.css">
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>    
+    <script>window.module = {}</script>
+    <script src="js/latex-printer.js"></script>
+    <!-- <script src="js/main.js"></script> -->
+	<script>
+		$(document).ready(function () {
+			"use strict";
+			$("#process").click(function (e) {
+				console.log("Processing...")
+				var code = $('textarea').val();
+				var parsed = exports.parse(code);
+				window.ast = parsed;
+				//var tokens = parsed.toTokens()
+				//$("#out-code").val(exports.printTokenStream(tokens));
+				$("#out-code").val(exports.print(code));
+			})
+		});
+	</script>
+</head>
+<body>
+	<button id="process">Process</button>
+	<div id="tex">
+	<textarea id="tex-code" name="tex-code"  rows="30">
+\begin{enumerate}
+		\item[55,4] Hi there
+\item$e^2$ is math mode!
+\end{enumerate}
+	</textarea>
+	<textarea id="out-code" name="tex-code" rows="30">
+\begin{enumerate, v}
+		\item[55,4] [Hi d {there}]
+
+\item$e^2$ is math mode!
+
+
+\end{enumerate, v}
+		
+\begin{enumerate}
+		\item[55,4] Hi there
+\item$e^2$ is math mode!
+\end{enumerate}
+	</textarea>
+	</div>
+</body>
+</html>

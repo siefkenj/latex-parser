@@ -1,0 +1,50 @@
+{
+  "name": "latex-parser",
+  "description": "JavaScript LaTeX parser and beautifier",
+  "version": "0.1.0",
+  "author": {
+    "name": "Jason Siefken",
+    "email": "siefkenj@gmail.com"
+  },
+  "keywords": [
+    "pegjs",
+    "latex",
+    "parser"
+  ],
+  "main": "dist/latex-parser.js",
+  "bin": {
+    "latex-parser": "./bin/latex-parser.js"
+  },
+  "files": [
+    "bin/latex-parser.js",
+    "dist/latex-parser.js"
+  ],
+  "scripts": {
+    "babel": "",
+    "build": "mkdirp dist;pegjs -o src/latexpeg.js src/PEG-grammar/latex.pegjs; mkdirp dist/css; mkdirp dist/js; webpack src/astbuilder.js dist/js/latex-parser.js; webpack src/prettyprinter.js dist/js/latex-printer.js",
+    "playground": "npm run build; cp playground/index.html dist/; cp playground/css/playground.css dist/css/"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "pegjs": "0.10.x",
+    "mkdirp": "0.5.x",
+    "webpack": "3.9.x",
+    "babel-loader": "8.0.0-beta.0",
+    "copy-webpack-plugin": "4.2.x",
+    "@babel/core": "7.0.0-beta.33",
+    "@babel/register": "7.0.0-beta.33"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siefkenj/latex-parser.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/siefkenj/latex-parser/issues"
+  },
+  "homepage": "https://github.com/siefkenj/latex-parser#readme",
+  "engines": {
+    "node": ">= 8.0"
+  }
+}
