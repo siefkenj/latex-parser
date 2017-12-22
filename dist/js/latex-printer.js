@@ -290,11 +290,22 @@ function print(str) {
     return tokenprinter.printTokenStream(parsed.toTokens());
 }
 
+function prettierPrint(str, opts) {
+    opts = prettierNormalizeOptions(opts);
+    var parsed = str;
+    if (typeof str === 'string') {
+        parsed = astbuilder.parse(str);
+    }
+    ASTremoveExcessSpace(parsed);
+    return prettierPrintDocToString(parsed.toPrettierDoc(), opts).formatted;
+}
+
 module.exports = astbuilder;
 module.exports.print = print;
+module.exports.prettierPrint = prettierPrint;
 module.exports.prettierPrintDoc = (doc, opts) => {
     opts = prettierNormalizeOptions(opts);
-    return prettierPrintDocToString(doc, opts).formatted;
+    return prettierPrintDocToString(doc, opts);
 };
 
 

@@ -25,7 +25,7 @@
 				if (printer === "token") {
 					$("#out-code").val(exports.print(code));
 				} else if (printer === "prettier") {
-					$("#out-code").val(exports.prettierPrintDoc(parsed.toPrettierDoc(), {printWidth: linewidth}));
+					$("#out-code").val(exports.prettierPrint(code, {printWidth: linewidth}));
 				}
 			})
 		});
