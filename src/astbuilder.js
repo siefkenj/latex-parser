@@ -12,8 +12,7 @@ const PRETTIER = require("./prettierutil.js");
 const tokenprinter = require("./tokenprinter.js");
 const TOKENS = tokenprinter.tokens;
 
-var LINEWRAP = 80,
-    ESCAPE = "\\";
+const ESCAPE = "\\";
 
 function type(x) {
     if (x === null) {
@@ -27,6 +26,39 @@ function type(x) {
     }
     return "object";
 }
+
+function arrayJoin(arr, tok) {
+    // return a new array where `tok` is inserted
+    // between each array entry
+    var ret = [];
+    for (let i of arr) {
+        ret.push(i);
+        ret.push(tok);
+    }
+    ret.pop();
+    return ret;
+}
+
+function isSpaceOrPar(x) {
+    if (typeof x == null) {
+        return false;
+    }
+    return x.TYPE === "whitespace" || x.TYPE === "parbreak";
+}
+
+function trimWhitespace(nodeList) {
+    // trim whitespace or newlines from the front
+    // and end of an ASTNodeList or an array
+    // this operation is destructive
+    while (nodeList.length > 0 && isSpaceOrPar(nodeList[0])) {
+        nodeList.shift()
+    }
+    while (nodeList.length > 0 && isSpaceOrPar(nodeList[nodeList.length - 1])) {
+        nodeList.pop()
+    }
+    return nodeList;
+}
+
 
 /*
  * Classes for the AST types
@@ -120,6 +152,41 @@ var Environment = class Environment extends ArgsNode {
         );
     }
 
+    _processEnumerateEnvironment() {
+        // enumerate environments have a list
+        // of `\item`s followed by contents.
+        // Find all of these so we can print them with
+        // special rules
+        // returns a list of lists that begins with each `\item`
+
+        var items = [];
+        var itemsText = new ASTNodeList();
+        for (let i of this.content) {
+            if (i.TYPE === "macro" && i.content === "item") {
+                if (itemsText.length > 0) {
+                    items.push(itemsText);
+                    itemsText = new ASTNodeList();
+                }
+            }
+            itemsText.push(i);
+        }
+        if (itemsText.length > 0) {
+            items.push(itemsText);
+        }
+
+        return items.map(trimWhitespace);
+    }
+
+    _enumerateItemToPrettier(i) {
+        var head = i[0];
+        var rest = new ASTNodeList(i.slice(1));
+
+        return PRETTIER.concat([
+            head.toPrettierDoc(),
+            PRETTIER.indent(rest.toPrettierDoc())
+        ]);
+    }
+
     get envStart() {
         return ESCAPE + "begin{" + this.env + "}";
     }
@@ -137,6 +204,25 @@ var Environment = class Environment extends ArgsNode {
         );
     }
     toPrettierDoc() {
+        console.log("doing env", ""+this.env)
+        switch (""+this.env) {
+            case "enumerate":
+                var items = this._processEnumerateEnvironment()
+                items = items.map(this._enumerateItemToPrettier)
+                items = arrayJoin(items, PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]))
+
+                return PRETTIER.concat([
+                    PRETTIER.hardline,
+                    this.envStart,
+                    super.toPrettierDoc(),
+                    PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
+                    PRETTIER.hardline,
+                    this.envEnd
+                ])
+
+                break;
+        }
+
         return PRETTIER.concat([
             PRETTIER.hardline,
             this.envStart,
@@ -184,10 +270,6 @@ var Macro = class Macro extends ArgsNode {
             case "usepackage":
             case "newcommand":
                 return PRETTIER.concat([PRETTIER.hardline, start]);
-                break;
-            case "item":
-                return PRETTIER.concat([PRETTIER.hardline, start]);
-                start = [TOKENS.preferpar].concat(start);
                 break;
         }
         return start + this.argsString;
@@ -514,7 +596,7 @@ function PEGtoAST(node) {
 }
 
 /*
- * Annotate a LaTeX AST by putting in references to the parent, next, 
+ * Annotate a LaTeX AST by putting in references to the parent, next,
  * and previous nodes.
  */
 function ASTannotate(ast, parent, next, previous) {
