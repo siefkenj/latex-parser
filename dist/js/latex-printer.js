@@ -294,8 +294,9 @@ module.exports = astbuilder;
 module.exports.print = print;
 module.exports.prettierPrintDoc = (doc, opts) => {
     opts = prettierNormalizeOptions(opts);
-    return prettierPrintDocToString(doc, opts);
+    return prettierPrintDocToString(doc, opts).formatted;
 };
+
 
 if (typeof window !== 'undefined') {
     window.exports = module.exports

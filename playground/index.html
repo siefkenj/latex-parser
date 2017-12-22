@@ -14,19 +14,32 @@
 		$(document).ready(function () {
 			"use strict";
 			$("#process").click(function (e) {
-				console.log("Processing...")
+				var linewidth = parseInt($('#linewidth').val(), 10);
+				var printer = $('#printer').find(":selected").val();
+				console.log("Processing...", "linewidth", linewidth, "printer", printer);
 				var code = $('textarea').val();
 				var parsed = exports.parse(code);
 				window.ast = parsed;
 				//var tokens = parsed.toTokens()
 				//$("#out-code").val(exports.printTokenStream(tokens));
-				$("#out-code").val(exports.print(code));
+				if (printer === "token") {
+					$("#out-code").val(exports.print(code));
+				} else if (printer === "prettier") {
+					$("#out-code").val(exports.prettierPrintDoc(parsed.toPrettierDoc(), {printWidth: linewidth}));
+				}
 			})
 		});
 	</script>
 </head>
 <body>
+	<div id="opts">
 	<button id="process">Process</button>
+	<input id="linewidth" type="number" value="60">
+	Backend: <select id="printer">
+		<option value="token">Basic Tokenizer</option>
+		<option value="prettier" selected>Prettier.js</option>
+	</select>
+	</div>
 	<div id="tex">
 	<textarea id="tex-code" name="tex-code"  rows="30">
 \begin{enumerate}
