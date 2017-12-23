@@ -27,16 +27,158 @@ function type(x) {
     return "object";
 }
 
+function splitOn(arr, tok) {
+    // splits `arr` based on `tok`.
+    // `tok` can be a string or an ASTNode
+    if (type(tok) === "string") {
+        if (tok.charAt(0) === "\\") {
+            tok = new Macro(tok.slice(1))
+        } else {
+            tok = new StringNode(tok)
+        }
+    }
+    var ret = new ASTNodeList(), toks = new ASTNodeList();
+    var tmp = new ASTNodeList();
+    for (let i of arr) {
+        if (i.TYPE === tok.TYPE && i.content === tok.content) {
+            toks.push(i);
+            ret.push(tmp);
+            tmp = new ASTNodeList();
+        } else {
+            tmp.push(i);
+        }
+    }
+    ret.push(tmp);
+    return [ret, toks];
+}
+
+function joinOn(arr, toks) {
+    // like arrayJoin, but this is the inverse
+    // to splitOn; i.e., it takes an array
+    // of inputs.
+    if (type(toks) != "array") {
+        return arrayJoin(arr, toks);
+    }
+
+    var ret = new ASTNodeList();
+    for (let i of arr) {
+        ret.push(i);
+        let tok = toks.shift();
+        if (typeof tok !== 'undefined') {
+            ret.push(tok);
+        }
+    }
+    return ret;
+}
+
 function arrayJoin(arr, tok) {
     // return a new array where `tok` is inserted
     // between each array entry
-    var ret = [];
+    var ret = new ASTNodeList();
     for (let i of arr) {
         ret.push(i);
         ret.push(tok);
     }
     ret.pop();
     return ret;
+}
+
+function transpose(arr) {
+    // get the transpose of an array of arrays
+
+    var copy = arr.map(x => {return [...x]})
+    var transpose = []
+    for (let i = 0; i < (arr[0] || []).length; i++) {
+        let tmp = [];
+        for (let r of copy) {
+            let elm = r.shift()
+            if (typeof elm !== "undefined") {
+                tmp.push(elm);
+            }
+        }
+        transpose.push(tmp);
+    }
+
+    return transpose;
+}
+
+function tabularToMatrix(arr, colSep, rowSep) {
+    // get a list of lists containing the rows,
+    // the columns, and the separators used
+
+    var [rows, rowSeps] = splitOn(arr, rowSep);
+    var mat = [], colSeps = [];
+    for (let row of rows) {
+        let [items, seps] = splitOn(row, colSep);
+        items = items.map(trimWhitespace)
+        mat.push(new ASTNodeList(...items));
+        colSeps.push(seps);
+    }
+
+    var rendered = mat.map( x => {return x.map( y => {return ""+y})})
+
+    var cols = transpose(rendered);
+    var colWidths = cols.map( x => {return Math.max(...(x.map(y => {return y.length})))})
+
+    return {
+        rows: mat,
+        rendered,
+        colWidths,
+        rowSeps,
+        colSeps
+    }
+}
+
+function padTable(rows, colWidths, rowSeps, colSeps, align="left", padColSep=true) {
+    // take in a table and insert padding to align all elements
+
+    function getSpace(len=1) {
+        return new StringNode(" ".repeat(len))
+    }
+    // set the proper alignment function
+    var alignFunc = (a, width) => { return new ASTNodeList(a, getSpace(width - (""+a).length)) }
+    if (align === "right") {
+        alignFunc = (a, width) => { return new ASTNodeList(getSpace(width - (""+a).length), a) }
+    } else if (align === "center" || align === "middle") {
+        alignFunc =  (a, width) => { 
+            var padd = width - (""+a).length;
+            var left = Math.floor(padd/2);
+            var right = padd - left;
+            return new ASTNodeList(getSpace(left), a, getSpace(right)) 
+        }
+    }
+
+    // align the columns
+
+    rows = rows.map(y => {return y.map((x, i) => {
+        return alignFunc(x, colWidths[i])
+    })});
+
+
+    if (padColSep) {
+        colSeps = colSeps.map(x => {return x.map(y => {return new ASTNodeList(getSpace(1), y, getSpace(1))})})
+    }
+
+    rows = rows.map((row, i) => {
+        if (row.length === 0) {
+            return new ASTNodeList();
+        }
+        var seps = [...(colSeps[i])];
+        var ret = new ASTNodeList(row.shift())
+        while (row.length > 0) {
+            ret.push(seps.shift());
+            ret.push(row.shift());
+        }
+        return ret;
+    })
+
+    //// add some newlines after the row separators
+    //rowSeps = rowSeps.map(x => {return new ASTNodeList(x, new Whitespace())})
+
+    // add the rowSeps to the end of each row
+    rows.map( (x,i) => {if (typeof rowSeps[i] !== "undefined") {x.push(rowSeps[i])}})
+    //var mat = joinOn(rows, rowSeps)
+    return rows
 }
 
 function isSpaceOrPar(x) {
@@ -96,12 +238,13 @@ var ContentOnlyNode = class ContentOnlyNode extends ASTNode {
 };
 
 var ArgsNode = class ArgsNode extends ASTNode {
+    // a node that has this.ags as a property
     constructor(args) {
         super();
         this.args = args;
     }
     get argsString() {
-        if (this.args) {
+        if (typeof this.args !== "undefined") {
             return "[" + this.args + "]";
         }
         return "";
@@ -204,8 +347,9 @@ var Environment = class Environment extends ArgsNode {
         );
     }
     toPrettierDoc() {
-        console.log("doing env", ""+this.env)
         switch (""+this.env) {
+            case "parts":
+            case "itemize":
             case "enumerate":
                 var items = this._processEnumerateEnvironment()
                 items = items.map(this._enumerateItemToPrettier)
@@ -219,7 +363,31 @@ var Environment = class Environment extends ArgsNode {
                     PRETTIER.hardline,
                     this.envEnd
                 ])
+                break;
+            case "align":
+            case "align*":
+            case "matrix":
+            case "bmatrix":
+            case "pmatrix":
+            case "vmatrix":
+            case "Bmatrix":
+            case "Vmatrix":
+            case "smallmatrix":
+                var table = tabularToMatrix(this.content, "&", "\\\\")
+                var formattedRows = padTable(table.rows, table.colWidths, table.rowSeps, table.colSeps)
 
+                var docRows = formattedRows.map( x=> {return x.toPrettierDoc()})
+                var doc = PRETTIER.concat(arrayJoin(docRows, PRETTIER.hardline))
+
+                return PRETTIER.concat([
+                    PRETTIER.hardline,
+                    this.envStart,
+                    super.toPrettierDoc(),
+                    PRETTIER.indent(PRETTIER.group(PRETTIER.concat([PRETTIER.hardline, doc]))),
+                    PRETTIER.hardline,
+                    this.envEnd
+                ])
+                return PRETTIER.concat(ret)
                 break;
         }
 

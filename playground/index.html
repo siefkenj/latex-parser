@@ -4,28 +4,36 @@
 <head>
     <meta charset="utf-8">
     <title></title>
+    <link rel="stylesheet" href="css/codemirror.css">
     <link rel="stylesheet" href="css/playground.css">
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>    
     <script>window.module = {}</script>
+    <script src="js/codemirror.js"></script>
+    <script src="js/stex.js"></script>
     <script src="js/latex-printer.js"></script>
     <!-- <script src="js/main.js"></script> -->
 	<script>
 		$(document).ready(function () {
 			"use strict";
+			// set up codemirror
+			var inCode = CodeMirror.fromTextArea(document.querySelector("#in-code"), {mode: "stex"})
+			var outCode = CodeMirror.fromTextArea(document.querySelector("#out-code"), {mode: "stex"})
+
+
 			$("#process").click(function (e) {
 				var linewidth = parseInt($('#linewidth').val(), 10);
 				var printer = $('#printer').find(":selected").val();
 				console.log("Processing...", "linewidth", linewidth, "printer", printer);
-				var code = $('textarea').val();
+				var code = inCode.getValue();
 				var parsed = exports.parse(code);
 				window.ast = parsed;
 				//var tokens = parsed.toTokens()
 				//$("#out-code").val(exports.printTokenStream(tokens));
 				if (printer === "token") {
-					$("#out-code").val(exports.print(code));
+					outCode.setValue(exports.print(code));
 				} else if (printer === "prettier") {
-					$("#out-code").val(exports.prettierPrint(code, {printWidth: linewidth}));
+					outCode.setValue(exports.prettierPrint(code, {printWidth: linewidth}));
 				}
 			})
 		});
@@ -41,13 +49,13 @@
 	</select>
 	</div>
 	<div id="tex">
-	<textarea id="tex-code" name="tex-code"  rows="30">
+	<textarea id="in-code" name="in-code"  rows="30">
 \begin{enumerate}
 		\item[55,4] Hi there
 \item$e^2$ is math mode!
 \end{enumerate}
 	</textarea>
-	<textarea id="out-code" name="tex-code" rows="30">
+	<textarea id="out-code" name="out-code" rows="30">
 \begin{enumerate, v}
 		\item[55,4] [Hi d {there}]
 

@@ -22,7 +22,7 @@
   "scripts": {
     "babel": "",
     "build": "mkdirp dist;pegjs -o src/latexpeg.js src/PEG-grammar/latex.pegjs; mkdirp dist/css; mkdirp dist/js; webpack src/astbuilder.js dist/js/latex-parser.js; webpack src/prettyprinter.js dist/js/latex-printer.js",
-    "playground": "npm run build; cp playground/index.html dist/; cp playground/css/playground.css dist/css/"
+    "playground": "npm run build; cp playground/index.html dist/; cp playground/css/playground.css dist/css/; cp playground/css/codemirror.css dist/css/; cp playground/codemirror.js dist/js/; cp playground/stex.js dist/js/"
   },
   "dependencies": {
     "cjk-regex": "1.0.2",
