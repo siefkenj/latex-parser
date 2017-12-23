@@ -1,6 +1,8 @@
 body, html {
 	width: 100%;
 	height: 100%;
+	margin: 0px;
+	padding: 0px;
 }
 body {
 	display: flex;
@@ -8,9 +10,40 @@ body {
 }
 #tex {
 	display: flex;
-}
-#tex textarea {
 	flex-grow: 1;
+}
+
+.CodeMirror {
+	height: 50em;
+}
+.CodeMirror, .CodeMirror-scrool {
+}
+
+.layer-wrap {
+	width: 100%;
 	height: 100%;
-	overflow: auto;
+	background-color: green;
+	position: relative;
+}
+
+/* splitter */
+
+.gutter.gutter-horizontal {
+    display: flex;
+    align-items: center;
+    line-height: 5px;
+    font-size: 12px;
+    font-family: sans-serif;
+    letter-spacing: 2px;
+    color: #ccc;
+    text-shadow: 1px 0 1px black;
+}
+
+.gutter::after {
+    content: '.. .. .. ..';
+}
+
+.gutter {
+    cursor: ew-resize;
+    background-color: #eee;
 }

@@ -9,6 +9,7 @@
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="http://code.jquery.com/jquery-migrate-1.2.1.min.js"></script>    
     <script>window.module = {}</script>
+    <script src="js/split.min.js"></script>
     <script src="js/codemirror.js"></script>
     <script src="js/stex.js"></script>
     <script src="js/latex-printer.js"></script>
@@ -17,8 +18,21 @@
 		$(document).ready(function () {
 			"use strict";
 			// set up codemirror
-			var inCode = CodeMirror.fromTextArea(document.querySelector("#in-code"), {mode: "stex"})
-			var outCode = CodeMirror.fromTextArea(document.querySelector("#out-code"), {mode: "stex"})
+			/*var inCodeTextArea = document.querySelector("#in-code")
+			var inCode = CodeMirror(function(el){
+				el.id = inCodeTextArea.id;
+				inCodeTextArea.parentNode.replaceChild(el, inCodeTextArea);
+			},{
+				mode: 'stex',
+				autofocus: true
+			})*/
+			var inCode = CodeMirror.fromTextArea(document.querySelector("#in-code"), {mode: "stex", viewportMargin: Infinity})
+			var outCode = CodeMirror.fromTextArea(document.querySelector("#out-code"), {mode: "stex", viewportMargin: Infinity})
+			//inCode.setSize("100%", "100%")
+			var oldCode = localStorage.getItem("code")
+			if (oldCode) {
+				inCode.setValue(oldCode)
+			}
 
 
 			$("#process").click(function (e) {
@@ -36,6 +50,23 @@
 					outCode.setValue(exports.prettierPrint(code, {printWidth: linewidth}));
 				}
 			})
+
+			$(window).unload(function() {
+				// save stuff to local storage
+				localStorage.setItem("code", inCode.getValue());
+			})
+
+
+			Split(['#in-container', '#out-container'], {
+        elementStyle: function (dimension, size, gutterSize) {
+            return { 'flex-basis': 'calc(' + size + '% - ' + gutterSize + 'px)' }
+        },
+        gutterStyle: function (dimension, gutterSize) {
+            return { 'flex-basis':  gutterSize + 'px' }
+        }
+    });
+
+
 		});
 	</script>
 </head>
@@ -49,12 +80,18 @@
 	</select>
 	</div>
 	<div id="tex">
+		<div id="in-container">
+			<div class="layer-wrap">
 	<textarea id="in-code" name="in-code"  rows="30">
 \begin{enumerate}
 		\item[55,4] Hi there
 \item$e^2$ is math mode!
 \end{enumerate}
 	</textarea>
+		</div>
+		</div>
+		<div id="out-container">
+			<div class="layer-wrap">
 	<textarea id="out-code" name="out-code" rows="30">
 \begin{enumerate, v}
 		\item[55,4] [Hi d {there}]
@@ -69,6 +106,8 @@
 \item$e^2$ is math mode!
 \end{enumerate}
 	</textarea>
+			</div>
+		</div>
 	</div>
 </body>
 </html>
