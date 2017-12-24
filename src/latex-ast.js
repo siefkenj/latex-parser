@@ -5,8 +5,7 @@
  * (as opposed to the PEG.js generated one)
  */
 
-
-const {ESCAPE, type} = require("./utils.js");
+const { ESCAPE, type } = require("./utils.js");
 
 /*
  * Classes for the AST types
@@ -326,8 +325,8 @@ module.exports = {
         CommentEnv,
         CommentNode,
         StringNode,
-        ArgList,
+        ArgList
     },
     PEGtoAST,
     ASTannotate
-}
+};

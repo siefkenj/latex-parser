@@ -820,8 +820,7 @@ module.exports = { normalize, defaults };
  * (as opposed to the PEG.js generated one)
  */
 
-
-const {ESCAPE, type} = __webpack_require__(0);
+const { ESCAPE, type } = __webpack_require__(0);
 
 /*
  * Classes for the AST types
@@ -1141,11 +1140,11 @@ module.exports = {
         CommentEnv,
         CommentNode,
         StringNode,
-        ArgList,
+        ArgList
     },
     PEGtoAST,
     ASTannotate
-}
+};
 
 
 /***/ }),
@@ -1228,34 +1227,35 @@ if (typeof window !== 'undefined') {
  * add prettier-based formatting to the AST
  */
 
-const {type, ESCAPE, callSuper} = __webpack_require__(0)
-const PRETTIER = __webpack_require__(1)
-const prettierPrintDocToString = __webpack_require__(2).printDocToString;
+const { type, ESCAPE, callSuper } = __webpack_require__(0);
+const PRETTIER = __webpack_require__(1);
+const prettierPrintDocToString = __webpack_require__(2)
+    .printDocToString;
 const prettierNormalizeOptions = __webpack_require__(3).normalize;
 
-const latexAst = __webpack_require__(4)
+const latexAst = __webpack_require__(4);
 const {
-        ASTNodeList,
-        ASTNode,
-        ContentOnlyNode,
-        ArgsNode,
-        Environment,
-        Macro,
-        Parbreak,
-        Whitespace,
-        Subscript,
-        Superscript,
-        InlineMath,
-        DisplayMath,
-        MathEnv,
-        Group,
-        Verbatim,
-        Verb,
-        CommentEnv,
-        CommentNode,
-        StringNode,
-        ArgList,
-    } = latexAst.nodeTypes;
+    ASTNodeList,
+    ASTNode,
+    ContentOnlyNode,
+    ArgsNode,
+    Environment,
+    Macro,
+    Parbreak,
+    Whitespace,
+    Subscript,
+    Superscript,
+    InlineMath,
+    DisplayMath,
+    MathEnv,
+    Group,
+    Verbatim,
+    Verb,
+    CommentEnv,
+    CommentNode,
+    StringNode,
+    ArgList
+} = latexAst.nodeTypes;
 
 const {
     ASTattachArgs,
@@ -1266,167 +1266,185 @@ const {
     isSpaceOrPar,
     isMathEnvironment,
     strToAST
-} = __webpack_require__(19)
-
-
-
+} = __webpack_require__(19);
 
 /*
  * Add toPrettierDoc method to each class
  */
 
 ASTNodeList.prototype.toPrettierDoc = function() {
-            return PRETTIER.concat([
-            PRETTIER.fill([].concat.apply([], this.map(x => x.toPrettierDoc())))
-        ]);
+    return PRETTIER.concat([
+        PRETTIER.fill([].concat.apply([], this.map(x => x.toPrettierDoc())))
+    ]);
 };
 
 ArgsNode.prototype.toPrettierDoc = function() {
-            if (this.args) {
-            return PRETTIER.concat([
-                PRETTIER.group(
-                    PRETTIER.concat([
-                        "[",
-                        //PRETTIER.indent(
-                        this.args.toPrettierDoc(),
-                        //)
-                        "]",
-                        PRETTIER.softline
-                    ])
-                )
-            ]);
-        }
-        return PRETTIER.concat([""]);
+    if (this.args) {
+        return PRETTIER.concat([
+            PRETTIER.group(
+                PRETTIER.concat([
+                    "[",
+                    //PRETTIER.indent(
+                    this.args.toPrettierDoc(),
+                    //)
+                    "]",
+                    PRETTIER.softline
+                ])
+            )
+        ]);
+    }
+    return PRETTIER.concat([""]);
 };
 
 Environment.prototype.toPrettierDoc = function() {
-        switch (""+this.env) {
-            case "parts":
-            case "itemize":
-            case "description":
-            case "enumerate":
-                var items = _processEnumerateEnvironment.call(this)
-                items = items.map(_enumerateItemToPrettier)
-                items = arrayJoin(items, PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]))
+    switch ("" + this.env) {
+        case "parts":
+        case "itemize":
+        case "description":
+        case "enumerate":
+            var items = _processEnumerateEnvironment.call(this);
+            items = items.map(_enumerateItemToPrettier);
+            items = arrayJoin(
+                items,
+                PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline])
+            );
 
-                return PRETTIER.concat([
-                    PRETTIER.hardline,
-                    this.envStart,
-                    callSuper(this, "toPrettierDoc"),
-                    PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
-                    PRETTIER.hardline,
-                    this.envEnd
-                ])
-                break;
-            case "align":
-            case "align*":
-            case "matrix":
-            case "bmatrix":
-            case "pmatrix":
-            case "vmatrix":
-            case "Bmatrix":
-            case "Vmatrix":
-            case "smallmatrix":
-                var table = tabularToMatrix(this.content, "&", ["\\\\", "\\hline"])
-                var formattedRows = padTable(table.rows, table.colWidths, table.rowSeps, table.colSeps)
+            return PRETTIER.concat([
+                PRETTIER.hardline,
+                this.envStart,
+                callSuper(this, "toPrettierDoc"),
+                PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
+                PRETTIER.hardline,
+                this.envEnd
+            ]);
+            break;
+        case "align":
+        case "align*":
+        case "matrix":
+        case "bmatrix":
+        case "pmatrix":
+        case "vmatrix":
+        case "Bmatrix":
+        case "Vmatrix":
+        case "smallmatrix":
+            var table = tabularToMatrix(this.content, "&", ["\\\\", "\\hline"]);
+            var formattedRows = padTable(
+                table.rows,
+                table.colWidths,
+                table.rowSeps,
+                table.colSeps
+            );
 
-                var docRows = formattedRows.map( x=> {return x.toPrettierDoc()})
-                var doc = PRETTIER.concat(arrayJoin(docRows, PRETTIER.hardline))
+            var docRows = formattedRows.map(x => {
+                return x.toPrettierDoc();
+            });
+            var doc = PRETTIER.concat(arrayJoin(docRows, PRETTIER.hardline));
 
-                return PRETTIER.concat([
-                    PRETTIER.hardline,
-                    this.envStart,
-                    callSuper(this,"toPrettierDoc"),
-                    PRETTIER.indent(PRETTIER.group(PRETTIER.concat([PRETTIER.hardline, doc]))),
-                    PRETTIER.hardline,
-                    this.envEnd
-                ])
-                return PRETTIER.concat(ret)
-                break;
-        }
+            return PRETTIER.concat([
+                PRETTIER.hardline,
+                this.envStart,
+                callSuper(this, "toPrettierDoc"),
+                PRETTIER.indent(
+                    PRETTIER.group(PRETTIER.concat([PRETTIER.hardline, doc]))
+                ),
+                PRETTIER.hardline,
+                this.envEnd
+            ]);
+            return PRETTIER.concat(ret);
+            break;
+    }
 
-        return PRETTIER.concat([
-            PRETTIER.hardline,
-            this.envStart,
-            callSuper(this, "toPrettierDoc"),
-            PRETTIER.indent(
-                PRETTIER.concat([
-                    PRETTIER.hardline,
-                    this.content.toPrettierDoc()
-                ])
-            ),
-            PRETTIER.hardline,
-            this.envEnd
-        ]);
-    return "" + this
+    return PRETTIER.concat([
+        PRETTIER.hardline,
+        this.envStart,
+        callSuper(this, "toPrettierDoc"),
+        PRETTIER.indent(
+            PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
+        ),
+        PRETTIER.hardline,
+        this.envEnd
+    ]);
+    return "" + this;
 };
 
 Macro.prototype.toPrettierDoc = function() {
-        let start = ESCAPE + this.content;
-        // there are some special macros that
-        // need special formatting
-        switch (this.content) {
-            case "usepackage":
-            case "newcommand":
-                return PRETTIER.concat([PRETTIER.hardline, start]);
-                break;
-            case "section":
-            case "subsection":
-            case "subsubsection":
-                return PRETTIER.concat([PRETTIER.hardline, start]);
-                break;
-        }
-        return start + this.argsString;
+    let start = ESCAPE + this.content;
+    // there are some special macros that
+    // need special formatting
+    switch (this.content) {
+        case "usepackage":
+        case "newcommand":
+            return PRETTIER.concat([PRETTIER.hardline, start]);
+            break;
+        case "section":
+        case "subsection":
+        case "subsubsection":
+            return PRETTIER.concat([PRETTIER.hardline, start]);
+            break;
+    }
+    return start + this.argsString;
 };
 
 Parbreak.prototype.toPrettierDoc = function() {
-        return PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]);
+    return PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]);
 };
 
 Whitespace.prototype.toPrettierDoc = function() {
-    return PRETTIER.line
+    return PRETTIER.line;
 };
 
 Subscript.prototype.toPrettierDoc = function() {
-        if (this.content.TYPE === "group") {
-            return PRETTIER.concat(["_", this.content.toPrettierDoc()]);
-        }
-        return PRETTIER.concat(["_{", trimWhitespace(this.content).toPrettierDoc(), "}"]);
+    if (this.content.TYPE === "group") {
+        return PRETTIER.concat(["_", this.content.toPrettierDoc()]);
+    }
+    return PRETTIER.concat([
+        "_{",
+        trimWhitespace(this.content).toPrettierDoc(),
+        "}"
+    ]);
 };
 
 Subscript.prototype.toPrettierDoc = function() {
-        if (this.content.TYPE === "group") {
-            return PRETTIER.concat(["^", this.content.toPrettierDoc()]);
-        }
-        return PRETTIER.concat(["^{", trimWhitespace(this.content).toPrettierDoc(), "}"]);
+    if (this.content.TYPE === "group") {
+        return PRETTIER.concat(["^", this.content.toPrettierDoc()]);
+    }
+    return PRETTIER.concat([
+        "^{",
+        trimWhitespace(this.content).toPrettierDoc(),
+        "}"
+    ]);
 };
 
 InlineMath.prototype.toPrettierDoc = function() {
-        return PRETTIER.concat(["$", trimWhitespace(this.content).toPrettierDoc(), "$"]);
+    return PRETTIER.concat([
+        "$",
+        trimWhitespace(this.content).toPrettierDoc(),
+        "$"
+    ]);
 };
 
 DisplayMath.prototype.toPrettierDoc = function() {
-        return PRETTIER.concat([
-            PRETTIER.hardline,
-            ESCAPE + "[",
-            PRETTIER.indent(
-                PRETTIER.concat([
-                    PRETTIER.hardline,
-                    PRETTIER.fill([trimWhitespace(this.content).toPrettierDoc()])
-                ])
-            ),
-            PRETTIER.hardline,
-            ESCAPE + "]",
-            PRETTIER.hardline
-        ]);
+    return PRETTIER.concat([
+        PRETTIER.hardline,
+        ESCAPE + "[",
+        PRETTIER.indent(
+            PRETTIER.concat([
+                PRETTIER.hardline,
+                PRETTIER.fill([trimWhitespace(this.content).toPrettierDoc()])
+            ])
+        ),
+        PRETTIER.hardline,
+        ESCAPE + "]",
+        PRETTIER.hardline
+    ]);
 };
 
 Group.prototype.toPrettierDoc = function() {
-        return PRETTIER.concat(["{", this.content.toPrettierDoc(), "}"]);
+    return PRETTIER.concat(["{", this.content.toPrettierDoc(), "}"]);
 };
 
 Verbatim.prototype.toPrettierDoc = function() {
-        return PRETTIER.concat(["" + this]);
+    return PRETTIER.concat(["" + this]);
 };
 
 Verb.prototype.toPrettierDoc = Verbatim.prototype.toPrettierDoc;
@@ -1434,80 +1452,75 @@ Verb.prototype.toPrettierDoc = Verbatim.prototype.toPrettierDoc;
 CommentEnv.prototype.toPrettierDoc = Verbatim.prototype.toPrettierDoc;
 
 CommentNode.prototype.toPrettierDoc = function() {
-        if (this.sameline) {
-            return PRETTIER.concat(["%", "" + this.content, PRETTIER.hardline]);
-        }
-        return PRETTIER.concat([
-            PRETTIER.hardline,
-            "%",
-            "" + this.content,
-            PRETTIER.hardline
-        ]);
+    if (this.sameline) {
+        return PRETTIER.concat(["%", "" + this.content, PRETTIER.hardline]);
+    }
+    return PRETTIER.concat([
+        PRETTIER.hardline,
+        "%",
+        "" + this.content,
+        PRETTIER.hardline
+    ]);
 };
 
 StringNode.prototype.toPrettierDoc = function() {
-    return this.content
+    return this.content;
 };
 
 ArgList.prototype.toPrettierDoc = function() {
-        // replace any "," in content with ","+PRETTIER.line
-        content = [];
-        for (let i of this.content) {
-            let rendered = i.toPrettierDoc();
-            content.push(rendered);
-            if (rendered === ",") {
-                content.push(PRETTIER.line);
-            }
+    // replace any "," in content with ","+PRETTIER.line
+    content = [];
+    for (let i of this.content) {
+        let rendered = i.toPrettierDoc();
+        content.push(rendered);
+        if (rendered === ",") {
+            content.push(PRETTIER.line);
         }
-        //console.log(content)
-        //return PRETTIER.indent(PRETTIER.concat(content))
-        return PRETTIER.indent(
-            PRETTIER.concat(
-                [PRETTIER.softline].concat(content)
-                //.concat([PRETTIER.softline])
-            )
-        );
+    }
+    //console.log(content)
+    //return PRETTIER.indent(PRETTIER.concat(content))
+    return PRETTIER.indent(
+        PRETTIER.concat(
+            [PRETTIER.softline].concat(content)
+            //.concat([PRETTIER.softline])
+        )
+    );
 };
 
+function _processEnumerateEnvironment() {
+    // enumerate environments have a list
+    // of `\item`s followed by contents.
+    // Find all of these so we can print them with
+    // special rules
+    // returns a list of lists that begins with each `\item`
 
-
-
-
- function   _processEnumerateEnvironment() {
-        // enumerate environments have a list
-        // of `\item`s followed by contents.
-        // Find all of these so we can print them with
-        // special rules
-        // returns a list of lists that begins with each `\item`
-
-        var items = [];
-        var itemsText = new ASTNodeList();
-        for (let i of this.content) {
-            if (i.TYPE === "macro" && i.content === "item") {
-                if (itemsText.length > 0) {
-                    items.push(itemsText);
-                    itemsText = new ASTNodeList();
-                }
+    var items = [];
+    var itemsText = new ASTNodeList();
+    for (let i of this.content) {
+        if (i.TYPE === "macro" && i.content === "item") {
+            if (itemsText.length > 0) {
+                items.push(itemsText);
+                itemsText = new ASTNodeList();
             }
-            itemsText.push(i);
         }
-        if (itemsText.length > 0) {
-            items.push(itemsText);
-        }
-
-        return items.map(trimWhitespace);
+        itemsText.push(i);
+    }
+    if (itemsText.length > 0) {
+        items.push(itemsText);
     }
 
- function   _enumerateItemToPrettier(i) {
-        var head = i[0];
-        var rest = new ASTNodeList(i.slice(1));
+    return items.map(trimWhitespace);
+}
 
-        return PRETTIER.concat([
-            head.toPrettierDoc(),
-            PRETTIER.indent(rest.toPrettierDoc())
-        ]);
-    }
+function _enumerateItemToPrettier(i) {
+    var head = i[0];
+    var rest = new ASTNodeList(i.slice(1));
 
+    return PRETTIER.concat([
+        head.toPrettierDoc(),
+        PRETTIER.indent(rest.toPrettierDoc())
+    ]);
+}
 
 function splitOn(arr, tok) {
     // splits `arr` based on `tok`.
@@ -1515,13 +1528,13 @@ function splitOn(arr, tok) {
     // or an array of things to split on
 
     if (type(tok) === "array") {
-        tok = tok.map(strToAST)
+        tok = tok.map(strToAST);
     } else {
-        tok = [strToAST(tok)]
+        tok = [strToAST(tok)];
     }
 
-
-    var ret = new ASTNodeList(), toks = new ASTNodeList();
+    var ret = new ASTNodeList(),
+        toks = new ASTNodeList();
     var tmp = new ASTNodeList();
     for (let i of arr) {
         for (let t of tok) {
@@ -1535,7 +1548,7 @@ function splitOn(arr, tok) {
         }
     }
     ret.push(tmp);
-    console.log(ret, toks)
+    console.log(ret, toks);
     return [ret, toks];
 }
 
@@ -1551,7 +1564,7 @@ function joinOn(arr, toks) {
     for (let i of arr) {
         ret.push(i);
         let tok = toks.shift();
-        if (typeof tok !== 'undefined') {
+        if (typeof tok !== "undefined") {
             ret.push(tok);
         }
     }
@@ -1573,12 +1586,14 @@ function arrayJoin(arr, tok) {
 function transpose(arr) {
     // get the transpose of an array of arrays
 
-    var copy = arr.map(x => {return [...x]})
-    var transpose = []
+    var copy = arr.map(x => {
+        return [...x];
+    });
+    var transpose = [];
     for (let i = 0; i < (arr[0] || []).length; i++) {
         let tmp = [];
         for (let r of copy) {
-            let elm = r.shift()
+            let elm = r.shift();
             if (typeof elm !== "undefined") {
                 tmp.push(elm);
             }
@@ -1594,18 +1609,29 @@ function tabularToMatrix(arr, colSep, rowSep) {
     // the columns, and the separators used
 
     var [rows, rowSeps] = splitOn(arr, rowSep);
-    var mat = [], colSeps = [];
+    var mat = [],
+        colSeps = [];
     for (let row of rows) {
         let [items, seps] = splitOn(row, colSep);
-        items = items.map(trimWhitespace)
+        items = items.map(trimWhitespace);
         mat.push(new ASTNodeList(...items));
         colSeps.push(seps);
     }
 
-    var rendered = mat.map( x => {return x.map( y => {return ""+y})})
+    var rendered = mat.map(x => {
+        return x.map(y => {
+            return "" + y;
+        });
+    });
 
     var cols = transpose(rendered);
-    var colWidths = cols.map( x => {return Math.max(...(x.map(y => {return y.length})))})
+    var colWidths = cols.map(x => {
+        return Math.max(
+            ...x.map(y => {
+                return y.length;
+            })
+        );
+    });
 
     return {
         rows: mat,
@@ -1613,73 +1639,83 @@ function tabularToMatrix(arr, colSep, rowSep) {
         colWidths,
         rowSeps,
         colSeps
-    }
+    };
 }
 
-function padTable(rows, colWidths, rowSeps, colSeps, align="left", padColSep=true) {
+function padTable(
+    rows,
+    colWidths,
+    rowSeps,
+    colSeps,
+    align = "left",
+    padColSep = true
+) {
     // take in a table and insert padding to align all elements
 
-    function getSpace(len=1) {
-        return new StringNode(" ".repeat(len))
+    function getSpace(len = 1) {
+        return new StringNode(" ".repeat(len));
     }
     // set the proper alignment function
-    var alignFunc = (a, width) => { return new ASTNodeList(a, getSpace(width - (""+a).length)) }
+    var alignFunc = (a, width) => {
+        return new ASTNodeList(a, getSpace(width - ("" + a).length));
+    };
     if (align === "right") {
-        alignFunc = (a, width) => { return new ASTNodeList(getSpace(width - (""+a).length), a) }
+        alignFunc = (a, width) => {
+            return new ASTNodeList(getSpace(width - ("" + a).length), a);
+        };
     } else if (align === "center" || align === "middle") {
-        alignFunc =  (a, width) => { 
-            var padd = width - (""+a).length;
-            var left = Math.floor(padd/2);
+        alignFunc = (a, width) => {
+            var padd = width - ("" + a).length;
+            var left = Math.floor(padd / 2);
             var right = padd - left;
-            return new ASTNodeList(getSpace(left), a, getSpace(right)) 
-        }
+            return new ASTNodeList(getSpace(left), a, getSpace(right));
+        };
     }
 
     // align the columns
 
-    rows = rows.map(y => {return y.map((x, i) => {
-        return alignFunc(x, colWidths[i])
-    })});
-
+    rows = rows.map(y => {
+        return y.map((x, i) => {
+            return alignFunc(x, colWidths[i]);
+        });
+    });
 
     if (padColSep) {
-        colSeps = colSeps.map(x => {return x.map(y => {return new ASTNodeList(getSpace(1), y, getSpace(1))})})
+        colSeps = colSeps.map(x => {
+            return x.map(y => {
+                return new ASTNodeList(getSpace(1), y, getSpace(1));
+            });
+        });
     }
 
     rows = rows.map((row, i) => {
         if (row.length === 0) {
             return new ASTNodeList();
         }
-        var seps = [...(colSeps[i])];
-        var ret = new ASTNodeList(row.shift())
+        var seps = [...colSeps[i]];
+        var ret = new ASTNodeList(row.shift());
         while (row.length > 0) {
             ret.push(seps.shift());
             ret.push(row.shift());
         }
         return ret;
-    })
+    });
 
     //// add some newlines after the row separators
     //rowSeps = rowSeps.map(x => {return new ASTNodeList(x, new Whitespace())})
 
     // add the rowSeps to the end of each row
-    rows.map( (x,i) => {if (typeof rowSeps[i] !== "undefined") {x.push(rowSeps[i])}})
+    rows.map((x, i) => {
+        if (typeof rowSeps[i] !== "undefined") {
+            x.push(rowSeps[i]);
+        }
+    });
     //var mat = joinOn(rows, rowSeps)
-    return rows
+    return rows;
 }
 
-
-
-
-
-
-
-
-
-
-
-module.exports.prettierNormalizeOptions = prettierNormalizeOptions
-module.exports.prettierPrintDocToString = prettierPrintDocToString
+module.exports.prettierNormalizeOptions = prettierNormalizeOptions;
+module.exports.prettierPrintDocToString = prettierPrintDocToString;
 module.exports.prettierPrintDoc = (doc, opts) => {
     opts = prettierNormalizeOptions(opts);
     return prettierPrintDocToString(doc, opts);
@@ -1690,12 +1726,11 @@ module.exports.utils = {
     cmpStringNode,
     trimWhitespace,
     strToAST
-}
+};
 
-if (typeof window !== 'undefined') {
-    window.exports = module.exports
+if (typeof window !== "undefined") {
+    window.exports = module.exports;
 }
-
 
 
 /***/ }),
@@ -3033,39 +3068,39 @@ function get_hex(char_code) {
  * utility functions for poking around the AST
  */
 
-const {type, ESCAPE} = __webpack_require__(0)
+const { type, ESCAPE } = __webpack_require__(0);
 const latexAst = __webpack_require__(4);
 const {
-        ASTNodeList,
-        ASTNode,
-        ContentOnlyNode,
-        ArgsNode,
-        Environment,
-        Macro,
-        Parbreak,
-        Whitespace,
-        Subscript,
-        Superscript,
-        InlineMath,
-        DisplayMath,
-        MathEnv,
-        Group,
-        Verbatim,
-        Verb,
-        CommentEnv,
-        CommentNode,
-        StringNode,
-        ArgList,
-    } = latexAst.nodeTypes;
+    ASTNodeList,
+    ASTNode,
+    ContentOnlyNode,
+    ArgsNode,
+    Environment,
+    Macro,
+    Parbreak,
+    Whitespace,
+    Subscript,
+    Superscript,
+    InlineMath,
+    DisplayMath,
+    MathEnv,
+    Group,
+    Verbatim,
+    Verb,
+    CommentEnv,
+    CommentNode,
+    StringNode,
+    ArgList
+} = latexAst.nodeTypes;
 
 function strToAST(tok) {
     // inputs a string or macro (string starting with \
     // and returns an AST node.
     if (type(tok) === "string") {
         if (tok.charAt(0) === "\\") {
-            tok = new Macro(tok.slice(1))
+            tok = new Macro(tok.slice(1));
         } else {
-            tok = new StringNode(tok)
+            tok = new StringNode(tok);
         }
     }
     return tok;
@@ -3073,12 +3108,16 @@ function strToAST(tok) {
 
 function isMathEnvironment(x) {
     if (typeof x === "undefined") {
-        return false
+        return false;
     }
-    if (x.TYPE === "inlinemath" || x.TYPE === "displaymath" || x.TYPE === "mathenv") {
-        return true
+    if (
+        x.TYPE === "inlinemath" ||
+        x.TYPE === "displaymath" ||
+        x.TYPE === "mathenv"
+    ) {
+        return true;
     }
-    return false
+    return false;
 }
 
 function isSpaceOrPar(x) {
@@ -3093,35 +3132,46 @@ function trimWhitespace(nodeList) {
     // and end of an ASTNodeList or an array
     // this operation is destructive
     while (nodeList.length > 0 && isSpaceOrPar(nodeList[0])) {
-        nodeList.shift()
+        nodeList.shift();
     }
     while (nodeList.length > 0 && isSpaceOrPar(nodeList[nodeList.length - 1])) {
-        nodeList.pop()
+        nodeList.pop();
     }
     return nodeList;
 }
 
-
 function ASTremoveExcessSpace(ast) {
     if (!ast) {
-        return
+        return;
     }
     if (ast.TYPE === "nodelist") {
-        let ret = [], lastPushed = "";
+        let ret = [],
+            lastPushed = "";
 
         for (let i = 0; i < ast.length; i++) {
-            let node = ast[i]
-            ASTremoveExcessSpace(node)
-            let next = ast[i+1] || ""
-            let prev = ast[i-1] || ""
-            
+            let node = ast[i];
+            ASTremoveExcessSpace(node);
+            let next = ast[i + 1] || "";
+            let prev = ast[i - 1] || "";
+
             // we don't need spaces at the start or end of an environment
-            var isEnvironmentBody = node.parent && (node.parent.parent ? node.parent.parent instanceof Environment : false)
-            if (isSpaceOrPar(node) && isEnvironmentBody && (prev === "" || next == "")) {
+            var isEnvironmentBody =
+                node.parent &&
+                (node.parent.parent
+                    ? node.parent.parent instanceof Environment
+                    : false);
+            if (
+                isSpaceOrPar(node) &&
+                isEnvironmentBody &&
+                (prev === "" || next == "")
+            ) {
                 continue;
             }
             // we don't need a space before or after an Environment
-            if (isSpaceOrPar(node) && (next instanceof Environment || prev instanceof Environment)) {
+            if (
+                isSpaceOrPar(node) &&
+                (next instanceof Environment || prev instanceof Environment)
+            ) {
                 continue;
             }
 
@@ -3147,12 +3197,12 @@ function ASTremoveExcessSpace(ast) {
             ast.push(i);
         }
     } else if (ast.content) {
-        ASTremoveExcessSpace(ast.content)
+        ASTremoveExcessSpace(ast.content);
     }
-    return ast
+    return ast;
 }
 
-function cmpStringNode(node, cmp, substr=null){
+function cmpStringNode(node, cmp, substr = null) {
     // Compares `node` with `cmp` if it is a string
     // or a macro; if `substr='start'` returns true
     // if the string starts with that, if `substr='end'`
@@ -3166,30 +3216,31 @@ function cmpStringNode(node, cmp, substr=null){
             if (cmp.startsWith("\\")) {
                 cmp = cmp.slice(1);
             } else {
-                return false
+                return false;
             }
         case "string":
             switch (substr) {
                 case "start":
                 case "starts":
-                    return node.content.startsWith(cmp)
+                    return node.content.startsWith(cmp);
                 case "end":
                 case "ends":
-                    return node.content.endsWith(cmp)
+                    return node.content.endsWith(cmp);
                 default:
-                    return (node.content === cmp ? true : false)
+                    return node.content === cmp ? true : false;
             }
     }
-    return false
+    return false;
 }
 
-function gobbleArgsAtMacro(stream, pos=0) {
+function gobbleArgsAtMacro(stream, pos = 0) {
     // look for macro arguments [..] occuring after position `pos`.
-    // gobble them and put them in the args of the macro. 
+    // gobble them and put them in the args of the macro.
     // This operation is destructive
 
     var origPos = pos;
-    var openPos = null, closePos = null;
+    var openPos = null,
+        closePos = null;
     pos++;
     // eat the whitespace
     while ((stream[pos] || "").TYPE === "whitespace") {
@@ -3200,8 +3251,10 @@ function gobbleArgsAtMacro(stream, pos=0) {
         return stream;
     }
     openPos = pos;
-    while (typeof stream[pos] !== 'undefined' 
-        && !cmpStringNode(stream[pos], "]", "end")) {
+    while (
+        typeof stream[pos] !== "undefined" &&
+        !cmpStringNode(stream[pos], "]", "end")
+    ) {
         pos++;
     }
     if (!cmpStringNode(stream[pos], "]", "end")) {
@@ -3209,7 +3262,6 @@ function gobbleArgsAtMacro(stream, pos=0) {
         return stream;
     }
     closePos = pos;
-
 
     var removed = stream.splice(openPos, closePos - openPos + 1);
 
@@ -3224,9 +3276,9 @@ function gobbleArgsAtMacro(stream, pos=0) {
         removed.pop();
     } else {
         var cont = removed[removed.length - 1].content;
-        removed[removed.length - 1].content = cont.slice(0, cont.length - 1)
+        removed[removed.length - 1].content = cont.slice(0, cont.length - 1);
     }
-    stream[origPos].args = removed
+    stream[origPos].args = removed;
 
     // if we gobbled any spaces, remove them
     if (openPos > origPos + 1) {
@@ -3237,41 +3289,49 @@ function gobbleArgsAtMacro(stream, pos=0) {
     return stream;
 }
 
-function ASTattachArgs(ast, context={}) {
+function ASTattachArgs(ast, context = {}) {
     // find macros that have optional args attached
     // to them and attach them.
 
     if (!ast) {
-        return
+        return;
     }
 
     if (ast.TYPE === "nodelist") {
         for (let i = ast.length - 1; i >= 0; i--) {
-            ASTattachArgs(ast[i], context)
+            ASTattachArgs(ast[i], context);
 
             // attach optional arguments to \\ macro
             if (cmpStringNode(ast[i], "\\\\")) {
-                gobbleArgsAtMacro(ast, i)
+                gobbleArgsAtMacro(ast, i);
             }
-            
+
             // attach optional arguments to \\ macro
             if (cmpStringNode(ast[i], "\\item")) {
-                gobbleArgsAtMacro(ast, i)
+                gobbleArgsAtMacro(ast, i);
             }
 
             // replace \cr in math environments
             if (context.math && cmpStringNode(ast[i], "\\cr")) {
-                console.log('ma', ast[i])
-                ast[i] = new Macro("\\")
+                console.log("ma", ast[i]);
+                ast[i] = new Macro("\\");
             }
         }
     } else if (ast.content) {
-        if (ast.TYPE === "environment" || ast.TYPE === "inlinemath" || ast.TYPE === "displaymath" || ast.TYPE === "mathenv") {
-            context = {immediate: ast, math: isMathEnvironment(ast) || context.math};
+        if (
+            ast.TYPE === "environment" ||
+            ast.TYPE === "inlinemath" ||
+            ast.TYPE === "displaymath" ||
+            ast.TYPE === "mathenv"
+        ) {
+            context = {
+                immediate: ast,
+                math: isMathEnvironment(ast) || context.math
+            };
         }
-        ASTattachArgs(ast.content, context)
+        ASTattachArgs(ast.content, context);
     }
-    return ast
+    return ast;
 }
 
 module.exports = {
@@ -3283,7 +3343,7 @@ module.exports = {
     isSpaceOrPar,
     isMathEnvironment,
     strToAST
-}
+};
 
 
 /***/ }),
