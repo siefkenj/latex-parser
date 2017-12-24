@@ -42,7 +42,8 @@ const {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    splitTabular
 } = require("./ast-utils.js");
 
 /*
@@ -80,6 +81,7 @@ Environment.prototype.toPrettierDoc = function() {
         case "description":
         case "enumerate":
             var items = _processEnumerateEnvironment.call(this);
+            //console.log(items, ""+this)
             items = items.map(_enumerateItemToPrettier);
             items = arrayJoin(
                 items,
@@ -104,30 +106,44 @@ Environment.prototype.toPrettierDoc = function() {
         case "Bmatrix":
         case "Vmatrix":
         case "smallmatrix":
-            var table = tabularToMatrix(this.content, "&", ["\\\\", "\\hline"]);
-            var formattedRows = padTable(
-                table.rows,
-                table.colWidths,
-                table.rowSeps,
-                table.colSeps
-            );
+            function getSpace(len = 1) {
+                return new StringNode(" ".repeat(len));
+            }
+            var alignFunc = (a, width) => {
+                return a + getSpace(width - ("" + a).length);
+            };
 
-            var docRows = formattedRows.map(x => {
-                return x.toPrettierDoc();
-            });
-            var doc = PRETTIER.concat(arrayJoin(docRows, PRETTIER.hardline));
+            var [rows, widths] = splitTabular(this.content);
+
+            rows = rows.map(row => {
+                return row.map((cell, i) => {
+                    if (cell.TYPE === "colsep") {
+                        return " " + cell.content + " ";
+                    } else if (cell.TYPE === "cell") {
+                        return alignFunc(cell.content, widths[i])            
+                    }
+                    return cell.content
+                })
+            })
+
+            rows = rows.map((x,i) => {
+                if (i === rows.length - 1) {
+                    // add a hardline to every row but the last one
+                    return PRETTIER.concat(x)
+                }
+                return PRETTIER.concat(x.concat(PRETTIER.hardline))
+            })
 
             return PRETTIER.concat([
                 PRETTIER.hardline,
                 this.envStart,
                 callSuper(this, "toPrettierDoc"),
                 PRETTIER.indent(
-                    PRETTIER.group(PRETTIER.concat([PRETTIER.hardline, doc]))
+                    PRETTIER.concat([PRETTIER.hardline].concat(rows))
                 ),
                 PRETTIER.hardline,
                 this.envEnd
             ]);
-            return PRETTIER.concat(ret);
             break;
     }
 
@@ -181,7 +197,7 @@ Subscript.prototype.toPrettierDoc = function() {
     ]);
 };
 
-Subscript.prototype.toPrettierDoc = function() {
+Superscript.prototype.toPrettierDoc = function() {
     if (this.content.TYPE === "group") {
         return PRETTIER.concat(["^", this.content.toPrettierDoc()]);
     }
@@ -290,6 +306,9 @@ function _processEnumerateEnvironment() {
 }
 
 function _enumerateItemToPrettier(i) {
+    if (i.length === 0) {
+        return PRETTIER.concat([])
+    }
     var head = i[0];
     var rest = new ASTNodeList(i.slice(1));
 
@@ -325,7 +344,6 @@ function splitOn(arr, tok) {
         }
     }
     ret.push(tmp);
-    console.log(ret, toks);
     return [ret, toks];
 }
 
@@ -379,44 +397,6 @@ function transpose(arr) {
     }
 
     return transpose;
-}
-
-function tabularToMatrix(arr, colSep, rowSep) {
-    // get a list of lists containing the rows,
-    // the columns, and the separators used
-
-    var [rows, rowSeps] = splitOn(arr, rowSep);
-    var mat = [],
-        colSeps = [];
-    for (let row of rows) {
-        let [items, seps] = splitOn(row, colSep);
-        items = items.map(trimWhitespace);
-        mat.push(new ASTNodeList(...items));
-        colSeps.push(seps);
-    }
-
-    var rendered = mat.map(x => {
-        return x.map(y => {
-            return "" + y;
-        });
-    });
-
-    var cols = transpose(rendered);
-    var colWidths = cols.map(x => {
-        return Math.max(
-            ...x.map(y => {
-                return y.length;
-            })
-        );
-    });
-
-    return {
-        rows: mat,
-        rendered,
-        colWidths,
-        rowSeps,
-        colSeps
-    };
 }
 
 function padTable(

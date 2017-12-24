@@ -315,7 +315,7 @@ module.exports = {
         Parbreak,
         Whitespace,
         Subscript,
-        Subscript,
+        Superscript,
         InlineMath,
         DisplayMath,
         MathEnv,

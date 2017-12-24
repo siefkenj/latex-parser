@@ -1130,7 +1130,7 @@ module.exports = {
         Parbreak,
         Whitespace,
         Subscript,
-        Subscript,
+        Superscript,
         InlineMath,
         DisplayMath,
         MathEnv,
@@ -1265,7 +1265,8 @@ const {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    splitTabular
 } = __webpack_require__(19);
 
 /*
@@ -1303,6 +1304,7 @@ Environment.prototype.toPrettierDoc = function() {
         case "description":
         case "enumerate":
             var items = _processEnumerateEnvironment.call(this);
+            //console.log(items, ""+this)
             items = items.map(_enumerateItemToPrettier);
             items = arrayJoin(
                 items,
@@ -1327,30 +1329,44 @@ Environment.prototype.toPrettierDoc = function() {
         case "Bmatrix":
         case "Vmatrix":
         case "smallmatrix":
-            var table = tabularToMatrix(this.content, "&", ["\\\\", "\\hline"]);
-            var formattedRows = padTable(
-                table.rows,
-                table.colWidths,
-                table.rowSeps,
-                table.colSeps
-            );
+            function getSpace(len = 1) {
+                return new StringNode(" ".repeat(len));
+            }
+            var alignFunc = (a, width) => {
+                return a + getSpace(width - ("" + a).length);
+            };
 
-            var docRows = formattedRows.map(x => {
-                return x.toPrettierDoc();
-            });
-            var doc = PRETTIER.concat(arrayJoin(docRows, PRETTIER.hardline));
+            var [rows, widths] = splitTabular(this.content);
+
+            rows = rows.map(row => {
+                return row.map((cell, i) => {
+                    if (cell.TYPE === "colsep") {
+                        return " " + cell.content + " ";
+                    } else if (cell.TYPE === "cell") {
+                        return alignFunc(cell.content, widths[i])            
+                    }
+                    return cell.content
+                })
+            })
+
+            rows = rows.map((x,i) => {
+                if (i === rows.length - 1) {
+                    // add a hardline to every row but the last one
+                    return PRETTIER.concat(x)
+                }
+                return PRETTIER.concat(x.concat(PRETTIER.hardline))
+            })
 
             return PRETTIER.concat([
                 PRETTIER.hardline,
                 this.envStart,
                 callSuper(this, "toPrettierDoc"),
                 PRETTIER.indent(
-                    PRETTIER.group(PRETTIER.concat([PRETTIER.hardline, doc]))
+                    PRETTIER.concat([PRETTIER.hardline].concat(rows))
                 ),
                 PRETTIER.hardline,
                 this.envEnd
             ]);
-            return PRETTIER.concat(ret);
             break;
     }
 
@@ -1404,7 +1420,7 @@ Subscript.prototype.toPrettierDoc = function() {
     ]);
 };
 
-Subscript.prototype.toPrettierDoc = function() {
+Superscript.prototype.toPrettierDoc = function() {
     if (this.content.TYPE === "group") {
         return PRETTIER.concat(["^", this.content.toPrettierDoc()]);
     }
@@ -1513,6 +1529,9 @@ function _processEnumerateEnvironment() {
 }
 
 function _enumerateItemToPrettier(i) {
+    if (i.length === 0) {
+        return PRETTIER.concat([])
+    }
     var head = i[0];
     var rest = new ASTNodeList(i.slice(1));
 
@@ -1548,7 +1567,6 @@ function splitOn(arr, tok) {
         }
     }
     ret.push(tmp);
-    console.log(ret, toks);
     return [ret, toks];
 }
 
@@ -1602,44 +1620,6 @@ function transpose(arr) {
     }
 
     return transpose;
-}
-
-function tabularToMatrix(arr, colSep, rowSep) {
-    // get a list of lists containing the rows,
-    // the columns, and the separators used
-
-    var [rows, rowSeps] = splitOn(arr, rowSep);
-    var mat = [],
-        colSeps = [];
-    for (let row of rows) {
-        let [items, seps] = splitOn(row, colSep);
-        items = items.map(trimWhitespace);
-        mat.push(new ASTNodeList(...items));
-        colSeps.push(seps);
-    }
-
-    var rendered = mat.map(x => {
-        return x.map(y => {
-            return "" + y;
-        });
-    });
-
-    var cols = transpose(rendered);
-    var colWidths = cols.map(x => {
-        return Math.max(
-            ...x.map(y => {
-                return y.length;
-            })
-        );
-    });
-
-    return {
-        rows: mat,
-        rendered,
-        colWidths,
-        rowSeps,
-        colSeps
-    };
 }
 
 function padTable(
@@ -3313,7 +3293,6 @@ function ASTattachArgs(ast, context = {}) {
 
             // replace \cr in math environments
             if (context.math && cmpStringNode(ast[i], "\\cr")) {
-                console.log("ma", ast[i]);
                 ast[i] = new Macro("\\");
             }
         }
@@ -3334,6 +3313,75 @@ function ASTattachArgs(ast, context = {}) {
     return ast;
 }
 
+function inArray(node, arr=[]) {
+    // returns true if `node` is in array `arr`
+    if (type(arr) !== "array") {
+        arr = [arr]
+    }
+
+    for (let e of arr) {
+        if (cmpStringNode(node, e)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function splitTabular(ast, colSep=["&"], rowSep=["\\\\", "\\hline"]) {
+    // takes a node-list and returns each row
+    // in an intermediate tabular format
+    var rows = [], row = [], currCol = 0, cell = new ASTNodeList();
+
+    for (let tok of ast) {
+        if (inArray(tok, colSep)) {
+            // we're in a new column
+            row.push({content: trimWhitespace(cell), TYPE: "cell"})
+            row.push({content: tok, TYPE: "colsep"})
+            currCol++
+            cell = new ASTNodeList()
+        } else if (inArray(tok, rowSep)) {
+            // we're in a new row
+            row.push({content: trimWhitespace(cell), TYPE: "cell"})
+            row.push({content: tok, TYPE:"rowsep"})
+            rows.push(row)
+            row = []
+            currCol = 0
+            cell = new ASTNodeList()
+        } else {
+            // we're just adding to the current cell
+            cell.push(tok)
+        }
+    }
+    row.push({content: trimWhitespace(cell), TYPE:"cell"})
+    rows.push(row)
+
+    // now each row is an array of the form [cell, sep, cell, sep, cell, break]
+    // that is, ever other entry *must* be a cell (even if it's empty).
+    var longestRow = Math.max(...rows.map(x=>x.length))
+    var widths = []
+    widths.length = longestRow
+    widths.fill(0)
+
+    // turn each cell into a string
+    rows.forEach(x => x.forEach(y => y.content = ""+y.content))
+
+    for (row of rows) {
+        currCol = 0;
+        for (cell of row) {
+            if (currCol % 2 === 1) {
+                currCol++
+                continue
+            }
+            widths[currCol] = Math.max(widths[currCol], cell.content.length)
+            currCol++
+        }
+    }
+
+    return [rows, widths]
+
+}
+
+window.ft = splitTabular
 module.exports = {
     ASTattachArgs,
     gobbleArgsAtMacro,
@@ -3342,7 +3390,8 @@ module.exports = {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    splitTabular
 };
 
 
@@ -7178,7 +7227,7 @@ module.exports = {
 const {type, ESCAPE, callSuper} = __webpack_require__(0)
 const latexAst = __webpack_require__(4)
 
-var {
+const {
         ASTNodeList,
         ASTNode,
         ContentOnlyNode,
@@ -7276,7 +7325,7 @@ Subscript.prototype.toTokens = function() {
     return [].concat.call([], ["_{"], this.content.toTokens(), ["}"]);
 };
 
-Subscript.prototype.toTokens = function() {
+Superscript.prototype.toTokens = function() {
     if (this.content.TYPE === "group") {
         return [].concat.call([], ["^"], this.content.toTokens());
     }

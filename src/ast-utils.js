@@ -249,7 +249,6 @@ function ASTattachArgs(ast, context = {}) {
 
             // replace \cr in math environments
             if (context.math && cmpStringNode(ast[i], "\\cr")) {
-                console.log("ma", ast[i]);
                 ast[i] = new Macro("\\");
             }
         }
@@ -270,6 +269,75 @@ function ASTattachArgs(ast, context = {}) {
     return ast;
 }
 
+function inArray(node, arr=[]) {
+    // returns true if `node` is in array `arr`
+    if (type(arr) !== "array") {
+        arr = [arr]
+    }
+
+    for (let e of arr) {
+        if (cmpStringNode(node, e)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function splitTabular(ast, colSep=["&"], rowSep=["\\\\", "\\hline"]) {
+    // takes a node-list and returns each row
+    // in an intermediate tabular format
+    var rows = [], row = [], currCol = 0, cell = new ASTNodeList();
+
+    for (let tok of ast) {
+        if (inArray(tok, colSep)) {
+            // we're in a new column
+            row.push({content: trimWhitespace(cell), TYPE: "cell"})
+            row.push({content: tok, TYPE: "colsep"})
+            currCol++
+            cell = new ASTNodeList()
+        } else if (inArray(tok, rowSep)) {
+            // we're in a new row
+            row.push({content: trimWhitespace(cell), TYPE: "cell"})
+            row.push({content: tok, TYPE:"rowsep"})
+            rows.push(row)
+            row = []
+            currCol = 0
+            cell = new ASTNodeList()
+        } else {
+            // we're just adding to the current cell
+            cell.push(tok)
+        }
+    }
+    row.push({content: trimWhitespace(cell), TYPE:"cell"})
+    rows.push(row)
+
+    // now each row is an array of the form [cell, sep, cell, sep, cell, break]
+    // that is, ever other entry *must* be a cell (even if it's empty).
+    var longestRow = Math.max(...rows.map(x=>x.length))
+    var widths = []
+    widths.length = longestRow
+    widths.fill(0)
+
+    // turn each cell into a string
+    rows.forEach(x => x.forEach(y => y.content = ""+y.content))
+
+    for (row of rows) {
+        currCol = 0;
+        for (cell of row) {
+            if (currCol % 2 === 1) {
+                currCol++
+                continue
+            }
+            widths[currCol] = Math.max(widths[currCol], cell.content.length)
+            currCol++
+        }
+    }
+
+    return [rows, widths]
+
+}
+
+window.ft = splitTabular
 module.exports = {
     ASTattachArgs,
     gobbleArgsAtMacro,
@@ -278,5 +346,6 @@ module.exports = {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    splitTabular
 };

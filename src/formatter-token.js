@@ -6,7 +6,7 @@
 const {type, ESCAPE, callSuper} = require("./utils.js")
 const latexAst = require("./latex-ast.js")
 
-var {
+const {
         ASTNodeList,
         ASTNode,
         ContentOnlyNode,
@@ -104,7 +104,7 @@ Subscript.prototype.toTokens = function() {
     return [].concat.call([], ["_{"], this.content.toTokens(), ["}"]);
 };
 
-Subscript.prototype.toTokens = function() {
+Superscript.prototype.toTokens = function() {
     if (this.content.TYPE === "group") {
         return [].concat.call([], ["^"], this.content.toTokens());
     }
