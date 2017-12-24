@@ -14,7 +14,7 @@ token "token"
   / group
   / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {TYPE:"inlinemath", content: eq}}
   / alignment_tab
-  / sp* nl nl+ sp* {return {TYPE:"parbreak"}}
+  / sp* nl sp* nl+ sp* {return {TYPE:"parbreak"}}
   / macro_parameter
   / superscript
   / subscript
@@ -43,7 +43,7 @@ args_token "args token"
   / group
   / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {TYPE:"inlinemath", content: eq}}
   / alignment_tab
-  / sp* nl nl+ sp* {return {TYPE:"parbreak"}}
+  / sp* nl sp* nl+ sp* {return {TYPE:"parbreak"}}
   / macro_parameter
   / superscript
   / subscript

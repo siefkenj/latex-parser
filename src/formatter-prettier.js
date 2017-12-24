@@ -91,12 +91,13 @@ Environment.prototype.toPrettierDoc = function() {
             return PRETTIER.concat([
                 PRETTIER.hardline,
                 this.envStart,
-                callSuper(this, "toPrettierDoc"),
+                callSuper(this, "toPrettierDoc", [], Environment),
                 PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
                 PRETTIER.hardline,
                 this.envEnd
             ]);
             break;
+        case "tabular":
         case "align":
         case "align*":
         case "matrix":
@@ -137,7 +138,7 @@ Environment.prototype.toPrettierDoc = function() {
             return PRETTIER.concat([
                 PRETTIER.hardline,
                 this.envStart,
-                callSuper(this, "toPrettierDoc"),
+                callSuper(this, "toPrettierDoc", [], Environment),
                 PRETTIER.indent(
                     PRETTIER.concat([PRETTIER.hardline].concat(rows))
                 ),
@@ -150,7 +151,7 @@ Environment.prototype.toPrettierDoc = function() {
     return PRETTIER.concat([
         PRETTIER.hardline,
         this.envStart,
-        callSuper(this, "toPrettierDoc"),
+        callSuper(this, "toPrettierDoc", [], Environment),
         PRETTIER.indent(
             PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
         ),

@@ -66,7 +66,7 @@ Environment.prototype.toTokens = function() {
     return [].concat.call(
         [],
         [TOKENS.ensurenew, this.envStart, TOKENS.indent],
-        callSuper(this, "toTokens"), // ArgsNode knows how to make arguments into tokens
+        callSuper(this, "toTokens", [], Environment), // ArgsNode knows how to make arguments into tokens
         [TOKENS.newline],
         this.content.toTokens(),
         [TOKENS.endindent, TOKENS.newline, this.envEnd]
@@ -86,7 +86,7 @@ Macro.prototype.toTokens = function() {
                 start = [TOKENS.preferpar].concat(start);
                 break;
         }
-        return start.concat(callSuper(this, "toTokens"));
+        return start.concat(callSuper(this, "toTokens", [], Macro));
 };
 
 Parbreak.prototype.toTokens = function() {

@@ -104,8 +104,9 @@ function ASTremoveExcessSpace(ast) {
                 continue;
             }
             // we don't need a space before or after an Environment
+            // but we should keep a par
             if (
-                isSpaceOrPar(node) &&
+                node.TYPE === "whitespace" &&
                 (next instanceof Environment || prev instanceof Environment)
             ) {
                 continue;

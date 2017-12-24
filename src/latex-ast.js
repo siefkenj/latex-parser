@@ -99,12 +99,18 @@ var Whitespace = class Whitespace extends ASTNode {
 
 var Subscript = class Subscript extends ContentOnlyNode {
     toString() {
+        if (this.content.TYPE === "group") {
+            return "_" + this.content
+        }
         return "_{" + this.content + "}";
     }
 };
 
 var Superscript = class Superscript extends ContentOnlyNode {
     toString() {
+        if (this.content.TYPE === "group") {
+            return "^" + this.content
+        }
         return "^{" + this.content + "}";
     }
 };

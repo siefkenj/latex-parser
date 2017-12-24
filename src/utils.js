@@ -18,9 +18,12 @@ function type(x) {
     return "object";
 }
 
-function callSuper(self, meth, args=[]) {
+function callSuper(self, meth, args=[], classObj) {
     // the same as super[meth](...args),
     // but can be used out of the `class` syntax
+    if (classObj) {
+        return Object.getPrototypeOf(classObj).prototype[meth].call(self, ...args)
+    }
     return Object.getPrototypeOf(self.constructor).prototype[meth].call(self, ...args)
 }
 
