@@ -9,8 +9,36 @@
 const latexpeg = require("./latexpeg.js");
 // Bare minimum to be able to export a prettier.js doc tree for pretty-printing
 const PRETTIER = require("./prettierutil.js");
-const tokenprinter = require("./tokenprinter.js");
-const TOKENS = tokenprinter.tokens;
+
+const latexAst = require("./latex-ast.js")
+const formatterTokens = require("./formatter-token.js")
+const TOKENS = formatterTokens.tokens;
+
+var {
+        ASTNodeList,
+        ASTNode,
+        ContentOnlyNode,
+        ArgsNode,
+        Environment,
+        Macro,
+        Parbreak,
+        Whitespace,
+        Subscript,
+        Superscript,
+        InlineMath,
+        DisplayMath,
+        MathEnv,
+        Group,
+        Verbatim,
+        Verb,
+        CommentEnv,
+        CommentNode,
+        StringNode,
+        ArgList,
+    } = latexAst.nodeTypes;
+
+
+
 
 const ESCAPE = "\\";
 
@@ -30,25 +58,30 @@ function type(x) {
 function splitOn(arr, tok) {
     // splits `arr` based on `tok`.
     // `tok` can be a string or an ASTNode
-    if (type(tok) === "string") {
-        if (tok.charAt(0) === "\\") {
-            tok = new Macro(tok.slice(1))
-        } else {
-            tok = new StringNode(tok)
-        }
+    // or an array of things to split on
+
+    if (type(tok) === "array") {
+        tok = tok.map(strToAST)
+    } else {
+        tok = [strToAST(tok)]
     }
+
+
     var ret = new ASTNodeList(), toks = new ASTNodeList();
     var tmp = new ASTNodeList();
     for (let i of arr) {
-        if (i.TYPE === tok.TYPE && i.content === tok.content) {
-            toks.push(i);
-            ret.push(tmp);
-            tmp = new ASTNodeList();
-        } else {
-            tmp.push(i);
+        for (let t of tok) {
+            if (i.TYPE === t.TYPE && i.content === t.content) {
+                toks.push(i);
+                ret.push(tmp);
+                tmp = new ASTNodeList();
+            } else {
+                tmp.push(i);
+            }
         }
     }
     ret.push(tmp);
+    console.log(ret, toks)
     return [ret, toks];
 }
 
@@ -181,26 +214,7 @@ function padTable(rows, colWidths, rowSeps, colSeps, align="left", padColSep=tru
     return rows
 }
 
-function isSpaceOrPar(x) {
-    if (typeof x == null) {
-        return false;
-    }
-    return x.TYPE === "whitespace" || x.TYPE === "parbreak";
-}
-
-function trimWhitespace(nodeList) {
-    // trim whitespace or newlines from the front
-    // and end of an ASTNodeList or an array
-    // this operation is destructive
-    while (nodeList.length > 0 && isSpaceOrPar(nodeList[0])) {
-        nodeList.shift()
-    }
-    while (nodeList.length > 0 && isSpaceOrPar(nodeList[nodeList.length - 1])) {
-        nodeList.pop()
-    }
-    return nodeList;
-}
-
+return
 
 /*
  * Classes for the AST types
@@ -350,6 +364,7 @@ var Environment = class Environment extends ArgsNode {
         switch (""+this.env) {
             case "parts":
             case "itemize":
+            case "description":
             case "enumerate":
                 var items = this._processEnumerateEnvironment()
                 items = items.map(this._enumerateItemToPrettier)
@@ -373,7 +388,7 @@ var Environment = class Environment extends ArgsNode {
             case "Bmatrix":
             case "Vmatrix":
             case "smallmatrix":
-                var table = tabularToMatrix(this.content, "&", "\\\\")
+                var table = tabularToMatrix(this.content, "&", ["\\\\", "\\hline"])
                 var formattedRows = padTable(table.rows, table.colWidths, table.rowSeps, table.colSeps)
 
                 var docRows = formattedRows.map( x=> {return x.toPrettierDoc()})
@@ -439,6 +454,11 @@ var Macro = class Macro extends ArgsNode {
             case "newcommand":
                 return PRETTIER.concat([PRETTIER.hardline, start]);
                 break;
+            case "section":
+            case "subsection":
+            case "subsubsection":
+                return PRETTIER.concat([PRETTIER.hardline, start]);
+                break;
         }
         return start + this.argsString;
     }
@@ -482,7 +502,7 @@ var Subscript = class Subscript extends ContentOnlyNode {
         if (this.content.TYPE === "group") {
             return PRETTIER.concat(["_", this.content.toPrettierDoc()]);
         }
-        return PRETTIER.concat(["_{", this.content.toPrettierDoc(), "}"]);
+        return PRETTIER.concat(["_{", trimWhitespace(this.content).toPrettierDoc(), "}"]);
     }
 };
 
@@ -500,7 +520,7 @@ var Superscript = class Superscript extends ContentOnlyNode {
         if (this.content.TYPE === "group") {
             return PRETTIER.concat(["^", this.content.toPrettierDoc()]);
         }
-        return PRETTIER.concat(["^{", this.content.toPrettierDoc(), "}"]);
+        return PRETTIER.concat(["^{", trimWhitespace(this.content).toPrettierDoc(), "}"]);
     }
 };
 
@@ -512,7 +532,7 @@ var InlineMath = class InlineMath extends ContentOnlyNode {
         return [].concat.call([], ["$"], this.content.toTokens(), ["$"]);
     }
     toPrettierDoc() {
-        return PRETTIER.concat(["$", this.content.toPrettierDoc(), "$"]);
+        return PRETTIER.concat(["$", trimWhitespace(this.content).toPrettierDoc(), "$"]);
     }
 };
 
@@ -535,7 +555,7 @@ var DisplayMath = class DisplayMath extends ContentOnlyNode {
             PRETTIER.indent(
                 PRETTIER.concat([
                     PRETTIER.hardline,
-                    PRETTIER.fill([this.content.toPrettierDoc()])
+                    PRETTIER.fill([trimWhitespace(this.content).toPrettierDoc()])
                 ])
             ),
             PRETTIER.hardline,
@@ -709,6 +729,7 @@ var Token = class Token extends ASTNode {
     }
 };
 
+
 /*
  * Take a PEG object and convert it into a LaTeX AST
  */
@@ -842,7 +863,7 @@ module.exports = {
     },
     parse,
     parsePeg: latexpeg.parse,
-    printTokenStream: tokenprinter.printTokenStream
+    printTokenStream: formatterTokens.printTokenStream
 }
 
 if (typeof window !== 'undefined') {
