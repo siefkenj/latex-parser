@@ -10,9 +10,10 @@ const prettierPrintDocToString = require("./prettier/doc-printer.js")
     .printDocToString;
 const prettierNormalizeOptions = require("./prettier/options.js").normalize;
 
-const latexAst = __webpack_require__(4);
+const latexAst = require("./latex-ast.js");
 const {
     ASTNodeList,
+    ASTParBlock,
     ASTNode,
     ContentOnlyNode,
     ArgsNode,
@@ -37,20 +38,37 @@ const {
 const {
     ASTattachArgs,
     gobbleArgsAtMacro,
+    gobbleParamsAtMacro,
     cmpStringNode,
     ASTremoveExcessSpace,
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
     strToAST,
-    splitTabular
+    splitTabular,
+    SPECIAL_MACROS,
+    makeMatchableNode,
+    parseParBlocks
 } = require("./ast-utils.js");
 
 /*
  * Add toPrettierDoc method to each class
  */
 
-ASTNodeList.prototype.toPrettierDoc = function() {
+ASTNodeList.prototype.toPrettierDoc = function(args={root: false}) {
+    if (args.root == true) {
+        // we are a root node
+        let pars = parseParBlocks(this);
+        let doc = [], prev = null, par = new Parbreak
+        // construct the Prettier doc
+        for (let node of pars) {
+            doc.push(node.toPrettierDoc({inParBlock: true}))
+            doc.push(PRETTIER.hardline)
+        }
+        doc.pop()
+        return PRETTIER.concat(doc)
+    }
+
     return PRETTIER.concat([
         PRETTIER.fill([].concat.apply([], this.map(x => x.toPrettierDoc())))
     ]);
@@ -89,7 +107,6 @@ Environment.prototype.toPrettierDoc = function() {
             );
 
             return PRETTIER.concat([
-                PRETTIER.hardline,
                 this.envStart,
                 callSuper(this, "toPrettierDoc", [], Environment),
                 PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
@@ -146,40 +163,102 @@ Environment.prototype.toPrettierDoc = function() {
                 this.envEnd
             ]);
             break;
+        case "tikz":
+        case "axis":
+        case "scope":
+            var args = ""
+            if (typeof this.args !== "undefined") {
+                args = _commaListGroupToPrettier(this.args, "[", "]")
+            }
+            return PRETTIER.concat([
+                PRETTIER.hardline,
+                this.envStart,
+                args,
+                PRETTIER.indent(
+                    PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
+                ),
+                PRETTIER.hardline,
+                this.envEnd
+            ]);
+            break;
+
     }
 
+    var comment = PRETTIER.concat([]);
+    var content = this.content;
+    if (typeof content[0] !== "undefined" && content[0].TYPE === "comment") {
+        comment = content[0].toPrettierDoc()
+        content = content.slice(1)
+    }
     return PRETTIER.concat([
-        PRETTIER.hardline,
         this.envStart,
-        callSuper(this, "toPrettierDoc", [], Environment),
+        callSuper(this, "toPrettierDoc", [], Environment), comment,
         PRETTIER.indent(
-            PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
+            PRETTIER.concat([PRETTIER.hardline, content.toPrettierDoc({root: true})])
         ),
         PRETTIER.hardline,
         this.envEnd
     ]);
-    return "" + this;
 };
 
 Macro.prototype.toPrettierDoc = function() {
     let start = ESCAPE + this.content;
     // there are some special macros that
     // need special formatting
-    switch (this.content) {
-        case "usepackage":
-        case "newcommand":
-            return PRETTIER.concat([PRETTIER.hardline, start]);
-            break;
-        case "section":
-        case "subsection":
-        case "subsubsection":
-            return PRETTIER.concat([PRETTIER.hardline, start]);
-            break;
+    //switch (this.content) {
+    //    case "usepackage":
+    //    case "newcommand":
+    //        return PRETTIER.concat([PRETTIER.hardline, start]);
+    //        break;
+    //    case "section":
+    //    case "subsection":
+    //    case "subsubsection":
+    //        return PRETTIER.concat([PRETTIER.hardline, start]);
+    //        break;
+    //}
+    if (this.params.length === 0) {
+        return start + this.argsString;
     }
-    return start + this.argsString;
+    
+    if (SPECIAL_MACROS.oneParam.has(start)) {
+        // we should remove all spaces from the params and
+        // wrap it in a group.
+        var params = this.params.filter( a => isSpaceOrPar(a) ? false : true );
+        if (typeof params[0] !== "undefined" && params[0].TYPE !== "group") {
+            params = new ASTNodeList(new Group(params));
+        }
+
+        // some special macros, we want to print their args differently
+        switch (start) {
+            case "\\usetikzlibrary":
+            case "\\pgfkeys":
+            case "\\pgfplotsset":
+            case "\\tikzset":
+                var paramsPrettier = _commaListGroupToPrettier(params[0])
+                return PRETTIER.concat([start + this.argsString, paramsPrettier]);
+        }
+        return PRETTIER.concat([start + this.argsString, params.toPrettierDoc()]);
+    }
+    if (SPECIAL_MACROS.tikzCommand.has(start)) {
+        // we're a tikz command inside a tikz environment
+        
+        // make sure there is one space before the params start
+        // and no spaces before the ";"
+        var params = this.params;
+        var terminator = params.pop();
+        params = trimWhitespace(params);
+        params.push(terminator);
+        params.unshift(new Whitespace);
+        return PRETTIER.concat([start + this.argsString, PRETTIER.indent(this.params.toPrettierDoc())])
+    }
+
+    return PRETTIER.concat([start + this.argsString, this.params.toPrettierDoc()]);
 };
 
-Parbreak.prototype.toPrettierDoc = function() {
+Parbreak.prototype.toPrettierDoc = function(args={inParBlock: false}) {
+    if (args.inParBlock) {
+        return ""
+    }
     return PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]);
 };
 
@@ -247,7 +326,7 @@ CommentEnv.prototype.toPrettierDoc = Verbatim.prototype.toPrettierDoc;
 
 CommentNode.prototype.toPrettierDoc = function() {
     if (this.sameline) {
-        return PRETTIER.concat(["%", "" + this.content, PRETTIER.hardline]);
+        return PRETTIER.concat([PRETTIER.lineSuffix("%" + this.content), PRETTIER.hardline])
     }
     return PRETTIER.concat([
         PRETTIER.hardline,
@@ -319,6 +398,29 @@ function _enumerateItemToPrettier(i) {
     ]);
 }
 
+function _commaListGroupToPrettier(group, left="{", right="}") {
+    // take a group whose items are separated by commas
+    // and format them in prettier syntax
+
+    var [arr, toks] = splitOn(group.content, ',');
+    arr = arr.map(trimWhitespace);
+    var items = [PRETTIER.indent(arr[0].toPrettierDoc())]
+    for (let a of arr.slice(1)) {
+        items = items.concat([",", PRETTIER.line])
+        items = items.concat([PRETTIER.indent(a.toPrettierDoc())])
+    }
+    return PRETTIER.group(PRETTIER.concat([left,
+        PRETTIER.indent(PRETTIER.concat([
+            PRETTIER.softline,
+            PRETTIER.concat(items),
+        ])),
+        PRETTIER.softline,
+        right
+    ]
+    ))
+
+}
+
 function splitOn(arr, tok) {
     // splits `arr` based on `tok`.
     // `tok` can be a string or an ASTNode
@@ -377,99 +479,6 @@ function arrayJoin(arr, tok) {
     }
     ret.pop();
     return ret;
-}
-
-function transpose(arr) {
-    // get the transpose of an array of arrays
-
-    var copy = arr.map(x => {
-        return [...x];
-    });
-    var transpose = [];
-    for (let i = 0; i < (arr[0] || []).length; i++) {
-        let tmp = [];
-        for (let r of copy) {
-            let elm = r.shift();
-            if (typeof elm !== "undefined") {
-                tmp.push(elm);
-            }
-        }
-        transpose.push(tmp);
-    }
-
-    return transpose;
-}
-
-function padTable(
-    rows,
-    colWidths,
-    rowSeps,
-    colSeps,
-    align = "left",
-    padColSep = true
-) {
-    // take in a table and insert padding to align all elements
-
-    function getSpace(len = 1) {
-        return new StringNode(" ".repeat(len));
-    }
-    // set the proper alignment function
-    var alignFunc = (a, width) => {
-        return new ASTNodeList(a, getSpace(width - ("" + a).length));
-    };
-    if (align === "right") {
-        alignFunc = (a, width) => {
-            return new ASTNodeList(getSpace(width - ("" + a).length), a);
-        };
-    } else if (align === "center" || align === "middle") {
-        alignFunc = (a, width) => {
-            var padd = width - ("" + a).length;
-            var left = Math.floor(padd / 2);
-            var right = padd - left;
-            return new ASTNodeList(getSpace(left), a, getSpace(right));
-        };
-    }
-
-    // align the columns
-
-    rows = rows.map(y => {
-        return y.map((x, i) => {
-            return alignFunc(x, colWidths[i]);
-        });
-    });
-
-    if (padColSep) {
-        colSeps = colSeps.map(x => {
-            return x.map(y => {
-                return new ASTNodeList(getSpace(1), y, getSpace(1));
-            });
-        });
-    }
-
-    rows = rows.map((row, i) => {
-        if (row.length === 0) {
-            return new ASTNodeList();
-        }
-        var seps = [...colSeps[i]];
-        var ret = new ASTNodeList(row.shift());
-        while (row.length > 0) {
-            ret.push(seps.shift());
-            ret.push(row.shift());
-        }
-        return ret;
-    });
-
-    //// add some newlines after the row separators
-    //rowSeps = rowSeps.map(x => {return new ASTNodeList(x, new Whitespace())})
-
-    // add the rowSeps to the end of each row
-    rows.map((x, i) => {
-        if (typeof rowSeps[i] !== "undefined") {
-            x.push(rowSeps[i]);
-        }
-    });
-    //var mat = joinOn(rows, rowSeps)
-    return rows;
 }
 
 module.exports.prettierNormalizeOptions = prettierNormalizeOptions;

@@ -86,7 +86,9 @@ Macro.prototype.toTokens = function() {
                 start = [TOKENS.preferpar].concat(start);
                 break;
         }
-        return start.concat(callSuper(this, "toTokens", [], Macro));
+        // tokenize ourself with args, and then put in our `params`
+        var toks = start.concat(callSuper(this, "toTokens", [], Macro));
+        return toks.concat(this.params.toTokens());
 };
 
 Parbreak.prototype.toTokens = function() {
@@ -144,9 +146,9 @@ CommentEnv.prototype.toTokens = Verbatim.prototype.toTokens;
 
 CommentNode.prototype.toTokens = function() {
     if (this.sameline) {
-        return ["%", "" + this.content, TOKENS.newline];
+        return ["%" + this.content, TOKENS.newline];
     }
-    return [TOKENS.newline, "%", "" + this.content, TOKENS.newline];
+    return [TOKENS.newline, "%" + this.content, TOKENS.newline];
 };
 
 StringNode.prototype.toTokens = function() {

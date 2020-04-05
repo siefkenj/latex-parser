@@ -6,6 +6,7 @@
  */
 
 const { ESCAPE, type } = require("./utils.js");
+const WILD = Symbol("WILD")
 
 /*
  * Classes for the AST types
@@ -19,11 +20,27 @@ var ASTNodeList = class ASTNodeList extends Array {
     toString() {
         return this.join("");
     }
+    equal(other) {
+        return false;
+    }
+};
+
+// A node list that will be recognized as containing a block of text
+// for a paragraph when printing.
+var ASTParBlock = class ASTParBlock extends ASTNodeList {
+    constructor() {
+        super(...arguments);
+        this.TYPE = "parblock";
+    }
 };
 
 var ASTNode = class ASTNode {
     constructor(type = this.constructor.name.toLowerCase()) {
         this.TYPE = type;
+    }
+
+    equal(other) {
+        return other instanceof this.constructor
     }
 };
 
@@ -32,17 +49,41 @@ var ContentOnlyNode = class ContentOnlyNode extends ASTNode {
         super();
         this.content = content;
     }
+    equal(other) {
+        if (super.equal(other)) {
+            if (this.content === WILD || other.content === WILD) {
+                return true;
+            }
+            return this.content == other.content;
+        }
+        return false;
+    }
 };
 
 var ArgsNode = class ArgsNode extends ASTNode {
-    // a node that has this.ags as a property
-    constructor(args) {
+    // a node that has this.args as a property
+    constructor(args, braces = {open: "[", close: "]"}) {
         super();
         this.args = args;
+        this.braces = braces;
+    }
+    get openBrace() {
+        let brace = (this.braces || {})['open']
+        if (typeof brace === "undefined") {
+            return ""
+        }
+        return brace
+    }
+    get closeBrace() {
+        let brace = (this.braces || {})['close']
+        if (typeof brace === "undefined") {
+            return ""
+        }
+        return brace
     }
     get argsString() {
         if (typeof this.args !== "undefined") {
-            return "[" + this.args + "]";
+            return "" + this.openBrace + this.args + this.closeBrace;
         }
         return "";
     }
@@ -76,12 +117,22 @@ var Environment = class Environment extends ArgsNode {
 };
 
 var Macro = class Macro extends ArgsNode {
-    constructor(name, args) {
+    // Macros can have args (things in []) and params (anything that follows the macro and should
+    // be interpreted as parameters that it might manipulate, e.g. the R in "\mathbb R")
+    constructor(name, args, params = new ASTNodeList) {
         super(args);
         this.content = name;
+        this.params = params;
     }
     toString() {
-        return ESCAPE + this.content + this.argsString;
+        return ESCAPE + this.content + this.argsString + this.params;
+    }
+    equal(other) {
+        // shorthand for comparing with macros
+        if (type(other) === "string" && other.charAt(0) === "\\") {
+            return this.equal(new Macro(other.slice(1)))
+        }
+        return super.equal(other)
     }
 };
 
@@ -276,6 +327,7 @@ function ASTannotate(ast, parent, next, previous) {
     ast.previous = previous;
 
     switch (ast.TYPE) {
+        case "parblock":
         case "nodelist":
             for (let i = 0; i < ast.length; i++) {
                 previous = i === 0 ? null : ast[i - 1];
@@ -294,6 +346,7 @@ function ASTannotate(ast, parent, next, previous) {
             break;
         case "macro":
             ASTannotate(ast.args, ast);
+            ASTannotate(ast.params, ast);
             break;
         case "environment":
             ASTannotate(ast.content, ast);
@@ -313,6 +366,7 @@ function ASTannotate(ast, parent, next, previous) {
 module.exports = {
     nodeTypes: {
         ASTNodeList,
+        ASTParBlock,
         ASTNode,
         ContentOnlyNode,
         ArgsNode,
@@ -333,6 +387,7 @@ module.exports = {
         StringNode,
         ArgList
     },
+    WILD,
     PEGtoAST,
     ASTannotate
 };

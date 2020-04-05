@@ -8,6 +8,7 @@ const { type, ESCAPE } = require("./utils.js");
 const latexAst = require("./latex-ast.js");
 const {
     ASTNodeList,
+    ASTParBlock,
     ASTNode,
     ContentOnlyNode,
     ArgsNode,
@@ -28,6 +29,75 @@ const {
     StringNode,
     ArgList
 } = latexAst.nodeTypes;
+const WILD = latexAst.WILD;
+
+window.nodeTypes = latexAst.nodeTypes
+
+const SPECIAL_MACROS = {
+    oneParam: new Set([
+                "\\mathbb",
+                "\\mathrm",
+                "\\textrm",
+                "\\textsf",
+                "\\texttt",
+                "\\textit",
+                "\\textsl",
+                "\\textsc",
+                "\\textbf",
+                "\\textmd",
+                "\\textlf",
+                "\\emph",
+                "\\textup",
+                "\\textnormal",
+                "\\uppercase",
+                "\\footnote",
+                "\\pgfkeys",
+                "\\tikzset",
+                "\\pgfplotsset",
+                "\\usetikzlibrary"
+    ]),
+    twoParam: new Set([
+        "\\frac",
+    ]),
+    tikzCommand: new Set([
+        "\\coordinate",
+        "\\draw",
+        "\\fill",
+        "\\path",
+        "\\node",
+        "\\graph",
+        "\\shade",
+        "\\clip",
+        "\\calendar",
+        "\\scoped",
+        "\\matrix",
+        "\\addplot",
+        "\\spy",
+        "\\pattern",
+        "\\filldraw",
+        "\\shadedraw",
+        "\\useasboundingbox",
+    ]),
+    lineBreakers: [
+        new Macro("documentclass"),
+        new Macro("usepackage"),
+        new Macro("geometry"),
+        new Macro("pagestyle"),
+        new Macro("section"),
+        new Macro("usetikzlibrary"),
+        new Macro("tikzset"),
+        new Macro("usepgfplotslibrary"),
+        new Macro("pgfplotsset"),
+        new Macro("newcommand"),
+        new Macro("renewcommand"),
+        new Macro("includegraphics"),
+        new Parbreak(),
+        new Macro(""),
+        new Macro(""),
+        new Environment(WILD),
+    ]
+
+}
 
 function strToAST(tok) {
     // inputs a string or macro (string starting with \
@@ -52,6 +122,24 @@ function isMathEnvironment(x) {
         x.TYPE === "mathenv"
     ) {
         return true;
+    }
+    return false;
+}
+
+function isTikzEnvironment(x, inTikz=false) {
+    // determine if we're in a tikz environment. inTikz determines
+    // whether we are entering a sub-environment from a tikz one
+    if (typeof x === "undefined") {
+        return false;
+    }
+    if (
+        x.TYPE === "environment"    ) {
+        var env = ""+x.env;
+        if ( env === "tikzpicture" ){
+            return true;
+        } else if (inTikz && (new Set(["scope", "axis"])).has(env)) {
+            return true;
+        }
     }
     return false;
 }
@@ -145,8 +233,18 @@ function cmpStringNode(node, cmp, substr = null) {
     // if the string starts with that, if `substr='end'`
     // returns true if it ends with it.
     // If you're comparing with a macro, `cmp` must start with \
+    //
+    // You can also pass in a set of items for cmp. In this case,
+    // substr won't work.
     if (typeof node === "undefined") {
         return false;
+    }
+    if (type(cmp) === "set") {
+        var content = node.content;
+        if (node.TYPE === "macro") {
+            content = "\\" + content;
+        }
+        return cmp.has(content);
     }
     switch (node.TYPE) {
         case "macro":
@@ -168,6 +266,54 @@ function cmpStringNode(node, cmp, substr = null) {
             }
     }
     return false;
+}
+
+function gobbleParamsAtMacro(stream, pos = 0, stop = 1) {
+    // look for macro params occuring after position `pos`.
+    // gobble them and put them in the args of the macro.
+    // This operation is destructive.
+    //
+    // If `stop` is a number, only gobble `stop` number of
+    // non-whitespace items. If `stop` is a string, gobble
+    // until that string is encountered.
+
+    var origPos = pos;
+    var openPos = null,
+        closePos = null;
+    pos++;
+
+    if (type(stop) === "string") {
+        openPos = pos;
+        // we don't gobble whitespace in this case. Just look
+        // for a node that matches the termination string
+        while (!cmpStringNode(stream[pos], stop) && pos < stream.length) {
+            pos++;
+        }
+        closePos = pos;
+        
+        var removed = stream.splice(openPos, closePos - openPos + 1);
+        stream[origPos].params = removed;
+        return stream;
+    }
+
+    // we need to eat a certain number of non-whitespace 
+    // items
+    openPos = pos;
+    while (stop > 0 && pos < stream.length) {
+        if ((stream[pos] || "").TYPE !== "whitespace") {
+            stop--;
+        }
+        pos++;
+    }
+    closePos = pos;
+    var removed = stream.splice(openPos, closePos - openPos);
+    // remove any whitespace
+    // XXX if we do this, "\mathbb a" becomes "\mathbba"; We don't want that,
+    // so leave it up to the pretty printer to remove space
+    //removed = removed.filter( a => (a || "").TYPE === "whitespace" ? false : true );
+    stream[origPos].params = removed;
+
+    return stream;
 }
 
 function gobbleArgsAtMacro(stream, pos = 0) {
@@ -243,7 +389,7 @@ function ASTattachArgs(ast, context = {}) {
                 gobbleArgsAtMacro(ast, i);
             }
 
-            // attach optional arguments to \\ macro
+            // attach optional arguments to \item macro
             if (cmpStringNode(ast[i], "\\item")) {
                 gobbleArgsAtMacro(ast, i);
             }
@@ -252,6 +398,23 @@ function ASTattachArgs(ast, context = {}) {
             if (context.math && cmpStringNode(ast[i], "\\cr")) {
                 ast[i] = new Macro("\\");
             }
+
+            // attach params to "\mathbb" and friends
+            if (cmpStringNode(ast[i], SPECIAL_MACROS.oneParam)) {
+                gobbleParamsAtMacro(ast, i, 1);
+            }
+            
+            // attach params to "\frac" and friends
+            if (cmpStringNode(ast[i], SPECIAL_MACROS.twoParam)) {
+                gobbleParamsAtMacro(ast, i, 2);
+            }
+            
+            // process the tikz commands
+            if (context.tikz && cmpStringNode(ast[i], SPECIAL_MACROS.tikzCommand)) {
+                gobbleArgsAtMacro(ast, i);
+                gobbleParamsAtMacro(ast, i, ";");
+            }
+
         }
     } else if (ast.content) {
         if (
@@ -262,7 +425,8 @@ function ASTattachArgs(ast, context = {}) {
         ) {
             context = {
                 immediate: ast,
-                math: isMathEnvironment(ast) || context.math
+                math: isMathEnvironment(ast) || context.math, // once we enter a math environment, we won't leave (XXX invalid assumption...)
+                tikz: isTikzEnvironment(ast, context.tikz)
             };
         }
         ASTattachArgs(ast.content, context);
@@ -338,15 +502,61 @@ function splitTabular(ast, colSep=["&"], rowSep=["\\\\", "\\hline"]) {
 
 }
 
-window.ft = splitTabular
+function makeMatchableNode(node) {
+    // returns a new node of the same type that 
+    // will match any other node of the same type
+    let ret = Object.getPrototypeOf(node);
+    ret = new (ret.constructor)(WILD);
+    return ret
+}
+
+function parseParBlocks(nodes) {
+    // parses a list and chunks it into blocks that should be printed on their own line.
+    if (type(nodes) !== "array") {
+        return nodes;
+    }
+
+    var ret = new ASTNodeList;
+    var par = new ASTParBlock;
+    for (var node of nodes) {
+        if (SPECIAL_MACROS.lineBreakers.some(x => x.equal(node))) {
+            // if we encountered a macro on which we should linebrake,
+            // start a new ASTParBlock
+            if (par.length > 0) {
+                par.parent = node.parent
+                ret.push(par);
+                par = new ASTParBlock;
+            }
+        }
+        // Parbreaks should be inserted on their own, not in a ParBlock
+        // it is safe to do this here because Parbreak triggers
+        // the creation of a new ParBlock.
+        if (node.equal(new Parbreak)) {
+            ret.push(node);
+        } else {
+            par.push(node)
+        }
+    }
+    if (par.length > 0) {
+        par.parent = node.parent
+        ret.push(par)
+    }
+    
+    return ret
+}
+
 module.exports = {
     ASTattachArgs,
     gobbleArgsAtMacro,
+    gobbleParamsAtMacro,
     cmpStringNode,
     ASTremoveExcessSpace,
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
     strToAST,
-    splitTabular
+    splitTabular,
+    SPECIAL_MACROS,
+    makeMatchableNode,
+    parseParBlocks
 };

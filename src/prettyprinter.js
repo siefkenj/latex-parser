@@ -17,7 +17,8 @@ const {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    parseParBlocks
 } = require("./ast-utils.js")
 
 
@@ -46,8 +47,11 @@ function prettierPrint(str, opts) {
         parsed = parse(str);
     }
     ASTremoveExcessSpace(parsed);
-    ASTattachArgs(parsed)
-    return formatterPrettier.prettierPrintDocToString(parsed.toPrettierDoc(), opts).formatted;
+    ASTattachArgs(parsed);
+    //parsed = parseParBlocks(parsed);
+    window.parsed = parsed;
+    window.ppb = parseParBlocks
+    return formatterPrettier.prettierPrintDocToString(parsed.toPrettierDoc({root: true}), opts).formatted;
 }
 
 module.exports = formatterPrettier

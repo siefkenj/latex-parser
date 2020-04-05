@@ -15,6 +15,9 @@ function type(x) {
     if (Array.isArray(x)) {
         return "array";
     }
+    if (x instanceof Set) {
+        return "set";
+    }
     return "object";
 }
 

@@ -21,6 +21,7 @@ token "token"
   / ignore
   / number
   / whitespace
+  / punctuation
   / x:(!nonchar_token x:. {return x})+ {return x.join("")}
 
 math_token "math token"
@@ -50,7 +51,9 @@ args_token "args token"
   / ignore
   / number
   / whitespace
+  / punctuation
   / x:(!(nonchar_token / "," / "]") x:. {return x})+ {return x.join("")}
+
 
 nonchar_token "nonchar token"
   = escape
@@ -65,6 +68,7 @@ nonchar_token "nonchar token"
   / subscript
   / ignore
   / sp
+  / punctuation
   / EOF
 
 whitespace "whitespace"
@@ -160,3 +164,4 @@ punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]]   // catcode 12
 comment        = "%"  c:(!nl c:. {return c})* (nl / EOF) {return c.join("")}          // catcode 14, including the newline
 
 EOF             = !.
+

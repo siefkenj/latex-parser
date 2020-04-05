@@ -85,6 +85,9 @@ function type(x) {
     if (Array.isArray(x)) {
         return "array";
     }
+    if (x instanceof Set) {
+        return "set";
+    }
     return "object";
 }
 
@@ -824,6 +827,7 @@ module.exports = { normalize, defaults };
  */
 
 const { ESCAPE, type } = __webpack_require__(0);
+const WILD = Symbol("WILD")
 
 /*
  * Classes for the AST types
@@ -837,11 +841,27 @@ var ASTNodeList = class ASTNodeList extends Array {
     toString() {
         return this.join("");
     }
+    equal(other) {
+        return false;
+    }
+};
+
+// A node list that will be recognized as containing a block of text
+// for a paragraph when printing.
+var ASTParBlock = class ASTParBlock extends ASTNodeList {
+    constructor() {
+        super(...arguments);
+        this.TYPE = "parblock";
+    }
 };
 
 var ASTNode = class ASTNode {
     constructor(type = this.constructor.name.toLowerCase()) {
         this.TYPE = type;
+    }
+
+    equal(other) {
+        return other instanceof this.constructor
     }
 };
 
@@ -850,17 +870,41 @@ var ContentOnlyNode = class ContentOnlyNode extends ASTNode {
         super();
         this.content = content;
     }
+    equal(other) {
+        if (super.equal(other)) {
+            if (this.content === WILD || other.content === WILD) {
+                return true;
+            }
+            return this.content == other.content;
+        }
+        return false;
+    }
 };
 
 var ArgsNode = class ArgsNode extends ASTNode {
-    // a node that has this.ags as a property
-    constructor(args) {
+    // a node that has this.args as a property
+    constructor(args, braces = {open: "[", close: "]"}) {
         super();
         this.args = args;
+        this.braces = braces;
+    }
+    get openBrace() {
+        let brace = (this.braces || {})['open']
+        if (typeof brace === "undefined") {
+            return ""
+        }
+        return brace
+    }
+    get closeBrace() {
+        let brace = (this.braces || {})['close']
+        if (typeof brace === "undefined") {
+            return ""
+        }
+        return brace
     }
     get argsString() {
         if (typeof this.args !== "undefined") {
-            return "[" + this.args + "]";
+            return "" + this.openBrace + this.args + this.closeBrace;
         }
         return "";
     }
@@ -894,12 +938,22 @@ var Environment = class Environment extends ArgsNode {
 };
 
 var Macro = class Macro extends ArgsNode {
-    constructor(name, args) {
+    // Macros can have args (things in []) and params (anything that follows the macro and should
+    // be interpreted as parameters that it might manipulate, e.g. the R in "\mathbb R")
+    constructor(name, args, params = new ASTNodeList) {
         super(args);
         this.content = name;
+        this.params = params;
     }
     toString() {
-        return ESCAPE + this.content + this.argsString;
+        return ESCAPE + this.content + this.argsString + this.params;
+    }
+    equal(other) {
+        // shorthand for comparing with macros
+        if (type(other) === "string" && other.charAt(0) === "\\") {
+            return this.equal(new Macro(other.slice(1)))
+        }
+        return super.equal(other)
     }
 };
 
@@ -1094,6 +1148,7 @@ function ASTannotate(ast, parent, next, previous) {
     ast.previous = previous;
 
     switch (ast.TYPE) {
+        case "parblock":
         case "nodelist":
             for (let i = 0; i < ast.length; i++) {
                 previous = i === 0 ? null : ast[i - 1];
@@ -1112,6 +1167,7 @@ function ASTannotate(ast, parent, next, previous) {
             break;
         case "macro":
             ASTannotate(ast.args, ast);
+            ASTannotate(ast.params, ast);
             break;
         case "environment":
             ASTannotate(ast.content, ast);
@@ -1131,6 +1187,7 @@ function ASTannotate(ast, parent, next, previous) {
 module.exports = {
     nodeTypes: {
         ASTNodeList,
+        ASTParBlock,
         ASTNode,
         ContentOnlyNode,
         ArgsNode,
@@ -1151,6 +1208,7 @@ module.exports = {
         StringNode,
         ArgList
     },
+    WILD,
     PEGtoAST,
     ASTannotate
 };
@@ -1180,7 +1238,8 @@ const {
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
-    strToAST
+    strToAST,
+    parseParBlocks
 } = __webpack_require__(19)
 
 
@@ -1209,8 +1268,11 @@ function prettierPrint(str, opts) {
         parsed = parse(str);
     }
     ASTremoveExcessSpace(parsed);
-    ASTattachArgs(parsed)
-    return formatterPrettier.prettierPrintDocToString(parsed.toPrettierDoc(), opts).formatted;
+    ASTattachArgs(parsed);
+    //parsed = parseParBlocks(parsed);
+    window.parsed = parsed;
+    window.ppb = parseParBlocks
+    return formatterPrettier.prettierPrintDocToString(parsed.toPrettierDoc({root: true}), opts).formatted;
 }
 
 module.exports = formatterPrettier
@@ -1245,6 +1307,7 @@ const prettierNormalizeOptions = __webpack_require__(3).normalize;
 const latexAst = __webpack_require__(4);
 const {
     ASTNodeList,
+    ASTParBlock,
     ASTNode,
     ContentOnlyNode,
     ArgsNode,
@@ -1269,20 +1332,37 @@ const {
 const {
     ASTattachArgs,
     gobbleArgsAtMacro,
+    gobbleParamsAtMacro,
     cmpStringNode,
     ASTremoveExcessSpace,
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
     strToAST,
-    splitTabular
+    splitTabular,
+    SPECIAL_MACROS,
+    makeMatchableNode,
+    parseParBlocks
 } = __webpack_require__(19);
 
 /*
  * Add toPrettierDoc method to each class
  */
 
-ASTNodeList.prototype.toPrettierDoc = function() {
+ASTNodeList.prototype.toPrettierDoc = function(args={root: false}) {
+    if (args.root == true) {
+        // we are a root node
+        let pars = parseParBlocks(this);
+        let doc = [], prev = null, par = new Parbreak
+        // construct the Prettier doc
+        for (let node of pars) {
+            doc.push(node.toPrettierDoc({inParBlock: true}))
+            doc.push(PRETTIER.hardline)
+        }
+        doc.pop()
+        return PRETTIER.concat(doc)
+    }
+
     return PRETTIER.concat([
         PRETTIER.fill([].concat.apply([], this.map(x => x.toPrettierDoc())))
     ]);
@@ -1321,7 +1401,6 @@ Environment.prototype.toPrettierDoc = function() {
             );
 
             return PRETTIER.concat([
-                PRETTIER.hardline,
                 this.envStart,
                 callSuper(this, "toPrettierDoc", [], Environment),
                 PRETTIER.indent(PRETTIER.concat([PRETTIER.hardline, ...items])),
@@ -1378,40 +1457,102 @@ Environment.prototype.toPrettierDoc = function() {
                 this.envEnd
             ]);
             break;
+        case "tikz":
+        case "axis":
+        case "scope":
+            var args = ""
+            if (typeof this.args !== "undefined") {
+                args = _commaListGroupToPrettier(this.args, "[", "]")
+            }
+            return PRETTIER.concat([
+                PRETTIER.hardline,
+                this.envStart,
+                args,
+                PRETTIER.indent(
+                    PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
+                ),
+                PRETTIER.hardline,
+                this.envEnd
+            ]);
+            break;
+
     }
 
+    var comment = PRETTIER.concat([]);
+    var content = this.content;
+    if (typeof content[0] !== "undefined" && content[0].TYPE === "comment") {
+        comment = content[0].toPrettierDoc()
+        content = content.slice(1)
+    }
     return PRETTIER.concat([
-        PRETTIER.hardline,
         this.envStart,
-        callSuper(this, "toPrettierDoc", [], Environment),
+        callSuper(this, "toPrettierDoc", [], Environment), comment,
         PRETTIER.indent(
-            PRETTIER.concat([PRETTIER.hardline, this.content.toPrettierDoc()])
+            PRETTIER.concat([PRETTIER.hardline, content.toPrettierDoc({root: true})])
         ),
         PRETTIER.hardline,
         this.envEnd
     ]);
-    return "" + this;
 };
 
 Macro.prototype.toPrettierDoc = function() {
     let start = ESCAPE + this.content;
     // there are some special macros that
     // need special formatting
-    switch (this.content) {
-        case "usepackage":
-        case "newcommand":
-            return PRETTIER.concat([PRETTIER.hardline, start]);
-            break;
-        case "section":
-        case "subsection":
-        case "subsubsection":
-            return PRETTIER.concat([PRETTIER.hardline, start]);
-            break;
+    //switch (this.content) {
+    //    case "usepackage":
+    //    case "newcommand":
+    //        return PRETTIER.concat([PRETTIER.hardline, start]);
+    //        break;
+    //    case "section":
+    //    case "subsection":
+    //    case "subsubsection":
+    //        return PRETTIER.concat([PRETTIER.hardline, start]);
+    //        break;
+    //}
+    if (this.params.length === 0) {
+        return start + this.argsString;
     }
-    return start + this.argsString;
+    
+    if (SPECIAL_MACROS.oneParam.has(start)) {
+        // we should remove all spaces from the params and
+        // wrap it in a group.
+        var params = this.params.filter( a => isSpaceOrPar(a) ? false : true );
+        if (typeof params[0] !== "undefined" && params[0].TYPE !== "group") {
+            params = new ASTNodeList(new Group(params));
+        }
+
+        // some special macros, we want to print their args differently
+        switch (start) {
+            case "\\usetikzlibrary":
+            case "\\pgfkeys":
+            case "\\pgfplotsset":
+            case "\\tikzset":
+                var paramsPrettier = _commaListGroupToPrettier(params[0])
+                return PRETTIER.concat([start + this.argsString, paramsPrettier]);
+        }
+        return PRETTIER.concat([start + this.argsString, params.toPrettierDoc()]);
+    }
+    if (SPECIAL_MACROS.tikzCommand.has(start)) {
+        // we're a tikz command inside a tikz environment
+        
+        // make sure there is one space before the params start
+        // and no spaces before the ";"
+        var params = this.params;
+        var terminator = params.pop();
+        params = trimWhitespace(params);
+        params.push(terminator);
+        params.unshift(new Whitespace);
+        return PRETTIER.concat([start + this.argsString, PRETTIER.indent(this.params.toPrettierDoc())])
+    }
+
+    return PRETTIER.concat([start + this.argsString, this.params.toPrettierDoc()]);
 };
 
-Parbreak.prototype.toPrettierDoc = function() {
+Parbreak.prototype.toPrettierDoc = function(args={inParBlock: false}) {
+    if (args.inParBlock) {
+        return ""
+    }
     return PRETTIER.concat([PRETTIER.hardline, PRETTIER.hardline]);
 };
 
@@ -1479,7 +1620,7 @@ CommentEnv.prototype.toPrettierDoc = Verbatim.prototype.toPrettierDoc;
 
 CommentNode.prototype.toPrettierDoc = function() {
     if (this.sameline) {
-        return PRETTIER.concat(["%", "" + this.content, PRETTIER.hardline]);
+        return PRETTIER.concat([PRETTIER.lineSuffix("%" + this.content), PRETTIER.hardline])
     }
     return PRETTIER.concat([
         PRETTIER.hardline,
@@ -1551,6 +1692,29 @@ function _enumerateItemToPrettier(i) {
     ]);
 }
 
+function _commaListGroupToPrettier(group, left="{", right="}") {
+    // take a group whose items are separated by commas
+    // and format them in prettier syntax
+
+    var [arr, toks] = splitOn(group.content, ',');
+    arr = arr.map(trimWhitespace);
+    var items = [PRETTIER.indent(arr[0].toPrettierDoc())]
+    for (let a of arr.slice(1)) {
+        items = items.concat([",", PRETTIER.line])
+        items = items.concat([PRETTIER.indent(a.toPrettierDoc())])
+    }
+    return PRETTIER.group(PRETTIER.concat([left,
+        PRETTIER.indent(PRETTIER.concat([
+            PRETTIER.softline,
+            PRETTIER.concat(items),
+        ])),
+        PRETTIER.softline,
+        right
+    ]
+    ))
+
+}
+
 function splitOn(arr, tok) {
     // splits `arr` based on `tok`.
     // `tok` can be a string or an ASTNode
@@ -1609,99 +1773,6 @@ function arrayJoin(arr, tok) {
     }
     ret.pop();
     return ret;
-}
-
-function transpose(arr) {
-    // get the transpose of an array of arrays
-
-    var copy = arr.map(x => {
-        return [...x];
-    });
-    var transpose = [];
-    for (let i = 0; i < (arr[0] || []).length; i++) {
-        let tmp = [];
-        for (let r of copy) {
-            let elm = r.shift();
-            if (typeof elm !== "undefined") {
-                tmp.push(elm);
-            }
-        }
-        transpose.push(tmp);
-    }
-
-    return transpose;
-}
-
-function padTable(
-    rows,
-    colWidths,
-    rowSeps,
-    colSeps,
-    align = "left",
-    padColSep = true
-) {
-    // take in a table and insert padding to align all elements
-
-    function getSpace(len = 1) {
-        return new StringNode(" ".repeat(len));
-    }
-    // set the proper alignment function
-    var alignFunc = (a, width) => {
-        return new ASTNodeList(a, getSpace(width - ("" + a).length));
-    };
-    if (align === "right") {
-        alignFunc = (a, width) => {
-            return new ASTNodeList(getSpace(width - ("" + a).length), a);
-        };
-    } else if (align === "center" || align === "middle") {
-        alignFunc = (a, width) => {
-            var padd = width - ("" + a).length;
-            var left = Math.floor(padd / 2);
-            var right = padd - left;
-            return new ASTNodeList(getSpace(left), a, getSpace(right));
-        };
-    }
-
-    // align the columns
-
-    rows = rows.map(y => {
-        return y.map((x, i) => {
-            return alignFunc(x, colWidths[i]);
-        });
-    });
-
-    if (padColSep) {
-        colSeps = colSeps.map(x => {
-            return x.map(y => {
-                return new ASTNodeList(getSpace(1), y, getSpace(1));
-            });
-        });
-    }
-
-    rows = rows.map((row, i) => {
-        if (row.length === 0) {
-            return new ASTNodeList();
-        }
-        var seps = [...colSeps[i]];
-        var ret = new ASTNodeList(row.shift());
-        while (row.length > 0) {
-            ret.push(seps.shift());
-            ret.push(row.shift());
-        }
-        return ret;
-    });
-
-    //// add some newlines after the row separators
-    //rowSeps = rowSeps.map(x => {return new ASTNodeList(x, new Whitespace())})
-
-    // add the rowSeps to the end of each row
-    rows.map((x, i) => {
-        if (typeof rowSeps[i] !== "undefined") {
-            x.push(rowSeps[i]);
-        }
-    });
-    //var mat = joinOn(rows, rowSeps)
-    return rows;
 }
 
 module.exports.prettierNormalizeOptions = prettierNormalizeOptions;
@@ -3062,6 +3133,7 @@ const { type, ESCAPE } = __webpack_require__(0);
 const latexAst = __webpack_require__(4);
 const {
     ASTNodeList,
+    ASTParBlock,
     ASTNode,
     ContentOnlyNode,
     ArgsNode,
@@ -3082,6 +3154,75 @@ const {
     StringNode,
     ArgList
 } = latexAst.nodeTypes;
+const WILD = latexAst.WILD;
+
+window.nodeTypes = latexAst.nodeTypes
+
+const SPECIAL_MACROS = {
+    oneParam: new Set([
+                "\\mathbb",
+                "\\mathrm",
+                "\\textrm",
+                "\\textsf",
+                "\\texttt",
+                "\\textit",
+                "\\textsl",
+                "\\textsc",
+                "\\textbf",
+                "\\textmd",
+                "\\textlf",
+                "\\emph",
+                "\\textup",
+                "\\textnormal",
+                "\\uppercase",
+                "\\footnote",
+                "\\pgfkeys",
+                "\\tikzset",
+                "\\pgfplotsset",
+                "\\usetikzlibrary"
+    ]),
+    twoParam: new Set([
+        "\\frac",
+    ]),
+    tikzCommand: new Set([
+        "\\coordinate",
+        "\\draw",
+        "\\fill",
+        "\\path",
+        "\\node",
+        "\\graph",
+        "\\shade",
+        "\\clip",
+        "\\calendar",
+        "\\scoped",
+        "\\matrix",
+        "\\addplot",
+        "\\spy",
+        "\\pattern",
+        "\\filldraw",
+        "\\shadedraw",
+        "\\useasboundingbox",
+    ]),
+    lineBreakers: [
+        new Macro("documentclass"),
+        new Macro("usepackage"),
+        new Macro("geometry"),
+        new Macro("pagestyle"),
+        new Macro("section"),
+        new Macro("usetikzlibrary"),
+        new Macro("tikzset"),
+        new Macro("usepgfplotslibrary"),
+        new Macro("pgfplotsset"),
+        new Macro("newcommand"),
+        new Macro("renewcommand"),
+        new Macro("includegraphics"),
+        new Parbreak(),
+        new Macro(""),
+        new Macro(""),
+        new Environment(WILD),
+    ]
+
+}
 
 function strToAST(tok) {
     // inputs a string or macro (string starting with \
@@ -3106,6 +3247,24 @@ function isMathEnvironment(x) {
         x.TYPE === "mathenv"
     ) {
         return true;
+    }
+    return false;
+}
+
+function isTikzEnvironment(x, inTikz=false) {
+    // determine if we're in a tikz environment. inTikz determines
+    // whether we are entering a sub-environment from a tikz one
+    if (typeof x === "undefined") {
+        return false;
+    }
+    if (
+        x.TYPE === "environment"    ) {
+        var env = ""+x.env;
+        if ( env === "tikzpicture" ){
+            return true;
+        } else if (inTikz && (new Set(["scope", "axis"])).has(env)) {
+            return true;
+        }
     }
     return false;
 }
@@ -3199,8 +3358,18 @@ function cmpStringNode(node, cmp, substr = null) {
     // if the string starts with that, if `substr='end'`
     // returns true if it ends with it.
     // If you're comparing with a macro, `cmp` must start with \
+    //
+    // You can also pass in a set of items for cmp. In this case,
+    // substr won't work.
     if (typeof node === "undefined") {
         return false;
+    }
+    if (type(cmp) === "set") {
+        var content = node.content;
+        if (node.TYPE === "macro") {
+            content = "\\" + content;
+        }
+        return cmp.has(content);
     }
     switch (node.TYPE) {
         case "macro":
@@ -3222,6 +3391,54 @@ function cmpStringNode(node, cmp, substr = null) {
             }
     }
     return false;
+}
+
+function gobbleParamsAtMacro(stream, pos = 0, stop = 1) {
+    // look for macro params occuring after position `pos`.
+    // gobble them and put them in the args of the macro.
+    // This operation is destructive.
+    //
+    // If `stop` is a number, only gobble `stop` number of
+    // non-whitespace items. If `stop` is a string, gobble
+    // until that string is encountered.
+
+    var origPos = pos;
+    var openPos = null,
+        closePos = null;
+    pos++;
+
+    if (type(stop) === "string") {
+        openPos = pos;
+        // we don't gobble whitespace in this case. Just look
+        // for a node that matches the termination string
+        while (!cmpStringNode(stream[pos], stop) && pos < stream.length) {
+            pos++;
+        }
+        closePos = pos;
+        
+        var removed = stream.splice(openPos, closePos - openPos + 1);
+        stream[origPos].params = removed;
+        return stream;
+    }
+
+    // we need to eat a certain number of non-whitespace 
+    // items
+    openPos = pos;
+    while (stop > 0 && pos < stream.length) {
+        if ((stream[pos] || "").TYPE !== "whitespace") {
+            stop--;
+        }
+        pos++;
+    }
+    closePos = pos;
+    var removed = stream.splice(openPos, closePos - openPos);
+    // remove any whitespace
+    // XXX if we do this, "\mathbb a" becomes "\mathbba"; We don't want that,
+    // so leave it up to the pretty printer to remove space
+    //removed = removed.filter( a => (a || "").TYPE === "whitespace" ? false : true );
+    stream[origPos].params = removed;
+
+    return stream;
 }
 
 function gobbleArgsAtMacro(stream, pos = 0) {
@@ -3297,7 +3514,7 @@ function ASTattachArgs(ast, context = {}) {
                 gobbleArgsAtMacro(ast, i);
             }
 
-            // attach optional arguments to \\ macro
+            // attach optional arguments to \item macro
             if (cmpStringNode(ast[i], "\\item")) {
                 gobbleArgsAtMacro(ast, i);
             }
@@ -3306,6 +3523,23 @@ function ASTattachArgs(ast, context = {}) {
             if (context.math && cmpStringNode(ast[i], "\\cr")) {
                 ast[i] = new Macro("\\");
             }
+
+            // attach params to "\mathbb" and friends
+            if (cmpStringNode(ast[i], SPECIAL_MACROS.oneParam)) {
+                gobbleParamsAtMacro(ast, i, 1);
+            }
+            
+            // attach params to "\frac" and friends
+            if (cmpStringNode(ast[i], SPECIAL_MACROS.twoParam)) {
+                gobbleParamsAtMacro(ast, i, 2);
+            }
+            
+            // process the tikz commands
+            if (context.tikz && cmpStringNode(ast[i], SPECIAL_MACROS.tikzCommand)) {
+                gobbleArgsAtMacro(ast, i);
+                gobbleParamsAtMacro(ast, i, ";");
+            }
+
         }
     } else if (ast.content) {
         if (
@@ -3316,7 +3550,8 @@ function ASTattachArgs(ast, context = {}) {
         ) {
             context = {
                 immediate: ast,
-                math: isMathEnvironment(ast) || context.math
+                math: isMathEnvironment(ast) || context.math, // once we enter a math environment, we won't leave (XXX invalid assumption...)
+                tikz: isTikzEnvironment(ast, context.tikz)
             };
         }
         ASTattachArgs(ast.content, context);
@@ -3392,17 +3627,63 @@ function splitTabular(ast, colSep=["&"], rowSep=["\\\\", "\\hline"]) {
 
 }
 
-window.ft = splitTabular
+function makeMatchableNode(node) {
+    // returns a new node of the same type that 
+    // will match any other node of the same type
+    let ret = Object.getPrototypeOf(node);
+    ret = new (ret.constructor)(WILD);
+    return ret
+}
+
+function parseParBlocks(nodes) {
+    // parses a list and chunks it into blocks that should be printed on their own line.
+    if (type(nodes) !== "array") {
+        return nodes;
+    }
+
+    var ret = new ASTNodeList;
+    var par = new ASTParBlock;
+    for (var node of nodes) {
+        if (SPECIAL_MACROS.lineBreakers.some(x => x.equal(node))) {
+            // if we encountered a macro on which we should linebrake,
+            // start a new ASTParBlock
+            if (par.length > 0) {
+                par.parent = node.parent
+                ret.push(par);
+                par = new ASTParBlock;
+            }
+        }
+        // Parbreaks should be inserted on their own, not in a ParBlock
+        // it is safe to do this here because Parbreak triggers
+        // the creation of a new ParBlock.
+        if (node.equal(new Parbreak)) {
+            ret.push(node);
+        } else {
+            par.push(node)
+        }
+    }
+    if (par.length > 0) {
+        par.parent = node.parent
+        ret.push(par)
+    }
+    
+    return ret
+}
+
 module.exports = {
     ASTattachArgs,
     gobbleArgsAtMacro,
+    gobbleParamsAtMacro,
     cmpStringNode,
     ASTremoveExcessSpace,
     trimWhitespace,
     isSpaceOrPar,
     isMathEnvironment,
     strToAST,
-    splitTabular
+    splitTabular,
+    SPECIAL_MACROS,
+    makeMatchableNode,
+    parseParBlocks
 };
 
 
@@ -4020,82 +4301,85 @@ module.exports = /*
                             if (s0 === peg$FAILED) {
                               s0 = peg$parsewhitespace();
                               if (s0 === peg$FAILED) {
-                                s0 = peg$currPos;
-                                s1 = [];
-                                s2 = peg$currPos;
-                                s3 = peg$currPos;
-                                peg$silentFails++;
-                                s4 = peg$parsenonchar_token();
-                                peg$silentFails--;
-                                if (s4 === peg$FAILED) {
-                                  s3 = void 0;
-                                } else {
-                                  peg$currPos = s3;
-                                  s3 = peg$FAILED;
-                                }
-                                if (s3 !== peg$FAILED) {
-                                  if (input.length > peg$currPos) {
-                                    s4 = input.charAt(peg$currPos);
-                                    peg$currPos++;
+                                s0 = peg$parsepunctuation();
+                                if (s0 === peg$FAILED) {
+                                  s0 = peg$currPos;
+                                  s1 = [];
+                                  s2 = peg$currPos;
+                                  s3 = peg$currPos;
+                                  peg$silentFails++;
+                                  s4 = peg$parsenonchar_token();
+                                  peg$silentFails--;
+                                  if (s4 === peg$FAILED) {
+                                    s3 = void 0;
                                   } else {
-                                    s4 = peg$FAILED;
-                                    if (peg$silentFails === 0) { peg$fail(peg$c5); }
+                                    peg$currPos = s3;
+                                    s3 = peg$FAILED;
                                   }
-                                  if (s4 !== peg$FAILED) {
-                                    peg$savedPos = s2;
-                                    s3 = peg$c6(s4);
-                                    s2 = s3;
-                                  } else {
-                                    peg$currPos = s2;
-                                    s2 = peg$FAILED;
-                                  }
-                                } else {
-                                  peg$currPos = s2;
-                                  s2 = peg$FAILED;
-                                }
-                                if (s2 !== peg$FAILED) {
-                                  while (s2 !== peg$FAILED) {
-                                    s1.push(s2);
-                                    s2 = peg$currPos;
-                                    s3 = peg$currPos;
-                                    peg$silentFails++;
-                                    s4 = peg$parsenonchar_token();
-                                    peg$silentFails--;
-                                    if (s4 === peg$FAILED) {
-                                      s3 = void 0;
+                                  if (s3 !== peg$FAILED) {
+                                    if (input.length > peg$currPos) {
+                                      s4 = input.charAt(peg$currPos);
+                                      peg$currPos++;
                                     } else {
-                                      peg$currPos = s3;
-                                      s3 = peg$FAILED;
+                                      s4 = peg$FAILED;
+                                      if (peg$silentFails === 0) { peg$fail(peg$c5); }
                                     }
-                                    if (s3 !== peg$FAILED) {
-                                      if (input.length > peg$currPos) {
-                                        s4 = input.charAt(peg$currPos);
-                                        peg$currPos++;
-                                      } else {
-                                        s4 = peg$FAILED;
-                                        if (peg$silentFails === 0) { peg$fail(peg$c5); }
-                                      }
-                                      if (s4 !== peg$FAILED) {
-                                        peg$savedPos = s2;
-                                        s3 = peg$c6(s4);
-                                        s2 = s3;
-                                      } else {
-                                        peg$currPos = s2;
-                                        s2 = peg$FAILED;
-                                      }
+                                    if (s4 !== peg$FAILED) {
+                                      peg$savedPos = s2;
+                                      s3 = peg$c6(s4);
+                                      s2 = s3;
                                     } else {
                                       peg$currPos = s2;
                                       s2 = peg$FAILED;
                                     }
+                                  } else {
+                                    peg$currPos = s2;
+                                    s2 = peg$FAILED;
                                   }
-                                } else {
-                                  s1 = peg$FAILED;
+                                  if (s2 !== peg$FAILED) {
+                                    while (s2 !== peg$FAILED) {
+                                      s1.push(s2);
+                                      s2 = peg$currPos;
+                                      s3 = peg$currPos;
+                                      peg$silentFails++;
+                                      s4 = peg$parsenonchar_token();
+                                      peg$silentFails--;
+                                      if (s4 === peg$FAILED) {
+                                        s3 = void 0;
+                                      } else {
+                                        peg$currPos = s3;
+                                        s3 = peg$FAILED;
+                                      }
+                                      if (s3 !== peg$FAILED) {
+                                        if (input.length > peg$currPos) {
+                                          s4 = input.charAt(peg$currPos);
+                                          peg$currPos++;
+                                        } else {
+                                          s4 = peg$FAILED;
+                                          if (peg$silentFails === 0) { peg$fail(peg$c5); }
+                                        }
+                                        if (s4 !== peg$FAILED) {
+                                          peg$savedPos = s2;
+                                          s3 = peg$c6(s4);
+                                          s2 = s3;
+                                        } else {
+                                          peg$currPos = s2;
+                                          s2 = peg$FAILED;
+                                        }
+                                      } else {
+                                        peg$currPos = s2;
+                                        s2 = peg$FAILED;
+                                      }
+                                    }
+                                  } else {
+                                    s1 = peg$FAILED;
+                                  }
+                                  if (s1 !== peg$FAILED) {
+                                    peg$savedPos = s0;
+                                    s1 = peg$c7(s1);
+                                  }
+                                  s0 = s1;
                                 }
-                                if (s1 !== peg$FAILED) {
-                                  peg$savedPos = s0;
-                                  s1 = peg$c7(s1);
-                                }
-                                s0 = s1;
                               }
                             }
                           }
@@ -4506,118 +4790,121 @@ module.exports = /*
                             if (s0 === peg$FAILED) {
                               s0 = peg$parsewhitespace();
                               if (s0 === peg$FAILED) {
-                                s0 = peg$currPos;
-                                s1 = [];
-                                s2 = peg$currPos;
-                                s3 = peg$currPos;
-                                peg$silentFails++;
-                                s4 = peg$parsenonchar_token();
-                                if (s4 === peg$FAILED) {
-                                  if (input.charCodeAt(peg$currPos) === 44) {
-                                    s4 = peg$c12;
-                                    peg$currPos++;
-                                  } else {
-                                    s4 = peg$FAILED;
-                                    if (peg$silentFails === 0) { peg$fail(peg$c13); }
-                                  }
+                                s0 = peg$parsepunctuation();
+                                if (s0 === peg$FAILED) {
+                                  s0 = peg$currPos;
+                                  s1 = [];
+                                  s2 = peg$currPos;
+                                  s3 = peg$currPos;
+                                  peg$silentFails++;
+                                  s4 = peg$parsenonchar_token();
                                   if (s4 === peg$FAILED) {
-                                    if (input.charCodeAt(peg$currPos) === 93) {
-                                      s4 = peg$c14;
+                                    if (input.charCodeAt(peg$currPos) === 44) {
+                                      s4 = peg$c12;
                                       peg$currPos++;
                                     } else {
                                       s4 = peg$FAILED;
-                                      if (peg$silentFails === 0) { peg$fail(peg$c15); }
+                                      if (peg$silentFails === 0) { peg$fail(peg$c13); }
                                     }
-                                  }
-                                }
-                                peg$silentFails--;
-                                if (s4 === peg$FAILED) {
-                                  s3 = void 0;
-                                } else {
-                                  peg$currPos = s3;
-                                  s3 = peg$FAILED;
-                                }
-                                if (s3 !== peg$FAILED) {
-                                  if (input.length > peg$currPos) {
-                                    s4 = input.charAt(peg$currPos);
-                                    peg$currPos++;
-                                  } else {
-                                    s4 = peg$FAILED;
-                                    if (peg$silentFails === 0) { peg$fail(peg$c5); }
-                                  }
-                                  if (s4 !== peg$FAILED) {
-                                    peg$savedPos = s2;
-                                    s3 = peg$c6(s4);
-                                    s2 = s3;
-                                  } else {
-                                    peg$currPos = s2;
-                                    s2 = peg$FAILED;
-                                  }
-                                } else {
-                                  peg$currPos = s2;
-                                  s2 = peg$FAILED;
-                                }
-                                if (s2 !== peg$FAILED) {
-                                  while (s2 !== peg$FAILED) {
-                                    s1.push(s2);
-                                    s2 = peg$currPos;
-                                    s3 = peg$currPos;
-                                    peg$silentFails++;
-                                    s4 = peg$parsenonchar_token();
                                     if (s4 === peg$FAILED) {
-                                      if (input.charCodeAt(peg$currPos) === 44) {
-                                        s4 = peg$c12;
+                                      if (input.charCodeAt(peg$currPos) === 93) {
+                                        s4 = peg$c14;
                                         peg$currPos++;
                                       } else {
                                         s4 = peg$FAILED;
-                                        if (peg$silentFails === 0) { peg$fail(peg$c13); }
-                                      }
-                                      if (s4 === peg$FAILED) {
-                                        if (input.charCodeAt(peg$currPos) === 93) {
-                                          s4 = peg$c14;
-                                          peg$currPos++;
-                                        } else {
-                                          s4 = peg$FAILED;
-                                          if (peg$silentFails === 0) { peg$fail(peg$c15); }
-                                        }
+                                        if (peg$silentFails === 0) { peg$fail(peg$c15); }
                                       }
                                     }
-                                    peg$silentFails--;
-                                    if (s4 === peg$FAILED) {
-                                      s3 = void 0;
+                                  }
+                                  peg$silentFails--;
+                                  if (s4 === peg$FAILED) {
+                                    s3 = void 0;
+                                  } else {
+                                    peg$currPos = s3;
+                                    s3 = peg$FAILED;
+                                  }
+                                  if (s3 !== peg$FAILED) {
+                                    if (input.length > peg$currPos) {
+                                      s4 = input.charAt(peg$currPos);
+                                      peg$currPos++;
                                     } else {
-                                      peg$currPos = s3;
-                                      s3 = peg$FAILED;
+                                      s4 = peg$FAILED;
+                                      if (peg$silentFails === 0) { peg$fail(peg$c5); }
                                     }
-                                    if (s3 !== peg$FAILED) {
-                                      if (input.length > peg$currPos) {
-                                        s4 = input.charAt(peg$currPos);
-                                        peg$currPos++;
-                                      } else {
-                                        s4 = peg$FAILED;
-                                        if (peg$silentFails === 0) { peg$fail(peg$c5); }
-                                      }
-                                      if (s4 !== peg$FAILED) {
-                                        peg$savedPos = s2;
-                                        s3 = peg$c6(s4);
-                                        s2 = s3;
-                                      } else {
-                                        peg$currPos = s2;
-                                        s2 = peg$FAILED;
-                                      }
+                                    if (s4 !== peg$FAILED) {
+                                      peg$savedPos = s2;
+                                      s3 = peg$c6(s4);
+                                      s2 = s3;
                                     } else {
                                       peg$currPos = s2;
                                       s2 = peg$FAILED;
                                     }
+                                  } else {
+                                    peg$currPos = s2;
+                                    s2 = peg$FAILED;
                                   }
-                                } else {
-                                  s1 = peg$FAILED;
+                                  if (s2 !== peg$FAILED) {
+                                    while (s2 !== peg$FAILED) {
+                                      s1.push(s2);
+                                      s2 = peg$currPos;
+                                      s3 = peg$currPos;
+                                      peg$silentFails++;
+                                      s4 = peg$parsenonchar_token();
+                                      if (s4 === peg$FAILED) {
+                                        if (input.charCodeAt(peg$currPos) === 44) {
+                                          s4 = peg$c12;
+                                          peg$currPos++;
+                                        } else {
+                                          s4 = peg$FAILED;
+                                          if (peg$silentFails === 0) { peg$fail(peg$c13); }
+                                        }
+                                        if (s4 === peg$FAILED) {
+                                          if (input.charCodeAt(peg$currPos) === 93) {
+                                            s4 = peg$c14;
+                                            peg$currPos++;
+                                          } else {
+                                            s4 = peg$FAILED;
+                                            if (peg$silentFails === 0) { peg$fail(peg$c15); }
+                                          }
+                                        }
+                                      }
+                                      peg$silentFails--;
+                                      if (s4 === peg$FAILED) {
+                                        s3 = void 0;
+                                      } else {
+                                        peg$currPos = s3;
+                                        s3 = peg$FAILED;
+                                      }
+                                      if (s3 !== peg$FAILED) {
+                                        if (input.length > peg$currPos) {
+                                          s4 = input.charAt(peg$currPos);
+                                          peg$currPos++;
+                                        } else {
+                                          s4 = peg$FAILED;
+                                          if (peg$silentFails === 0) { peg$fail(peg$c5); }
+                                        }
+                                        if (s4 !== peg$FAILED) {
+                                          peg$savedPos = s2;
+                                          s3 = peg$c6(s4);
+                                          s2 = s3;
+                                        } else {
+                                          peg$currPos = s2;
+                                          s2 = peg$FAILED;
+                                        }
+                                      } else {
+                                        peg$currPos = s2;
+                                        s2 = peg$FAILED;
+                                      }
+                                    }
+                                  } else {
+                                    s1 = peg$FAILED;
+                                  }
+                                  if (s1 !== peg$FAILED) {
+                                    peg$savedPos = s0;
+                                    s1 = peg$c7(s1);
+                                  }
+                                  s0 = s1;
                                 }
-                                if (s1 !== peg$FAILED) {
-                                  peg$savedPos = s0;
-                                  s1 = peg$c7(s1);
-                                }
-                                s0 = s1;
                               }
                             }
                           }
@@ -4674,7 +4961,10 @@ module.exports = /*
                           if (s0 === peg$FAILED) {
                             s0 = peg$parsesp();
                             if (s0 === peg$FAILED) {
-                              s0 = peg$parseEOF();
+                              s0 = peg$parsepunctuation();
+                              if (s0 === peg$FAILED) {
+                                s0 = peg$parseEOF();
+                              }
                             }
                           }
                         }
@@ -7340,7 +7630,9 @@ Macro.prototype.toTokens = function() {
                 start = [TOKENS.preferpar].concat(start);
                 break;
         }
-        return start.concat(callSuper(this, "toTokens", [], Macro));
+        // tokenize ourself with args, and then put in our `params`
+        var toks = start.concat(callSuper(this, "toTokens", [], Macro));
+        return toks.concat(this.params.toTokens());
 };
 
 Parbreak.prototype.toTokens = function() {
@@ -7398,9 +7690,9 @@ CommentEnv.prototype.toTokens = Verbatim.prototype.toTokens;
 
 CommentNode.prototype.toTokens = function() {
     if (this.sameline) {
-        return ["%", "" + this.content, TOKENS.newline];
+        return ["%" + this.content, TOKENS.newline];
     }
-    return [TOKENS.newline, "%", "" + this.content, TOKENS.newline];
+    return [TOKENS.newline, "%" + this.content, TOKENS.newline];
 };
 
 StringNode.prototype.toTokens = function() {
