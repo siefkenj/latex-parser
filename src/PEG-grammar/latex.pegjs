@@ -12,9 +12,9 @@ token "token"
   / macro
   / full_comment
   / group
-  / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {TYPE:"inlinemath", content: eq}}
+  / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {type:"inlinemath", content: eq}}
   / alignment_tab
-  / sp* nl sp* nl+ sp* {return {TYPE:"parbreak"}}
+  / parbreak
   / macro_parameter
   / superscript
   / subscript
@@ -24,6 +24,9 @@ token "token"
   / punctuation
   / x:(!nonchar_token x:. {return x})+ {return x.join("")}
 
+parbreak "parbreak"
+  = sp* nl sp* nl+ sp* {return {type:"parbreak"}}
+
 math_token "math token"
   = special_macro
   / macro
@@ -31,8 +34,8 @@ math_token "math token"
   / whitespace* x:group whitespace* {return x}
   / whitespace* x:alignment_tab whitespace* {return x}
   / whitespace* x:macro_parameter whitespace* {return x}
-  / whitespace* superscript whitespace* x:math_token {return {TYPE:"superscript", content:x}}
-  / whitespace* subscript whitespace* x:math_token {return {TYPE:"subscript", content:x}}
+  / whitespace* superscript whitespace* x:math_token {return {type:"superscript", content:x}}
+  / whitespace* subscript whitespace* x:math_token {return {type:"subscript", content:x}}
   / ignore
   / whitespace
   / .
@@ -42,9 +45,9 @@ args_token "args token"
   / macro
   / full_comment
   / group
-  / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {TYPE:"inlinemath", content: eq}}
+  / math_shift eq:(!math_shift t:math_token {return t})+ math_shift {return {type:"inlinemath", content: eq}}
   / alignment_tab
-  / sp* nl sp* nl+ sp* {return {TYPE:"parbreak"}}
+  / sp* nl sp* nl+ sp* {return {type:"parbreak"}}
   / macro_parameter
   / superscript
   / subscript
@@ -72,7 +75,7 @@ nonchar_token "nonchar token"
   / EOF
 
 whitespace "whitespace"
-  = (nl sp*/ sp+ nl sp* !nl/ sp+) {return {TYPE: "whitespace"}}
+  = (nl sp* / sp+ nl !comment sp* !nl / sp+) {return {type: "whitespace"}}
   
 number "number"
   = a:num+ "." b:num+ {return a.join("") + "." + b.join("")}
@@ -80,45 +83,69 @@ number "number"
   / a:num+ "." {return a.join("") + "."}
 
 special_macro "special macro" // for the special macros like \[ \] and \begin{} \end{} etc.
-  = escape "verb" e:. x:(!(end:. & {return end == e}) x:. {return x})* (end:. & {return end == e})  {return {TYPE:"verb", escape:e, content:x.join("")}}  // \verb|xxx|
-  / escape "begin{verbatim}" x:(!(escape "end{verbatim}") x:. {return x})* escape "end{verbatim}" {return {TYPE:"verbatim", content:x.join("")}}  // verbatim environment
-  / escape "begin{comment}" x:(!(escape "end{comment}") x:. {return x})* escape "end{comment}" {return {TYPE:"commentenv", content:x.join("")}}  // comment environment provided by \usepackage{verbatim}
-  / begin_display_math x:(!end_display_math x:math_token {return x})+ end_display_math {return {TYPE:"displaymath", content:x}}   //display math with \[\]
-  / begin_inline_math x:(!end_inline_math x:math_token {return x})+ end_inline_math {return {TYPE:"inlinemath", content:x}}       //inline math with \(\)
-  / math_shift math_shift x:(!(math_shift math_shift) x:math_token {return x})+ math_shift math_shift {return {TYPE:"displaymath", content:x}}   //display math with $$ $$
+  = escape env:("verb*" / "verb") e:. x:(!(end:. & {return end == e}) x:. {return x})* (end:. & {return end == e}) 
+      {
+        	return {type:"verb", env: env, escape:e, content:x.join("")}
+      }  // \verb|xxx| and \verb*|xxx|
+  / escape "begin{verbatim}" x:(!(escape "end{verbatim}") x:. {return x})* escape "end{verbatim}"
+      {
+        	return {type: "verbatim", env: "verbatim", content:x.join("")}
+      }  // verbatim environment
+  / escape "begin{verbatim*}" x:(!(escape "end{verbatim*}") x:. {return x})* escape "end{verbatim*}"
+      {
+        	return {type: "verbatim", env: "verbatim*", content:x.join("")}
+      }  // verbatim* environment
+  / escape "begin{comment}" x:(!(escape "end{comment}") x:. {return x})* escape "end{comment}"
+      {
+        	return {type: "commentenv", env: "comment", content: x.join("")}
+      }  // comment environment provided by \usepackage{verbatim}
+  / begin_display_math x:(!end_display_math x:math_token {return x})+ end_display_math
+      {
+        	return {type: "displaymath", content:x}
+      }   //display math with \[...\]
+  / begin_inline_math x:(!end_inline_math x:math_token {return x})+ end_inline_math
+      {
+        	return {type: "inlinemath", content:x}
+      }       //inline math with \(...\)
+  / math_shift math_shift x:(!(math_shift math_shift) x:math_token {return x})+ math_shift math_shift
+      {
+        	return {type: "displaymath", content:x}
+      }   //display math with $$ $$
   / math_environment
   / environment
   
   
 macro "macro" 
   = m:(escape n:char+ {return n.join("")}
-  / escape n:. {return n}) {return {TYPE:"macro", content:m}}
+  / escape n:. {return n}) {return {type:"macro", content:m}}
 
 group "group"
-  = begin_group x:(!end_group c:token {return c})* end_group {return {TYPE:"group", content:x}}
+  = begin_group x:(!end_group c:token {return c})* end_group {return {type:"group", content:x}}
 
 
 argument_list "argument list"
-  = whitespace* "[" body:(!"]" x:("," / args_token) {return x})* "]" {return {TYPE:"arglist", content:body}}
+  = whitespace* "[" body:(!"]" x:("," / args_token) {return x})* "]" {return {type: "argument", content: body, openMark: "[", closeMark: "]"}}
 
 
 environment "environment"
   = begin_env env:group args:argument_list?
   			  body:(!(end_env end_env:group & {return compare_env(env,end_env)}) x:token {return x})* 
-    end_env group {return {TYPE:"environment", env:env.content, args:args, content:body}}
+    end_env group {return {type:"environment", env:env.content, args:args, content:body}}
     
 math_environment "math environment"
   = begin_env begin_group env:math_env_name end_group
   			body: (!(end_env end_env:group & {console.log(env, end_env,  compare_env({content:[env]},end_env));return compare_env({content:[env]},end_env)}) x:math_token {return x})* 
-    end_env begin_group math_env_name end_group {return {TYPE:"mathenv", env:env, content:body}}
+    end_env begin_group math_env_name end_group {return {type:"mathenv", env:env, content:body}}
 
 
 math_group "math group"  // group that assumes you're in math mode.  If you use "\text{}" this isn't a good idea....
-  = begin_group x:(!end_group c:math_token {return c})* end_group {return {TYPE:"group", content:x}}
+  = begin_group x:(!end_group c:math_token {return c})* end_group {return {type:"group", content:x}}
 
 full_comment "full comment" 		// comment that detects whether it is at the end of a line or on a new line
-  = nl x:comment {return {TYPE:"comment", content:x, sameline:false}} 
-  / x:comment {return {TYPE:"comment", content:x, sameline:true}}
+  = nl x:comment_and_parbreak {return {type: "comment", content: x, sameline: false, suffixParbreak: true}}
+  / nl x:comment {return {type:"comment", content:x, sameline:false}}
+  / x:comment_and_parbreak {return {type: "comment", content: x, sameline: true, suffixParbreak: true}}
+  / x:comment {return {type:"comment", content:x, sameline:true}}
 
 
 begin_display_math = escape "["
@@ -161,7 +188,11 @@ sp          "whitespace"   =   [ \t]+ { return " "}// catcode 10
 char        "letter"       = c:[a-zA-Z]            // catcode 11
 num         "digit"        = n:[0-9]               // catcode 12 (other)
 punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]]   // catcode 12
-comment        = "%"  c:(!nl c:. {return c})* (nl / EOF) {return c.join("")}          // catcode 14, including the newline
+// catcode 14, including the newline
+comment_and_parbreak
+  = "%" c:(!nl c:. {return c})* &parbreak {return c.join("")} // parbreaks following a comment are preserved
+comment
+  = "%"  c:(!nl c:. {return c})* (nl sp*/ EOF) {return c.join("")} // if a comment is not followed by a parbreak, the newline is consumed
 
 EOF             = !.
 
