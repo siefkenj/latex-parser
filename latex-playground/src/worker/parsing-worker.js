@@ -1,5 +1,5 @@
 import * as Comlink from "comlink";
-import * as latexParser from "../parser-utils/latex";
+import * as latexParser from "../parser-utils/latex-parser";
 
 const obj = {
     format(texInput, options = {}) {
