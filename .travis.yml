@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+  - "8.12.0"
+cache:
+  directories:
+  - node_modules
+  - latex-playground/node_modules
+script:
+  - npm install && npm run build
+  - npm run playground
+after_failure: cat /home/travis/.npm/_logs/*-debug.log
+warnings_are_errors: false
+env:
+  CI=false
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $github_token
+  local_dir: latex-playground/build
+  on:
+    branch: master
