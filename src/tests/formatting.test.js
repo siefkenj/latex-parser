@@ -73,4 +73,57 @@ describe("Prettier tests", () => {
         //        console.log(TEX);
         //        console.log(formatted);
     });
+
+    it.only("Formats aligned environments", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{align}ab& c\\\\d&eee\\end{align}",
+                outStr:
+                    "\\begin{align}\n\tab & c   \\\\\n\td  & eee\n\\end{align}",
+            },
+            {
+                inStr: "\\begin{align}& c\\\\d&e\\end{align}",
+                outStr: "\\begin{align}\n\t  & c \\\\\n\td & e\n\\end{align}",
+            },
+            {
+                inStr: "\\begin{align}a&b\\\\[44pt]d&e\\\\xx&yy\\end{align}",
+                outStr:
+                    "\\begin{align}\n\ta  & b  \\\\[44pt]\n\td  & e  \\\\\n\txx & yy\n\\end{align}",
+            },
+            {
+                inStr: "\\begin{align}a\\\\\\hline bbb\\end{align}",
+                outStr:
+                    "\\begin{align}\n\ta   \\\\\n\t\\hline\n\tbbb\n\\end{align}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+
+        let ast; //= latexParser.parse("ab&c\\\\d&eee\\hline");
+        //let split = prettierPluginLatex.formatAlignedContent(ast);
+        //console.log(ast);
+        //console.log(split);
+
+        const TEX = "$a*\n\\begin{matrix}a\\\\ bbb\\end{matrix}*c$";
+        const parsed = latexParser.parse(TEX);
+        console.log("PARSED", parsed);
+        const formatted = Prettier.format(TEX, {
+            printWidth: 30,
+            useTabs: true,
+            parser: "latex-parser",
+            plugins: [prettierPluginLatex],
+        });
+        origLog("Raw print:", latexParser.printRaw(parsed));
+        origLog(`Formatted as: '${formatted}'`);
+        //console.log(TEX);
+        //console.log(formatted);
+    });
 });

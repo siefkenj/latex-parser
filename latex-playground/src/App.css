@@ -1,0 +1,150 @@
+html,
+body,
+#root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.App {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.options-bar {
+    position: relative;
+}
+.tex-section {
+    flex-grow: 1;
+    position: relative;
+}
+
+/* AST view */
+
+.ast-node {
+    margin: 1px;
+    padding: 1px;
+    background-color: #71caff36;
+    cursor: default;
+}
+.ast-env {
+    display: block;
+    margin-left: 1.5em;
+}
+.ast-comment {
+    white-space: pre;
+    font-family: monospace;
+}
+.ast-args-container,
+.ast-environment-container {
+    display: inline-block;
+}
+.ast-captioned {
+    display: inline-block;
+    border: 1px solid #ffffff00;
+    padding-bottom: 1px;
+}
+.ast-captioned:hover {
+    border: 1px dotted #7584ff;
+}
+.ast-captioned-caption {
+    overflow: hidden;
+    font-size: small;
+    color: purple;
+}
+.ast-control-symbol {
+    font-weight: bold;
+    font-size: small;
+    color: green;
+}
+.ast-verb {
+    white-space: pre;
+    font-family: monospace;
+}
+
+.CodeMirror {
+    height: auto;
+}
+.CodeMirror {
+    height: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.code-container {
+    background: rgb(246, 251, 255);
+    height: 100%;
+    position: relative;
+    overflow: auto;
+    display: flex;
+    flex-flow: row wrap;
+    flex: 1;
+}
+
+/* react-split-pane styling */
+.Resizer {
+    background: #000;
+    opacity: 0.2;
+    z-index: 1;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -moz-background-clip: padding;
+    -webkit-background-clip: padding;
+    background-clip: padding-box;
+    flex-shrink: 0;
+}
+
+.Resizer:hover {
+    -webkit-transition: all 2s ease;
+    transition: all 2s ease;
+}
+
+.Resizer.horizontal {
+    height: 11px;
+    margin: -5px 0;
+    border-top: 5px solid rgba(255, 255, 255, 0);
+    border-bottom: 5px solid rgba(255, 255, 255, 0);
+    cursor: row-resize;
+    width: 100%;
+}
+
+.Resizer.horizontal:hover {
+    border-top: 5px solid rgba(0, 0, 0, 0.5);
+    border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+}
+
+.Resizer.vertical {
+    width: 13px;
+    margin: 0 -5px;
+    border-left: 5px solid rgba(255, 255, 255, 0);
+    border-right: 5px solid rgba(255, 255, 255, 0);
+    cursor: col-resize;
+}
+
+.Resizer.vertical:hover {
+    border-left: 5px solid rgba(30, 83, 255, 0.5);
+    border-right: 5px solid rgba(30, 83, 255, 0.5);
+}
+.Resizer.disabled {
+    cursor: not-allowed;
+}
+.Resizer.disabled:hover {
+    border-color: transparent;
+}
+.Pane2 {
+    overflow: auto;
+}
+
+.editor {
+    box-sizing: border-box;
+    display: flex;
+    flex: 1 1 100%;
+    flex-basis: 100%;
+    position: relative;
+    border-bottom: 1px solid #ddd;
+}

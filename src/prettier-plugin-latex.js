@@ -1,29 +1,26 @@
 import Prettier from "prettier/standalone";
-import { parse, printRaw } from "./latex-parser";
-import { ReferenceMap, hasPreambleCode } from "./macro-utils";
+import { parse, printRaw } from "./libs/parser";
+import {
+    ReferenceMap,
+    hasPreambleCode,
+    splitTabular,
+} from "./libs/macro-utils";
 
 const ESCAPE = "\\";
 
 // Commands to build the prettier syntax tree
 const {
     concat,
-    group,
-    conditionalGroup,
+    //group,
     fill,
-    ifBreak,
-    breakParent,
-    join,
+    //ifBreak,
     line,
     softline,
     hardline,
-    literalline,
     lineSuffix,
     lineSuffixBoundary,
     indent,
-    dedent,
-    align,
-    markAsRoot,
-    dedentToRoot,
+    //markAsRoot,
 } = Prettier.doc.builders;
 
 /**
@@ -52,6 +49,97 @@ function joinWithSoftline(arr) {
         ret.push(nextNode);
     }
     return ret;
+}
+
+/**
+ * Formats the content of an aligned/tabular environment's content.
+ * Ensures the "&" delimiters all line up.
+ *
+ * @export
+ * @param {[object]} nodes
+ * @returns {{rows: [string], rowSeps: [object]}}
+ */
+export function formatAlignedContent(nodes) {
+    function getSpace(len = 1) {
+        return " ".repeat(len);
+    }
+    const { rows, rowSeps } = splitTabular(nodes);
+
+    // Get the widths of each column.
+    // Column widths will be the width of column contents plus the width
+    // of the separator. This way, even multi-character separators
+    // can be accommodated when rendering.
+    const renderedRows = rows.map(({ cells, seps }) => ({
+        cells: cells.map(printRaw),
+        seps: seps.map(printRaw),
+    }));
+    const numCols = Math.max(...rows.map(({ seps }) => seps.length + 1));
+    const colWidths = [];
+    for (let i = 0; i < numCols; i++) {
+        colWidths.push(
+            Math.max(
+                ...renderedRows.map(
+                    ({ cells, seps }) =>
+                        ((cells[i] || "") + (seps[i] || "")).length
+                )
+            )
+        );
+    }
+
+    const joinedRows = renderedRows.map(({ cells, seps }) => {
+        if (cells.length === 1 && cells[0] === "") {
+            return "";
+        }
+        let ret = "";
+        for (let i = 0; i < cells.length; i++) {
+            // There are at least as many cells as there are `seps`. Possibly one extra
+            const width = colWidths[i] - (seps[i] || "").length;
+
+            // Insert a space at the start so we don't run into the prior separator.
+            // We'll trim this off in the end, in case it's not needed.
+            ret +=
+                (i === 0 ? "" : " ") +
+                cells[i] +
+                getSpace(width - cells[i].length + 1) +
+                (seps[i] || "");
+        }
+        return ret;
+    });
+
+    return { rows: joinedRows, rowSeps };
+}
+
+/**
+ * Print a `.type === environment` node.
+ *
+ * @param {*} path
+ * @param {function} print
+ * @returns
+ */
+function printEnvironmentContent(path, print, mode) {
+    const node = path.getValue();
+
+    if (mode === "aligned") {
+        const { rows, rowSeps } = formatAlignedContent(node.content);
+        const content = [];
+        for (let i = 0; i < rows.length; i++) {
+            if (rowSeps[i]) {
+                content.push(rows[i]);
+                content.push(printRaw(rowSeps[i]));
+                content.push(hardline);
+            } else if (rows[i]) {
+                content.push(rows[i]);
+            }
+        }
+        // Make sure the last item is not a `hardline`.
+        if (content[content.length - 1] === hardline) {
+            content.pop();
+        }
+        return concat(content);
+    }
+
+    // By default, we just render the content
+    return path.call(print, "content");
 }
 
 /**
@@ -175,7 +263,6 @@ function printLatexAst(path, options, print) {
 
     // tmp variables
     let content = null;
-    let args = null;
     switch (node.type) {
         case "argument":
             return printArgument(path, print, "tree");
@@ -199,16 +286,22 @@ function printLatexAst(path, options, print) {
             var envEnd = ESCAPE + "end{" + env + "}";
             var argsString = node.args == null ? "" : printRaw(node.args);
 
-            // The environment might switch modes if an `inMathMode` property is supplied
-            if (node._renderInfo && node._renderInfo.inMathMode != null) {
+            var mode = "";
+            if (node._renderInfo != null && node._renderInfo.alignContent) {
+                mode = "aligned";
+            }
+            if (
+                node._renderInfo != null &&
+                node._renderInfo.inMathMode != null
+            ) {
+                // The environment might switch modes if an `inMathMode` property is supplied
                 const prevMathMode = options.inMathMode;
                 options.inMathMode = node._renderInfo.inMathMode;
-                content = path.call(print, "content");
+                content = printEnvironmentContent(path, print, mode);
                 options.inMathMode = prevMathMode;
             } else {
-                content = path.call(print, "content");
+                content = printEnvironmentContent(path, print, mode);
             }
-
             // If we are a startNode or we are preceded by a parskip,
             // we don't want a forced newline at the start.
             var startToken = [hardline];
@@ -222,8 +315,8 @@ function printLatexAst(path, options, print) {
             }
 
             if (node.content.length === 0) {
-            // If the environment has no content, we want to print an empty body,
-            // not a parskip
+                // If the environment has no content, we want to print an empty body,
+                // not a parskip
                 return concat(
                     startToken.concat([envStart, argsString, hardline, envEnd])
                 );
@@ -238,6 +331,7 @@ function printLatexAst(path, options, print) {
                     envEnd,
                 ])
             );
+
         case "displaymath":
             // use the `options` object to pass information about the current state
             // to the recursive call to `print`.

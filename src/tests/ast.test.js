@@ -1,7 +1,7 @@
 import util from "util";
 
-import * as latexParser from "../latex-parser";
-import * as macroUtils from "../macro-utils";
+import * as latexParser from "../libs/parser";
+import * as macroUtils from "../libs/macro-utils";
 
 /* eslint-env jest */
 
@@ -712,5 +712,59 @@ describe("AST tests", () => {
         expect(
             latexParser.printRaw(macroUtils.cleanEnumerateBody(ast, "xxx"))
         ).toEqual(outStr);
+    });
+
+    it("Splits tabular body", () => {
+        let ast = latexParser.parse("a&2\\\\[4pt]3&4");
+
+        expect(macroUtils.splitTabular(macroUtils.trimRenderInfo(ast))).toEqual(
+            {
+                rows: [
+                    {
+                        cells: [
+                            [
+                                {
+                                    type: "string",
+                                    content: "a",
+                                },
+                            ],
+                            [{ type: "string", content: "2" }],
+                        ],
+                        seps: [{ type: "string", content: "&" }],
+                    },
+                    {
+                        cells: [
+                            [{ type: "string", content: "3" }],
+                            [
+                                {
+                                    type: "string",
+                                    content: "4",
+                                },
+                            ],
+                        ],
+                        seps: [{ type: "string", content: "&" }],
+                    },
+                ],
+                rowSeps: [
+                    {
+                        type: "macro",
+                        content: "\\",
+                        args: [
+                            {
+                                type: "argument",
+                                content: [
+                                    {
+                                        type: "string",
+                                        content: "4pt",
+                                    },
+                                ],
+                                openMark: "[",
+                                closeMark: "]",
+                            },
+                        ],
+                    },
+                ],
+            }
+        );
     });
 });
