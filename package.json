@@ -25,7 +25,7 @@
         "test": "jest src/tests",
         "watch": "webpack --watch",
         "build": "mkdirp dist; webpack",
-        "playground": "npm run build; cp playground/index.html dist/; cp playground/css/playground.css dist/css/; cp playground/css/codemirror.css dist/css/; cp playground/codemirror.js dist/js/; cp playground/stex.js dist/js/; cp playground/split.min.js dist/js/; cp playground/cm-rulers.js dist/js/"
+        "playground": "cd latex-playground && npm install && npm run build"
     },
     "dependencies": {
         "prettier": "2.0.2"
