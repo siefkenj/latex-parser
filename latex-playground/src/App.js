@@ -1,6 +1,7 @@
 import React from "react";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/mode/stex/stex";
+import "codemirror/mode/javascript/javascript"
 import "codemirror/lib/codemirror.css";
 import SplitPane from "react-split-pane";
 import "codemirror/addon/display/rulers";
@@ -60,6 +61,14 @@ function App() {
     if (currDisplay === "ast") {
         rightPanel = <AstView ast={texParsed} />;
     }
+    if (currDisplay === "json") {
+        rightPanel = (
+            <CodeMirror
+                value={JSON.stringify(texParsed, null, 4)}
+                options={{ mode: "javascript" }}
+            />
+        );
+    }
 
     return (
         <div className="App">
@@ -76,6 +85,9 @@ function App() {
                 >
                     <option value="formatted">Formatted Code</option>
                     <option value="ast">AST (Abstract Syntax Tree)</option>
+                    <option value="json">
+                        JSON AST (Abstract Syntax Tree)
+                    </option>
                 </select>
             </div>
             <div className="tex-section">
