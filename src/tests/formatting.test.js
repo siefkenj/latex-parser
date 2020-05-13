@@ -133,6 +133,42 @@ describe("Prettier tests", () => {
         }
     });
 
+    it("prints math environments", () => {
+        const STRINGS = [
+            { inStr: "\\[x\\]", outStr: "\\[\n\tx\n\\]" },
+            { inStr: "\\[\\]", outStr: "\\[\n\\]" },
+            { inStr: "\\[ \\]", outStr: "\\[\n\\]" },
+            { inStr: "\\[\n\n\\]", outStr: "\\[\n\\]" },
+            { inStr: "\\[\n\nx\n\\]", outStr: "\\[\n\tx\n\\]" },
+            { inStr: "\\[%xx\n\\]", outStr: "\\[%xx\n\\]" },
+            { inStr: "\\[\n%xx\n\\]", outStr: "\\[\n\t%xx\n\\]" },
+            // Special case of empty inline math environment
+            { inStr: "$ $", outStr: "$ $" },
+            { inStr: "$\n$", outStr: "$ $" },
+            { inStr: "$x$", outStr: "$x$" },
+            { inStr: "$\nx$", outStr: "$x$" },
+            { inStr: "$ x \n$", outStr: "$x$" },
+            { inStr: "$%\n$", outStr: "$%\n$" },
+            { inStr: "$a%\n$", outStr: "$a%\n$" },
+            { inStr: "$\na%\n$", outStr: "$a%\n$" },
+            { inStr: "$%x\na%\n$", outStr: "$%x\na%\n$" },
+            { inStr: "%", outStr: "%" },
+            { inStr: "%", outStr: "%" },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
     it.skip("prints latex code", () => {
         //const TEX = String.raw`\hi 22, I am % cool !
         let TEX = "a%\n  b";

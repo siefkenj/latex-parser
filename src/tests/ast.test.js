@@ -510,6 +510,43 @@ describe("AST tests", () => {
         expect(macroUtils.trim(ast)).toEqual([]);
     });
 
+    it("trims whitespace/parbreaks in math environments", () => {
+        // Display math
+        let targetAst = macroUtils.trimRenderInfo(latexParser.parse("\\[\\]"));
+
+        let ast = macroUtils.trimRenderInfo(latexParser.parse("\\[ \\]"));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        ast = macroUtils.trimRenderInfo(latexParser.parse("\\[\n\\]"));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        // Inline math
+        ast = macroUtils.trimRenderInfo(latexParser.parse("$ $"));
+        expect(macroUtils.trim(ast)).toEqual([
+            { type: "inlinemath", content: [] },
+        ]);
+
+        ast = macroUtils.trimRenderInfo(latexParser.parse("$\n$"));
+        expect(macroUtils.trim(ast)).toEqual([
+            { type: "inlinemath", content: [] },
+        ]);
+
+        // Environments
+        targetAst = macroUtils.trimRenderInfo(
+            latexParser.parse("\\begin{equation}\\end{equation}")
+        );
+
+        ast = macroUtils.trimRenderInfo(
+            latexParser.parse("\\begin{equation} \\end{equation}")
+        );
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        ast = macroUtils.trimRenderInfo(
+            latexParser.parse("\\begin{equation}\n \\end{equation}")
+        );
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+    });
+
     it("Splits and unsplits based on a macro", () => {
         // basic splitting
         let ast = macroUtils.trimRenderInfo(

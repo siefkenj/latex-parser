@@ -688,7 +688,12 @@ export function trimEnvironmentContents(ast) {
 
             return ret;
         },
-        (node) => node != null && node.type === "environment"
+        (node) =>
+            node != null &&
+            (node.type === "environment" ||
+                node.type === "inlinemath" ||
+                node.type === "displaymath" ||
+                node.type === "mathenv")
     );
 }
 

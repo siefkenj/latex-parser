@@ -99,15 +99,15 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
       {
         	return {type: "commentenv", env: "comment", content: x.join("")}
       }  // comment environment provided by \usepackage{verbatim}
-  / begin_display_math x:(!end_display_math x:math_token {return x})+ end_display_math
+  / begin_display_math x:(!end_display_math x:math_token {return x})* end_display_math
       {
         	return {type: "displaymath", content:x}
       }   //display math with \[...\]
-  / begin_inline_math x:(!end_inline_math x:math_token {return x})+ end_inline_math
+  / begin_inline_math x:(!end_inline_math x:math_token {return x})* end_inline_math
       {
         	return {type: "inlinemath", content:x}
       }       //inline math with \(...\)
-  / math_shift math_shift x:(!(math_shift math_shift) x:math_token {return x})+ math_shift math_shift
+  / math_shift math_shift x:(!(math_shift math_shift) x:math_token {return x})* math_shift math_shift
       {
         	return {type: "displaymath", content:x}
       }   //display math with $$ $$
@@ -134,7 +134,9 @@ environment "environment"
     
 math_environment "math environment"
   = begin_env begin_group env:math_env_name end_group
-  			body: (!(end_env end_env:group & {console.log(env, end_env,  compare_env({content:[env]},end_env));return compare_env({content:[env]},end_env)}) x:math_token {return x})* 
+    			body: (!(end_env end_env:group & {
+          return compare_env({content:[env]},end_env)
+        }) x:math_token {return x})*
     end_env begin_group math_env_name end_group {return {type:"mathenv", env:env, content:body}}
 
 

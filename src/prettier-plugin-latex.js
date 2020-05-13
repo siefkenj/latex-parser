@@ -267,7 +267,7 @@ function printLatexAst(path, options, print) {
     }
 
     // tmp variables
-    let content = null;
+    let content, startToken, previousNode, bodyStartToken;
     switch (node.type) {
         case "argument":
             return printArgument(path, print, "tree");
@@ -317,8 +317,8 @@ function printLatexAst(path, options, print) {
             }
             // If we are a startNode or we are preceded by a parskip,
             // we don't want a forced newline at the start.
-            var startToken = [hardline];
-            var previousNode =
+            startToken = [hardline];
+            previousNode =
                 (options.referenceMap &&
                     options.referenceMap.getPreviousNode(node)) ||
                 {};
@@ -328,7 +328,7 @@ function printLatexAst(path, options, print) {
 
             // If we start with a comment on the same line as the environment
             // We should not insert a newline at the start of the environment body
-            var bodyStartToken = [hardline];
+            bodyStartToken = [hardline];
             if (
                 node.content.length === 0 ||
                 (node.content[0].type === "comment" && node.content[0].sameline)
@@ -353,19 +353,54 @@ function printLatexAst(path, options, print) {
             content = path.call(print, "content");
             options.inMathMode = false;
 
-            return concat([
-                hardline,
-                ESCAPE + "[",
-                indent(concat([hardline, content])),
-                hardline,
-                ESCAPE + "]",
-            ]);
+            // If we are a startNode or we are preceded by a parskip,
+            // we don't want a forced newline at the start.
+            startToken = [hardline];
+            previousNode =
+                (options.referenceMap &&
+                    options.referenceMap.getPreviousNode(node)) ||
+                {};
+            if (renderInfo.startNode || previousNode.type === "parbreak") {
+                startToken = [];
+            }
+
+            // If we start with a comment on the same line as the environment
+            // We should not insert a newline at the start of the environment body
+            bodyStartToken = [hardline];
+            if (
+                node.content.length === 0 ||
+                (node.content[0].type === "comment" && node.content[0].sameline)
+            ) {
+                bodyStartToken.pop();
+            }
+
+            return concat(
+                startToken.concat([
+                    ESCAPE + "[",
+                    indent(concat(bodyStartToken.concat([content]))),
+                    hardline,
+                    ESCAPE + "]",
+                ])
+            );
         case "group":
             return concat(["{", printRaw(node.content), "}"]);
         case "inlinemath":
+            // Since `$$` starts display math mode (in plain TeX),
+            // an empty inline math environment must be printed as `$ $`.
+            // We special case this.
+            if (node.content.length === 0) {
+                // We won't allow an empty math environment to be broken
+                return concat(["$", " ", "$"]);
+            }
+
             options.inMathMode = true;
             content = path.call(print, "content");
             options.inMathMode = false;
+
+            // If the last node is a comment, we need a linebreak before the closing `$`
+            if (node.content[node.content.length - 1].type === "comment") {
+                content = concat([content, hardline]);
+            }
 
             return concat(["$", content, "$"]);
         case "macro":
