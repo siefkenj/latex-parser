@@ -460,7 +460,22 @@ export function trim(ast) {
         return ast;
     }
 
-    return ast.slice(leftTrim, ast.length - rightTrim);
+    const ret = ast.slice(leftTrim, ast.length - rightTrim);
+    // Special care must be taken because the content could have a comment
+    // in it. If the comment was on the same line as a parskip, it will no
+    // longer be on the same line after the trimming. Thus, we must modify
+    // the comment.
+    if (
+        ret.length > 0 &&
+        leftTrim > 0 &&
+        ret[0].type === "comment" &&
+        ret[0].sameline
+    ) {
+        const comment = ret.shift();
+        ret.unshift({ ...comment, sameline: false });
+    }
+
+    return ret;
 }
 
 /**

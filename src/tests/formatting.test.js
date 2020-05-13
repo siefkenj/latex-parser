@@ -4,6 +4,34 @@ import { origLog } from "./parser.test";
 import * as latexParser from "../latex-parser";
 import * as prettierPluginLatex from "../prettier-plugin-latex";
 
+expect.extend({
+    toFormatAs(inStr, outStr, formatter) {
+        if (typeof formatter !== "function") {
+            throw new Error(
+                "Must pass in a formatting function as the second argument when using `toFormatAs`"
+            );
+        }
+        const formatted = formatter(inStr);
+
+        const pass = this.equals(formatted, outStr);
+
+        return {
+            pass,
+            message: () =>
+                `When formatting\n\n${this.utils.EXPECTED_COLOR(
+                    inStr
+                )}\n\nthe output did ${
+                    pass ? "" : "not"
+                } format correctly\n\n${this.utils.printDiffOrStringify(
+                    outStr,
+                    formatted,
+                    "Expected",
+                    "Received"
+                )}`,
+        };
+    },
+});
+
 /* eslint-env jest */
 
 describe("Prettier tests", () => {
@@ -43,18 +71,69 @@ describe("Prettier tests", () => {
             { inStr: "\\begin{xx}\\end{xx}", outStr: "\\begin{xx}\n\\end{xx}" },
         ];
 
-        for (const { inStr, outStr } of STRINGS) {
-            const formatted = Prettier.format(inStr, {
+        const formatter = (x) =>
+            Prettier.format(x, {
                 printWidth: 30,
                 useTabs: true,
                 parser: "latex-parser",
                 plugins: [prettierPluginLatex],
             });
-            expect(formatted).toEqual(outStr);
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
         }
     });
 
-    it("prints latex code", () => {
+    it("prints comments", () => {
+        const STRINGS = [
+            { inStr: "%", outStr: "%" },
+            { inStr: "x%", outStr: "x%" },
+            { inStr: "x %", outStr: "x %" },
+            { inStr: "x % abc", outStr: "x % abc" },
+            { inStr: "x % abc\ny", outStr: "x % abc\ny" },
+            { inStr: "x % abc\n\ny", outStr: "x % abc\n\ny" },
+            { inStr: "x % abc\n\n", outStr: "x % abc" },
+            { inStr: "x\n%\n\ny", outStr: "x\n%\n\ny" },
+            {
+                inStr: "\\begin{a}\n%\n\\end{a}",
+                outStr: "\\begin{a}\n\t%\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}x%\n\\end{a}",
+                outStr: "\\begin{a}\n\tx%\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}x%\n\n\\end{a}",
+                outStr: "\\begin{a}\n\tx%\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}%\n\n\\end{a}",
+                outStr: "\\begin{a}%\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\n%\n\n\\end{a}",
+                outStr: "\\begin{a}\n\t%\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\n\n%\n\n\\end{a}",
+                outStr: "\\begin{a}\n\t%\n\\end{a}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
+    it.skip("prints latex code", () => {
         //const TEX = String.raw`\hi 22, I am % cool !
         let TEX = "a%\n  b";
         TEX = String.raw`\begin{xx}
@@ -74,7 +153,7 @@ describe("Prettier tests", () => {
         //        console.log(formatted);
     });
 
-    it.only("Formats aligned environments", () => {
+    it.skip("Formats aligned environments", () => {
         const STRINGS = [
             {
                 inStr: "\\begin{align}ab& c\\\\d&eee\\end{align}",

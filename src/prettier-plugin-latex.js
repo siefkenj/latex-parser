@@ -17,8 +17,8 @@ const {
     line,
     softline,
     hardline,
-    lineSuffix,
-    lineSuffixBoundary,
+    //lineSuffix,
+    //lineSuffixBoundary,
     indent,
     //markAsRoot,
 } = Prettier.doc.builders;
@@ -154,12 +154,14 @@ function printEnvironmentContent(path, print, mode) {
  */
 function printMacro(path, print, mode = "tree") {
     const node = path.getValue();
+    const renderInfo = node._renderInfo || {};
+
     let args = [];
     if (node.args != null) {
         // If the macro has been marked as inParMode,
         // it should render inline as if it is part of regular text.
         // To do this, we print the arguments and extract the contents.
-        if (node._renderInfo && node._renderInfo.inParMode) {
+        if (renderInfo.inParMode) {
             // gather all the args flat-printed
             args = path.map(
                 (subPath) => printArgument(subPath, print, "flat"),
@@ -173,7 +175,7 @@ function printMacro(path, print, mode = "tree") {
     const flatBody = [].concat([ESCAPE, printRaw(node.content)], ...args);
 
     if (mode === "tree") {
-        if (node._renderInfo && node._renderInfo.hangingIndent) {
+        if (renderInfo.hangingIndent) {
             return indent(concat(flatBody));
         }
         return concat(flatBody);
@@ -213,6 +215,7 @@ function printArgument(path, print, mode = "tree") {
 
 function printLatexAst(path, options, print) {
     const node = path.getValue();
+    const renderInfo = node._renderInfo || {};
 
     let breakOnAllLines = false;
     if (path.getName() == null) {
@@ -240,9 +243,11 @@ function printLatexAst(path, options, print) {
         // same `fill`.
         const printFlatVersion = (subPath) => {
             const node = subPath.getValue();
+            const renderInfo = node._renderInfo || {};
+
             if (node.type === "macro") {
                 const content = [].concat(...printMacro(path, print, "flat"));
-                if (node._renderInfo && node._renderInfo.hangingIndent) {
+                if (renderInfo.hangingIndent) {
                     return indent(fill(content));
                 }
             }
@@ -267,16 +272,27 @@ function printLatexAst(path, options, print) {
         case "argument":
             return printArgument(path, print, "tree");
         case "comment":
+            content = ["%" + printRaw(node.content)];
             if (node.sameline) {
-                if (node.suffixParbreak) {
-                    return concat([lineSuffix("%" + printRaw(node.content))]);
+                // This used to be a `lineSuffix` with a `lineSuffixBoundary`, but that turned out
+                // not to work because a `lineSuffix` is never printed if a line is never encountered
+                // (e.g., if a file ends with a comment). Since comment position is important in LaTeX
+                // documents (since whitespace is significant), we enforce a printing style where
+                // comments are always flushed, right where they are
+                if (!node.suffixParbreak && !renderInfo.endNode) {
+                    content.push(hardline);
                 }
-                return concat([
-                    lineSuffix("%" + printRaw(node.content)),
-                    lineSuffixBoundary,
-                ]);
+                return concat(content);
             }
-            return "\n%" + printRaw(node.content) + "\n";
+            // Comments should insert a prefix and suffix newline unless
+            // they start/end an environment
+            if (!renderInfo.startNode) {
+                content.unshift(hardline);
+            }
+            if (!node.suffixParbreak && !renderInfo.endNode) {
+                content.push(hardline);
+            }
+            return concat(content);
         case "commentenv":
         case "environment":
         case "mathenv":
@@ -287,16 +303,13 @@ function printLatexAst(path, options, print) {
             var argsString = node.args == null ? "" : printRaw(node.args);
 
             var mode = "";
-            if (node._renderInfo != null && node._renderInfo.alignContent) {
+            if (renderInfo.alignContent) {
                 mode = "aligned";
             }
-            if (
-                node._renderInfo != null &&
-                node._renderInfo.inMathMode != null
-            ) {
+            if (renderInfo.inMathMode != null) {
                 // The environment might switch modes if an `inMathMode` property is supplied
                 const prevMathMode = options.inMathMode;
-                options.inMathMode = node._renderInfo.inMathMode;
+                options.inMathMode = renderInfo.inMathMode;
                 content = printEnvironmentContent(path, print, mode);
                 options.inMathMode = prevMathMode;
             } else {
@@ -305,28 +318,29 @@ function printLatexAst(path, options, print) {
             // If we are a startNode or we are preceded by a parskip,
             // we don't want a forced newline at the start.
             var startToken = [hardline];
-            if (
-                (node._renderInfo && node._renderInfo.startNode) ||
+            var previousNode =
                 (options.referenceMap &&
-                    (options.referenceMap.getPreviousNode(node) || {}).type ===
-                        "parbreak")
-            ) {
+                    options.referenceMap.getPreviousNode(node)) ||
+                {};
+            if (renderInfo.startNode || previousNode.type === "parbreak") {
                 startToken = [];
             }
 
-            if (node.content.length === 0) {
-                // If the environment has no content, we want to print an empty body,
-                // not a parskip
-                return concat(
-                    startToken.concat([envStart, argsString, hardline, envEnd])
-                );
+            // If we start with a comment on the same line as the environment
+            // We should not insert a newline at the start of the environment body
+            var bodyStartToken = [hardline];
+            if (
+                node.content.length === 0 ||
+                (node.content[0].type === "comment" && node.content[0].sameline)
+            ) {
+                bodyStartToken.pop();
             }
 
             return concat(
                 startToken.concat([
                     envStart,
                     argsString,
-                    indent(concat([hardline, content])),
+                    indent(concat(bodyStartToken.concat([content]))),
                     hardline,
                     envEnd,
                 ])
@@ -355,11 +369,7 @@ function printLatexAst(path, options, print) {
 
             return concat(["$", content, "$"]);
         case "macro":
-            if (
-                node._renderInfo &&
-                node._renderInfo.inParMode &&
-                !node._renderInfo.hangingIndent
-            ) {
+            if (renderInfo.inParMode && !renderInfo.hangingIndent) {
                 return printMacro(path, print, "flat");
             }
             return printMacro(path, print, "tree");
