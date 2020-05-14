@@ -1,7 +1,7 @@
 import React from "react";
 import { Controlled as CodeMirror } from "react-codemirror2";
 import "codemirror/mode/stex/stex";
-import "codemirror/mode/javascript/javascript"
+import "codemirror/mode/javascript/javascript";
 import "codemirror/lib/codemirror.css";
 import SplitPane from "react-split-pane";
 import "codemirror/addon/display/rulers";
@@ -33,18 +33,29 @@ function App() {
     const [texInput, setTexInput] = React.useState(DEFAULT_INPUT_TEXT);
     const [texOutput, setTexOutput] = React.useState("");
     const [texParsed, setTexParsed] = React.useState([]);
+    const [prettierDoc, setPrettierDoc] = React.useState("");
 
     React.useEffect(() => {
-        if (currDisplay !== "formatted") {
-            asyncFormatter
-                .parse(texInput)
-                .then((x) => setTexParsed(x))
-                .catch((e) => console.warn("Failed to parse", e));
-        } else {
-            asyncFormatter
-                .format(texInput, { printWidth: textWidth })
-                .then((x) => setTexOutput(x))
-                .catch((e) => console.warn("Failed to parse", e));
+        switch (currDisplay) {
+            case "formatted":
+                asyncFormatter
+                    .format(texInput, { printWidth: textWidth })
+                    .then((x) => setTexOutput(x))
+                    .catch((e) => console.warn("Failed to parse", e));
+                break;
+            case "ast":
+            case "json":
+                asyncFormatter
+                    .parse(texInput)
+                    .then((x) => setTexParsed(x))
+                    .catch((e) => console.warn("Failed to parse", e));
+                break;
+            case "doc":
+                asyncFormatter
+                    .parseToDoc(texInput)
+                    .then((x) => setPrettierDoc(x))
+                    .catch((e) => console.warn("Failed to parse", e));
+                break;
         }
     }, [texInput, textWidth, currDisplay]);
 
@@ -69,6 +80,11 @@ function App() {
             />
         );
     }
+    if (currDisplay === "doc") {
+        rightPanel = (
+            <CodeMirror value={prettierDoc} options={{ mode: "javascript" }} />
+        );
+    }
 
     return (
         <div className="App">
@@ -87,6 +103,9 @@ function App() {
                     <option value="ast">AST (Abstract Syntax Tree)</option>
                     <option value="json">
                         JSON AST (Abstract Syntax Tree)
+                    </option>
+                    <option value="doc">
+                        Prettier Doc (AST for formatting)
                     </option>
                 </select>
             </div>

@@ -118,6 +118,14 @@ describe("Prettier tests", () => {
                 inStr: "\\begin{a}\n\n%\n\n\\end{a}",
                 outStr: "\\begin{a}\n\t%\n\\end{a}",
             },
+            {
+                inStr: "\\begin{a}\\end{a}%\n\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}%\n\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\\end{a}\n\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
+            },
         ];
 
         const formatter = (x) =>

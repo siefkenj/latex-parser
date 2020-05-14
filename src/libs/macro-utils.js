@@ -773,6 +773,5 @@ export function splitTabular(
  * @returns {object}
  */
 export function markAlignEnv(node) {
-    console.log("XXXX marking");
     return updateRenderInfo(node, { alignedContent: true });
 }

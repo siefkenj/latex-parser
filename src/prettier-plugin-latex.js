@@ -322,7 +322,11 @@ function printLatexAst(path, options, print) {
                 (options.referenceMap &&
                     options.referenceMap.getPreviousNode(node)) ||
                 {};
-            if (renderInfo.startNode || previousNode.type === "parbreak") {
+            if (
+                renderInfo.startNode ||
+                previousNode.type === "parbreak" ||
+                previousNode.type === "comment"
+            ) {
                 startToken = [];
             }
 
@@ -360,7 +364,11 @@ function printLatexAst(path, options, print) {
                 (options.referenceMap &&
                     options.referenceMap.getPreviousNode(node)) ||
                 {};
-            if (renderInfo.startNode || previousNode.type === "parbreak") {
+            if (
+                renderInfo.startNode ||
+                previousNode.type === "parbreak" ||
+                previousNode.type === "comment"
+            ) {
                 startToken = [];
             }
 
