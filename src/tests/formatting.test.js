@@ -222,6 +222,78 @@ describe("Prettier tests", () => {
         }
     });
 
+    it("verb tests", () => {
+        const STRINGS = [
+            { inStr: "\\verb|%$\n|", outStr: "\\verb|%$\n|" },
+            { inStr: "\\verb!{!", outStr: "\\verb!{!" },
+            { inStr: "x\\verb!{!", outStr: "x\\verb!{!" },
+            { inStr: "\\verb!{!y", outStr: "\\verb!{!y" },
+            { inStr: "\\verb!{! y", outStr: "\\verb!{! y" },
+            { inStr: "\\verb!%!\ny", outStr: "\\verb!%! y" },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
+    it("verbatim environments tests", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{verbatim}\\end{verbatim}",
+                outStr: "\\begin{verbatim}\\end{verbatim}",
+            },
+            {
+                inStr: "\\begin{verbatim}a b  c\\end{verbatim}",
+                outStr: "\\begin{verbatim}a b  c\\end{verbatim}",
+            },
+            {
+                inStr: "\\begin{verbatim}\na b \n\n c\\end{verbatim}",
+                outStr: "\\begin{verbatim}\na b \n\n c\\end{verbatim}",
+            },
+            {
+                inStr: "\\begin{verbatim}\n\\end{verbatim}",
+                outStr: "\\begin{verbatim}\n\\end{verbatim}",
+            },
+            {
+                inStr: "a \\begin{verbatim}\\end{verbatim}",
+                outStr: "a\n\\begin{verbatim}\\end{verbatim}",
+            },
+            {
+                inStr: "\\begin{verbatim}\\end{verbatim} b",
+                outStr: "\\begin{verbatim}\\end{verbatim}\nb",
+            },
+            {
+                inStr: "\\begin{verbatim*}\n\n\n  $\\end{verbatim*}",
+                outStr: "\\begin{verbatim*}\n\n\n  $\\end{verbatim*}",
+            },
+            {
+                inStr: "\\begin{comment}\n\n\n  $\\end{comment}",
+                outStr: "\\begin{comment}\n\n\n  $\\end{comment}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
     it.skip("prints latex code", () => {
         //const TEX = String.raw`\hi 22, I am % cool !
         let TEX = "a%\n  b";

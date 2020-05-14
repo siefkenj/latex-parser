@@ -23,7 +23,6 @@ export function printRaw(node) {
                 return "%" + printRaw(node.content) + suffix;
             }
             return "\n%" + printRaw(node.content) + suffix;
-        case "commentenv":
         case "environment":
         case "mathenv":
         case "verbatim":

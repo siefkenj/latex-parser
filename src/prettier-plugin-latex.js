@@ -213,6 +213,32 @@ function printArgument(path, print, mode = "tree") {
     }
 }
 
+/**
+ * Computes the environment name, start/end, and args.
+ * E.g., for "\begin{x}abc\end{x}", it returns
+ * ```
+ * {
+ *  envName: "x",
+ *  start: "\\begin{x}",
+ *  end: "\\end{x}",
+ *  args: ""
+ * }
+ * ```
+ *
+ * @param {*} node
+ * @returns
+ */
+function formatEnvSurround(node) {
+    const env = printRaw(node.env);
+
+    return {
+        envName: env,
+        start: ESCAPE + "begin{" + env + "}",
+        end: ESCAPE + "end{" + env + "}",
+        args: node.args == null ? "" : printRaw(node.args),
+    };
+}
+
 function printLatexAst(path, options, print) {
     const node = path.getValue();
     const renderInfo = node._renderInfo || {};
@@ -267,7 +293,7 @@ function printLatexAst(path, options, print) {
     }
 
     // tmp variables
-    let content, startToken, bodyStartToken, nextNode, previousNode;
+    let content, startToken, bodyStartToken, nextNode, previousNode, env;
     switch (node.type) {
         case "argument":
             return printArgument(path, print, "tree");
@@ -293,14 +319,10 @@ function printLatexAst(path, options, print) {
                 content.push(hardline);
             }
             return concat(content);
-        case "commentenv":
         case "environment":
         case "mathenv":
         case "verbatim":
-            var env = printRaw(node.env);
-            var envStart = ESCAPE + "begin{" + env + "}";
-            var envEnd = ESCAPE + "end{" + env + "}";
-            var argsString = node.args == null ? "" : printRaw(node.args);
+            env = formatEnvSurround(node);
 
             var mode = "";
             if (renderInfo.alignContent) {
@@ -340,13 +362,21 @@ function printLatexAst(path, options, print) {
                 bodyStartToken.pop();
             }
 
+            // Verbatim environments should be printed with their content
+            // directly included instead of indented/etc.
+            if (node.type === "verbatim") {
+                return concat(
+                    startToken.concat([env.start, env.args, content, env.end])
+                );
+            }
+
             return concat(
                 startToken.concat([
-                    envStart,
-                    argsString,
+                    env.start,
+                    env.args,
                     indent(concat(bodyStartToken.concat([content]))),
                     hardline,
-                    envEnd,
+                    env.end,
                 ])
             );
 
@@ -449,7 +479,10 @@ function printLatexAst(path, options, print) {
                 (options.referenceMap &&
                     options.referenceMap.getNextNode(node)) ||
                 {};
-            if (nextNode.env != null || nextNode.type === "displaymath") {
+            if (
+                (nextNode.env != null && nextNode.type !== "verb") ||
+                nextNode.type === "displaymath"
+            ) {
                 return "";
             }
 
@@ -462,7 +495,7 @@ function printLatexAst(path, options, print) {
                     options.referenceMap.getPreviousNode(node)) ||
                 {};
             if (
-                previousNode.env != null ||
+                (previousNode.env != null && previousNode.type !== "verb") ||
                 previousNode.type === "displaymath"
             ) {
                 return hardline;

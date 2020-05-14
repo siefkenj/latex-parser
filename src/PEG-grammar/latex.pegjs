@@ -83,34 +83,46 @@ number "number"
   / a:num+ "." {return a.join("") + "."}
 
 special_macro "special macro" // for the special macros like \[ \] and \begin{} \end{} etc.
+    // \verb|xxx| and \verb*|xxx|
   = escape env:("verb*" / "verb") e:. x:(!(end:. & {return end == e}) x:. {return x})* (end:. & {return end == e}) 
       {
         	return {type:"verb", env: env, escape:e, content:x.join("")}
-      }  // \verb|xxx| and \verb*|xxx|
+      }
+    // verbatim environment
   / escape "begin{verbatim}" x:(!(escape "end{verbatim}") x:. {return x})* escape "end{verbatim}"
       {
         	return {type: "verbatim", env: "verbatim", content:x.join("")}
-      }  // verbatim environment
+      }
+    // verbatim* environment
   / escape "begin{verbatim*}" x:(!(escape "end{verbatim*}") x:. {return x})* escape "end{verbatim*}"
       {
         	return {type: "verbatim", env: "verbatim*", content:x.join("")}
-      }  // verbatim* environment
+      }
+    // comment environment provided by \usepackage{verbatim}
   / escape "begin{comment}" x:(!(escape "end{comment}") x:. {return x})* escape "end{comment}"
       {
-        	return {type: "commentenv", env: "comment", content: x.join("")}
-      }  // comment environment provided by \usepackage{verbatim}
+        	return {type: "verbatim", env: "comment", content: x.join("")}
+      }
+    // lstlisting environment provided by \usepackage{listings}
+  / escape "begin{lstlisting}" x:(!(escape "end{lstlisting}") x:. {return x})* escape "end{lstlisting}"
+      {
+        	return {type: "verbatim", env: "lstlisting", content: x.join("")}
+      }
+    //display math with \[...\]
   / begin_display_math x:(!end_display_math x:math_token {return x})* end_display_math
       {
         	return {type: "displaymath", content:x}
-      }   //display math with \[...\]
+      }
+    //inline math with \(...\)
   / begin_inline_math x:(!end_inline_math x:math_token {return x})* end_inline_math
       {
         	return {type: "inlinemath", content:x}
-      }       //inline math with \(...\)
+      }
+    //display math with $$ $$
   / math_shift math_shift x:(!(math_shift math_shift) x:math_token {return x})* math_shift math_shift
       {
         	return {type: "displaymath", content:x}
-      }   //display math with $$ $$
+      }
   / math_environment
   / environment
   
