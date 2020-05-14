@@ -160,8 +160,53 @@ describe("Prettier tests", () => {
             { inStr: "$a%\n$", outStr: "$a%\n$" },
             { inStr: "$\na%\n$", outStr: "$a%\n$" },
             { inStr: "$%x\na%\n$", outStr: "$%x\na%\n$" },
-            { inStr: "%", outStr: "%" },
-            { inStr: "%", outStr: "%" },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
+    it("insert newlines around environments", () => {
+        const STRINGS = [
+            { inStr: "\\[\\] x", outStr: "\\[\n\\]\nx" },
+            { inStr: "y \\[\\]", outStr: "y\n\\[\n\\]" },
+            { inStr: "\\[\\]\\[\\]", outStr: "\\[\n\\]\n\\[\n\\]" },
+            { inStr: "\\[\\] \\[\\]", outStr: "\\[\n\\]\n\\[\n\\]" },
+            { inStr: "\\[\\]\n\\[\\]", outStr: "\\[\n\\]\n\\[\n\\]" },
+            { inStr: "\\[\\]\n\n\\[\\]", outStr: "\\[\n\\]\n\n\\[\n\\]" },
+            {
+                inStr: "\\begin{a}\\end{a} x",
+                outStr: "\\begin{a}\n\\end{a}\nx",
+            },
+            {
+                inStr: "y \\begin{a}\\end{a}",
+                outStr: "y\n\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\\end{a}\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\\end{a} \\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\\end{a}\n\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\\end{a}\n\n\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}\n\n\\begin{a}\n\\end{a}",
+            },
         ];
 
         const formatter = (x) =>

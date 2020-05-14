@@ -267,7 +267,7 @@ function printLatexAst(path, options, print) {
     }
 
     // tmp variables
-    let content, startToken, previousNode, bodyStartToken;
+    let content, startToken, bodyStartToken, nextNode, previousNode;
     switch (node.type) {
         case "argument":
             return printArgument(path, print, "tree");
@@ -443,6 +443,31 @@ function printLatexAst(path, options, print) {
                 node.escape,
             ]);
         case "whitespace":
+            // Environments print a `hardline` before they start, so there is no need to
+            // put any whitespace down if the next item is an environment
+            nextNode =
+                (options.referenceMap &&
+                    options.referenceMap.getNextNode(node)) ||
+                {};
+            if (nextNode.env != null || nextNode.type === "displaymath") {
+                return "";
+            }
+
+            // Most of the time we print in `fill` mode, which means
+            // a `line` is either a line break or a space. However, if the
+            // previous node is an environment, we want to use a `hardline` instead
+            // of a line.
+            previousNode =
+                (options.referenceMap &&
+                    options.referenceMap.getPreviousNode(node)) ||
+                {};
+            if (
+                previousNode.env != null ||
+                previousNode.type === "displaymath"
+            ) {
+                return hardline;
+            }
+
             return line;
         default:
             console.warn("Printing unknown type", node);
