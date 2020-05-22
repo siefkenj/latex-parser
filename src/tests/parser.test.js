@@ -53,7 +53,6 @@ describe("Basic ast", () => {
             "a comment % at the end\nof a line",
             "a comment %    with    extra    spaces",
             "a comment\n% at a new position\non the next line",
-            "a comment \n% at a new position\non the next line",
             "a comment % at a new position\n\nwith a parbreak",
             String.raw`\verb|$|`,
             String.raw`\verb*|$|`,
@@ -76,6 +75,10 @@ describe("Basic ast", () => {
             [
                 "spaces at the start%\n    of a newline are ignored",
                 "spaces at the start%\nof a newline are ignored",
+            ],
+            [
+                "a comment \n% at a new position\non the next line",
+                "a comment\n% at a new position\non the next line",
             ],
         ];
 

@@ -279,6 +279,220 @@ describe("Prettier tests", () => {
                 inStr: "\\begin{comment}\n\n\n  $\\end{comment}",
                 outStr: "\\begin{comment}\n\n\n  $\\end{comment}",
             },
+            {
+                inStr: "\\begin{comment}\n\n\n  $\\end{comment}",
+                outStr: "\\begin{comment}\n\n\n  $\\end{comment}",
+            },
+            {
+                inStr:
+                    "\\begin{a}\\begin{comment}\n\n\n  $\\end{comment}\\end{a}",
+                outStr:
+                    "\\begin{a}\n\t\\begin{comment}\n\n\n  $\\end{comment}\n\\end{a}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
+    it("comments at start of environments tests", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{a}\\end{a}",
+                outStr: "\\begin{a}\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}%xx\n\\end{a}",
+                outStr: "\\begin{a}%xx\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a} %xx\n\\end{a}",
+                outStr: "\\begin{a} %xx\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a} %xx\n%y\n\\end{a}",
+                outStr: "\\begin{a} %xx\n\t%y\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\n%xx\n%y\n\\end{a}",
+                outStr: "\\begin{a}\n\t%xx\n\t%y\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}\n %xx\n%y\n\\end{a}",
+                outStr: "\\begin{a}\n\t%xx\n\t%y\n\\end{a}",
+            },
+            // Math environments should print the same way
+            {
+                inStr: "\\begin{equation}\\end{equation}",
+                outStr: "\\begin{equation}\n\\end{equation}",
+            },
+            {
+                inStr: "\\begin{equation}%xx\n\\end{equation}",
+                outStr: "\\begin{equation}%xx\n\\end{equation}",
+            },
+            {
+                inStr: "\\begin{equation} %xx\n\\end{equation}",
+                outStr: "\\begin{equation} %xx\n\\end{equation}",
+            },
+            {
+                inStr: "\\begin{equation} %xx\n%y\n\\end{equation}",
+                outStr: "\\begin{equation} %xx\n\t%y\n\\end{equation}",
+            },
+            {
+                inStr: "\\begin{equation}\n%xx\n%y\n\\end{equation}",
+                outStr: "\\begin{equation}\n\t%xx\n\t%y\n\\end{equation}",
+            },
+            {
+                inStr: "\\begin{equation}\n %xx\n%y\n\\end{equation}",
+                outStr: "\\begin{equation}\n\t%xx\n\t%y\n\\end{equation}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+
+    it("matrix environment tests", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{matrix}a\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}a\\\\b\\\\c\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\ta \\\\\n\tb \\\\\n\tc\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}a&b\\\\c&d\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta & b \\\\\n\tc & d\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}axxx&b\\\\c&d\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\taxxx & b \\\\\n\tc    & d\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}axxx&b\\\\c&dxxx\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\taxxx & b    \\\\\n\tc    & dxxx\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}a\\\\[4pt]b\\\\c\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\ta \\\\[4pt]\n\tb \\\\\n\tc\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}a\\\\%\nb\\\\c\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\ta \\\\ %\n\tb \\\\\n\tc\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}\n%xx\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\t%xx\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}\n%xx\n%yyy\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\t%xx\n\t%yyy\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}\n%xx\n  %yyy\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\t%xx\n\t%yyy\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}x%xx\n  %yyy\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\tx %xx\n\t%yyy\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}x&y%xx\n  %yyy\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\tx & y %xx\n\t%yyy\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}x&y\\\\%xx\n  %yyy\n\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\tx & y \\\\ %xx\n\t%yyy\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}x\n%y\n\\\\z\\\\%ww\n\\end{matrix}",
+                outStr:
+                    "\\begin{matrix}\n\tx %y\n\t\\\\\n\tz \\\\ %ww\n\\end{matrix}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+    
+    it("matrix environment with comments at start", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{matrix}%xx\na\\end{matrix}",
+                outStr: "\\begin{matrix}%xx\n\ta\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix} %xx\na\\end{matrix}",
+                outStr: "\\begin{matrix} %xx\n\ta\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}    %xx\na\\end{matrix}",
+                outStr: "\\begin{matrix} %xx\n\ta\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}%xx\n%ab\na\\end{matrix}",
+                outStr: "\\begin{matrix}%xx\n\t%ab\n\ta\n\\end{matrix}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
+    
+    it("matrix environment alignment of cell items", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{matrix}\na\\\\ b\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta \\\\\n\tb\n\\end{matrix}",
+            },
+            {
+                inStr: "\\begin{matrix}\na\\\\\n\\\\\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta \\\\\n\t\\\\\n\\end{matrix}",
+            },
         ];
 
         const formatter = (x) =>

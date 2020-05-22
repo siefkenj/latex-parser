@@ -1,6 +1,16 @@
 import Prettier from "prettier/standalone";
 import * as prettierPluginLatex from "./prettier-plugin-latex";
 import { parse, printRaw } from "./libs/parser";
+import {
+    parseAlignEnvironment,
+    createMatchers,
+} from "./libs/align-environment-parser";
+import * as macroUtils from "./libs/macro-utils";
+
+const astParsers = {
+    parseAlignEnvironment,
+    utils: { ...macroUtils, createMatchers },
+};
 
 /**
  * Format `source` LaTeX code using Prettier to format/render
@@ -22,4 +32,11 @@ function printPrettier(source = "", options = {}) {
     });
 }
 
-export { parse, printRaw, printPrettier, prettierPluginLatex, Prettier };
+export {
+    parse,
+    printRaw,
+    printPrettier,
+    prettierPluginLatex,
+    Prettier,
+    astParsers,
+};

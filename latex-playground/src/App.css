@@ -148,3 +148,9 @@ body,
     position: relative;
     border-bottom: 1px solid #ddd;
 }
+
+.debug-code-parent {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}

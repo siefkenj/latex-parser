@@ -141,26 +141,51 @@ argument_list "argument list"
 
 environment "environment"
   = begin_env env:group args:argument_list?
-  			  body:(!(end_env end_env:group & {return compare_env(env,end_env)}) x:token {return x})* 
-    end_env group {return {type:"environment", env:env.content, args:args, content:body}}
+  			  env_comment:env_comment?
+  			  body:(
+              	!(end_env end_env:group & {return compare_env(env,end_env)})
+                x:token {return x}
+              )* 
+    end_env group {
+    	return {
+        	type:"environment",
+            env:env.content,
+            args:args,
+            content: env_comment ? [env_comment, ...body] : body
+        }
+    }
     
 math_environment "math environment"
   = begin_env begin_group env:math_env_name end_group
-    			body: (!(end_env end_env:group & {
-          return compare_env({content:[env]},end_env)
-        }) x:math_token {return x})*
-    end_env begin_group math_env_name end_group {return {type:"mathenv", env:env, content:body}}
+  				env_comment:env_comment?
+    			body:(
+                	!(end_env end_env:group & {return compare_env({content:[env]},end_env)})
+                	x:math_token {return x}
+                )*
+    end_env begin_group math_env_name end_group {
+    	return {
+        		type:"mathenv",
+                env:env,
+                content: env_comment ? [env_comment, ...body] : body
+            }
+        }
 
 
 math_group "math group"  // group that assumes you're in math mode.  If you use "\text{}" this isn't a good idea....
   = begin_group x:(!end_group c:math_token {return c})* end_group {return {type:"group", content:x}}
 
 full_comment "full comment" 		// comment that detects whether it is at the end of a line or on a new line
-  = nl x:comment_and_parbreak {return {type: "comment", content: x, sameline: false, suffixParbreak: true}}
-  / nl x:comment {return {type:"comment", content:x, sameline:false}}
+  = start_of_line x:comment {return {type:"comment", content:x, sameline:false}}
+  / leading_sp x:comment {return {type:"comment", content:x, sameline:false, leadingWhitespace: true}}
+  / sp* nl leading_sp? x:comment_and_parbreak {return {type: "comment", content: x, sameline: false, suffixParbreak: true}}
+  / sp* nl leading_sp? x:comment {return {type:"comment", content:x, sameline:false}}
   / x:comment_and_parbreak {return {type: "comment", content: x, sameline: true, suffixParbreak: true}}
   / x:comment {return {type:"comment", content:x, sameline:true}}
 
+env_comment "environment comment" =
+	sp:sp* comment:comment {
+       return { type: "comment", content: comment, sameline: true, leadingWhitespace: sp.length > 0 }
+    }
 
 begin_display_math = escape "["
 end_display_math = escape "]"
@@ -203,10 +228,25 @@ char        "letter"       = c:[a-zA-Z]            // catcode 11
 num         "digit"        = n:[0-9]               // catcode 12 (other)
 punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]]   // catcode 12
 // catcode 14, including the newline
+comment_start = "%"
 comment_and_parbreak
-  = "%" c:(!nl c:. {return c})* &parbreak {return c.join("")} // parbreaks following a comment are preserved
-comment
-  = "%"  c:(!nl c:. {return c})* (nl sp*/ EOF) {return c.join("")} // if a comment is not followed by a parbreak, the newline is consumed
+  = comment_start c:(!nl c:. {return c})* &parbreak {return c.join("")} // parbreaks following a comment are preserved
+comment "comment"
+	// A comment normally consumes the next newline and all leading whitespace.
+    // The exception is if the next line consists solely of a comment. In that case,
+    // consume the newline but leave the whitespace (`full_comment` will eat the
+    // leading whitspace)
+  = comment_start  c:(!nl c:. {return c})* (nl sp* !comment_start / nl / EOF) {return c.join("")} // if a comment is not followed by a parbreak, the newline is consumed
+
+// Whitespace at the start of a line only
+leading_sp = 
+	start_of_line sp+ { return " " }
+    
+start_of_line =
+	& {
+      var loc = location();
+      return loc.start.column === 1
+    }
 
 EOF             = !.
 

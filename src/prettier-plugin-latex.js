@@ -3,8 +3,9 @@ import { parse, printRaw } from "./libs/parser";
 import {
     ReferenceMap,
     hasPreambleCode,
-    splitTabular,
+    trim,
 } from "./libs/macro-utils";
+import { parseAlignEnvironment } from "./libs/align-environment-parser";
 
 const ESCAPE = "\\";
 
@@ -63,17 +64,21 @@ export function formatAlignedContent(nodes) {
     function getSpace(len = 1) {
         return " ".repeat(len);
     }
-    const { rows, rowSeps } = splitTabular(nodes);
+
+    const rows = parseAlignEnvironment(nodes);
+    // Find the number of columns
+    const numCols = Math.max(...rows.map((r) => r.cells.length));
+    const rowSeps = rows.map(({ rowSep }) => printRaw(rowSep || []));
+    const trailingComments = rows.map(({ trailingComment }) => trailingComment);
 
     // Get the widths of each column.
     // Column widths will be the width of column contents plus the width
     // of the separator. This way, even multi-character separators
     // can be accommodated when rendering.
-    const renderedRows = rows.map(({ cells, seps }) => ({
-        cells: cells.map(printRaw),
-        seps: seps.map(printRaw),
+    const renderedRows = rows.map(({ cells, colSeps }) => ({
+        cells: cells.map(trim).map(printRaw),
+        seps: colSeps.map(printRaw),
     }));
-    const numCols = Math.max(...rows.map(({ seps }) => seps.length + 1));
     const colWidths = [];
     for (let i = 0; i < numCols; i++) {
         colWidths.push(
@@ -106,7 +111,7 @@ export function formatAlignedContent(nodes) {
         return ret;
     });
 
-    return { rows: joinedRows, rowSeps };
+    return { rows: joinedRows, rowSeps, trailingComments };
 }
 
 /**
@@ -120,21 +125,54 @@ function printEnvironmentContent(path, print, mode) {
     const node = path.getValue();
 
     if (mode === "aligned") {
-        const { rows, rowSeps } = formatAlignedContent(node.content);
+        // If an aligned environment starts with a same-line comment, we want
+        // to ignore it. It will be printed by the environment itself.
+        const leadingComment =
+            node.content[0] &&
+            node.content[0].type === "comment" &&
+            node.content[0].sameline
+                ? node.content[0]
+                : null;
+
+        const { rows, rowSeps, trailingComments } = formatAlignedContent(
+            leadingComment ? node.content.slice(1) : node.content
+        );
+
         const content = [];
         for (let i = 0; i < rows.length; i++) {
-            if (rowSeps[i]) {
-                content.push(rows[i]);
-                content.push(printRaw(rowSeps[i]));
+            const row = rows[i];
+            const rowSep = rowSeps[i];
+            const trailingComment = trailingComments[i];
+
+            // A row has
+            // 1) Content
+            // 2) (optional) rowSep (e.g., `\\`)
+            // 3) (optional) comment
+            // We want there to be exactly one space before the rowsep and exactly one space
+            // before any comment.
+            content.push(row);
+            if (rowSep) {
+                content.push(printRaw(rowSep));
+            }
+            if (rowSep && trailingComment) {
+                content.push(" ");
+            }
+            if (trailingComment) {
+                content.push(concat(["%", printRaw(trailingComment.content)]));
+            }
+            if (rowSep || trailingComment) {
                 content.push(hardline);
-            } else if (rows[i]) {
-                content.push(rows[i]);
             }
         }
         // Make sure the last item is not a `hardline`.
         if (content[content.length - 1] === hardline) {
             content.pop();
         }
+
+        if (leadingComment) {
+            content.unshift("%" + printRaw(leadingComment.content), hardline);
+        }
+
         return concat(content);
     }
 
@@ -298,6 +336,10 @@ function printLatexAst(path, options, print) {
         case "argument":
             return printArgument(path, print, "tree");
         case "comment":
+            previousNode =
+                (options.referenceMap &&
+                    options.referenceMap.getPreviousNode(node)) ||
+                {};
             content = ["%" + printRaw(node.content)];
             if (node.sameline) {
                 // This used to be a `lineSuffix` with a `lineSuffixBoundary`, but that turned out
@@ -311,8 +353,9 @@ function printLatexAst(path, options, print) {
                 return concat(content);
             }
             // Comments should insert a prefix and suffix newline unless
-            // they start/end an environment
-            if (!renderInfo.startNode) {
+            // they start/end an environment or they come right after another
+            // comment.
+            if (!renderInfo.startNode && previousNode.type !== "comment") {
                 content.unshift(hardline);
             }
             if (!node.suffixParbreak && !renderInfo.endNode) {
@@ -360,6 +403,14 @@ function printLatexAst(path, options, print) {
                 (node.content[0].type === "comment" && node.content[0].sameline)
             ) {
                 bodyStartToken.pop();
+                // If there is leading whitespace before the sameline comment,
+                // we do want to preserve that.
+                if (
+                    node.content.length > 0 &&
+                    node.content[0].leadingWhitespace
+                ) {
+                    bodyStartToken.push(" ");
+                }
             }
 
             // Verbatim environments should be printed with their content

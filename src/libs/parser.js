@@ -49,6 +49,9 @@ const SPECIAL_ENVIRONMENTS = {
     itemize: { signature: "o", processContent: cleanEnumerateBody },
     description: { signature: "o", processContent: cleanEnumerateBody },
     parts: { signature: "o", processContent: cleanEnumerateBody },
+    // Aligned environments
+    tabular: { signature: "m", renderInfo: { alignContent: true } },
+    tabularx: { signature: "m m", renderInfo: { alignContent: true } },
     // Math environments
     "equation*": { renderInfo: { inMathMode: true } },
     equation: { renderInfo: { inMathMode: true } },

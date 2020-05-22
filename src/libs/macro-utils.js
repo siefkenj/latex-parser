@@ -254,7 +254,7 @@ export function gobbleSingleArgument(ast, argType) {
 /**
  * Functions to match different types of nodes.
  */
-const match = {
+export const match = {
     macro(node, macroName) {
         if (node == null) {
             return false;
@@ -731,41 +731,6 @@ export class ReferenceMap {
 }
 
 /**
- * Splits a tabular environment based on `rowSepMacros` and `colSep` strings.
- *
- * @export
- * @param {*} ast
- * @param {string} [colSep=["&"]]
- * @param {string} [rowSepMacros=["\\", "hline", "cr"]]
- * @returns {{rows: [{cells: [object], seps: [string]}], rowSeps: [object]}}
- */
-export function splitTabular(
-    ast,
-    colSep = ["&"],
-    rowSepMacros = ["\\", "hline", "cr"]
-) {
-    if (!Array.isArray(ast)) {
-        throw new Error(
-            `Expecting Array when splitting a tabular environment, not ${ast}`
-        );
-    }
-    const { segments: rows, macros: rowSeps } = splitOnMacro(ast, rowSepMacros);
-
-    const ret = { rows: [], rowSeps };
-    for (const row of rows) {
-        let { segments: cols, separators: colSeps } = split(row, (node) =>
-            colSep.some((sep) => match.string(node, sep))
-        );
-        ret.rows.push({
-            cells: cols.map(trim),
-            seps: colSeps,
-        });
-    }
-
-    return ret;
-}
-
-/**
  * Adds `_renderInfo.alignedContent = true` to the specified node.
  *
  * @export
@@ -774,4 +739,31 @@ export function splitTabular(
  */
 export function markAlignEnv(node) {
     return updateRenderInfo(node, { alignedContent: true });
+}
+
+/**
+ * Pegjs operates on strings. However, strings and arrays are very similar!
+ * This function adds `charAt`, `charCodeAt`, and `substring` methods to
+ * `array` so that `array` can then be fed to a Pegjs generated parser.
+ *
+ * @param {[object]} array
+ * @returns {[object]}
+ */
+export function decorateArrayForPegjs(array) {
+    array.charAt = function (i) {
+        return this[i];
+    };
+    // We don't have a hope of imitating `charCodeAt`, so
+    // make it something that won't interfere
+    array.charCodeAt = () => 0;
+    array.substring = function (i, j) {
+        return this.slice(i, j);
+    };
+    // This function is called when reporting an error,
+    // so we convert back to a string.
+    array.replace = function (a, b) {
+        const ret = JSON.stringify(this);
+        return ret.replace(a, b);
+    };
+    return array;
 }

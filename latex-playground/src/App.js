@@ -16,7 +16,11 @@ import Worker from "worker-loader!./worker/parsing-worker";
 
 import * as latexParser from "./parser-utils/latex-parser";
 import { AstView } from "./ast-view";
+
+import PEG from "pegjs";
+import { DebugView } from "./DebugView";
 window.LP = latexParser;
+window.PEG = PEG;
 
 const DEFAULT_INPUT_TEXT = String.raw`\begin{enumerate}
     \item[55,4] Hi there
@@ -85,6 +89,9 @@ function App() {
             <CodeMirror value={prettierDoc} options={{ mode: "javascript" }} />
         );
     }
+    if (currDisplay === "debug") {
+        rightPanel = <DebugView texInput={texInput} textWidth={textWidth} />;
+    }
 
     return (
         <div className="App">
@@ -107,6 +114,7 @@ function App() {
                     <option value="doc">
                         Prettier Doc (AST for formatting)
                     </option>
+                    <option value="debug">Debug View</option>
                 </select>
             </div>
             <div className="tex-section">
