@@ -6,6 +6,10 @@ import peg from "pegjs";
 // Needed to print the prettier Doc
 import prettierPluginBabel from "prettier/parser-babel";
 
+// XXX globalThis needs a polyfill, otherwise CRA will silently error on build!
+import globalthisgenrator from "globalthis";
+var globalThis = globalthisgenrator();
+
 const obj = {
     format(texInput, options = {}) {
         const output = latexParser.printPrettier(texInput, options);

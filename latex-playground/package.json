@@ -9,6 +9,7 @@
     "@testing-library/user-event": "^7.1.2",
     "codemirror": "^5.52.2",
     "comlink": "^4.2.0",
+    "globalthis": "^1.0.1",
     "react": "^16.13.1",
     "react-codemirror2": "^7.1.0",
     "react-dom": "^16.13.1",
