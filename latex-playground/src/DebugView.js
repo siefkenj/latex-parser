@@ -9,14 +9,11 @@ import "codemirror/addon/display/rulers";
 
 import "./App.css";
 
-import { CodeMirrorPanel } from "./CodeMirrorPanel.js";
-
 import * as Comlink from "comlink";
 /* eslint-disable import/no-webpack-loader-syntax */
 import Worker from "worker-loader!./worker/parsing-worker";
 
 import * as latexParser from "./parser-utils/latex-parser";
-import { AstView } from "./ast-view";
 
 import PEG from "pegjs";
 window.latexParser = latexParser;
