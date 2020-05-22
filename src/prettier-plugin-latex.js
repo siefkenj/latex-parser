@@ -1,10 +1,6 @@
 import Prettier from "prettier/standalone";
 import { parse, printRaw } from "./libs/parser";
-import {
-    ReferenceMap,
-    hasPreambleCode,
-    trim,
-} from "./libs/macro-utils";
+import { ReferenceMap, hasPreambleCode, trim } from "./libs/macro-utils";
 import { parseAlignEnvironment } from "./libs/align-environment-parser";
 
 const ESCAPE = "\\";
@@ -277,9 +273,24 @@ function formatEnvSurround(node) {
     };
 }
 
+const EMPTY_OBJECT = {};
+
 function printLatexAst(path, options, print) {
     const node = path.getValue();
-    const renderInfo = node._renderInfo || {};
+    let renderInfo = node._renderInfo || EMPTY_OBJECT;
+    const previousNode =
+        (options.referenceMap && options.referenceMap.getPreviousNode(node)) ||
+        EMPTY_OBJECT;
+    const nextNode =
+        (options.referenceMap && options.referenceMap.getNextNode(node)) ||
+        EMPTY_OBJECT;
+    // It's useful to know whether we're the start or end node in an array,
+    // so compute this information.
+    renderInfo = {
+        ...renderInfo,
+        endNode: nextNode === EMPTY_OBJECT,
+        startNode: previousNode === EMPTY_OBJECT,
+    };
 
     let breakOnAllLines = false;
     if (path.getName() == null) {
@@ -331,15 +342,11 @@ function printLatexAst(path, options, print) {
     }
 
     // tmp variables
-    let content, startToken, bodyStartToken, nextNode, previousNode, env;
+    let content, startToken, bodyStartToken, env;
     switch (node.type) {
         case "argument":
             return printArgument(path, print, "tree");
         case "comment":
-            previousNode =
-                (options.referenceMap &&
-                    options.referenceMap.getPreviousNode(node)) ||
-                {};
             content = ["%" + printRaw(node.content)];
             if (node.sameline) {
                 // This used to be a `lineSuffix` with a `lineSuffixBoundary`, but that turned out
@@ -383,10 +390,6 @@ function printLatexAst(path, options, print) {
             // If we are a startNode or we are preceded by a parskip,
             // we don't want a forced newline at the start.
             startToken = [hardline];
-            previousNode =
-                (options.referenceMap &&
-                    options.referenceMap.getPreviousNode(node)) ||
-                {};
             if (
                 renderInfo.startNode ||
                 previousNode.type === "parbreak" ||
@@ -441,10 +444,6 @@ function printLatexAst(path, options, print) {
             // If we are a startNode or we are preceded by a parskip,
             // we don't want a forced newline at the start.
             startToken = [hardline];
-            previousNode =
-                (options.referenceMap &&
-                    options.referenceMap.getPreviousNode(node)) ||
-                {};
             if (
                 renderInfo.startNode ||
                 previousNode.type === "parbreak" ||
@@ -526,10 +525,6 @@ function printLatexAst(path, options, print) {
         case "whitespace":
             // Environments print a `hardline` before they start, so there is no need to
             // put any whitespace down if the next item is an environment
-            nextNode =
-                (options.referenceMap &&
-                    options.referenceMap.getNextNode(node)) ||
-                {};
             if (
                 (nextNode.env != null && nextNode.type !== "verb") ||
                 nextNode.type === "displaymath"
@@ -541,10 +536,6 @@ function printLatexAst(path, options, print) {
             // a `line` is either a line break or a space. However, if the
             // previous node is an environment, we want to use a `hardline` instead
             // of a line.
-            previousNode =
-                (options.referenceMap &&
-                    options.referenceMap.getPreviousNode(node)) ||
-                {};
             if (
                 (previousNode.env != null && previousNode.type !== "verb") ||
                 previousNode.type === "displaymath"

@@ -652,28 +652,6 @@ export function processEnvironment(ast, envName, envInfo) {
 }
 
 /**
- * Add `_renderInfo.startNode` and `_renderInfo.endNode` properties
- * to the first and last nodes of an array. This operation is destructive.
- *
- * @export
- * @param {*} ast
- * @returns
- */
-export function tagStartAndEndNodes(ast) {
-    return walkAst(
-        ast,
-        (array) => {
-            if (array.length > 0) {
-                updateRenderInfo(array[0], { startNode: true });
-                updateRenderInfo(array[array.length - 1], { endNode: true });
-            }
-            return array;
-        },
-        (node) => Array.isArray(node)
-    );
-}
-
-/**
  * Remove any whitespace from the start and end of environment bodies.
  *
  * @param {*} ast

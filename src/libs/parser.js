@@ -4,7 +4,6 @@ import {
     cleanEnumerateBody,
     processEnvironment,
     trim,
-    tagStartAndEndNodes,
     trimEnvironmentContents,
 } from "./macro-utils";
 
@@ -167,7 +166,6 @@ function parse(str = "") {
     ast = processSpecialEnvironments(ast);
     ast = trim(ast);
     ast = trimEnvironmentContents(ast);
-    ast = tagStartAndEndNodes(ast);
     return ast;
 }
 
