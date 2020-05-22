@@ -89,25 +89,7 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
         	return {type:"verb", env: env, escape:e, content:x.join("")}
       }
     // verbatim environment
-  / escape "begin{verbatim}" x:(!(escape "end{verbatim}") x:. {return x})* escape "end{verbatim}"
-      {
-        	return {type: "verbatim", env: "verbatim", content:x.join("")}
-      }
-    // verbatim* environment
-  / escape "begin{verbatim*}" x:(!(escape "end{verbatim*}") x:. {return x})* escape "end{verbatim*}"
-      {
-        	return {type: "verbatim", env: "verbatim*", content:x.join("")}
-      }
-    // comment environment provided by \usepackage{verbatim}
-  / escape "begin{comment}" x:(!(escape "end{comment}") x:. {return x})* escape "end{comment}"
-      {
-        	return {type: "verbatim", env: "comment", content: x.join("")}
-      }
-    // lstlisting environment provided by \usepackage{listings}
-  / escape "begin{lstlisting}" x:(!(escape "end{lstlisting}") x:. {return x})* escape "end{lstlisting}"
-      {
-        	return {type: "verbatim", env: "lstlisting", content: x.join("")}
-      }
+   / verbatim_environment
     //display math with \[...\]
   / begin_display_math x:(!end_display_math x:math_token {return x})* end_display_math
       {
@@ -125,7 +107,29 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
       }
   / math_environment
   / environment
-  
+
+verbatim_environment "verbatim environment"
+  = begin_env begin_group env:verbatim_env_name end_group
+    			body:(
+                	!(end_env end_env:group & {return compare_env({content:[env]},end_env)})
+                	x:. {return x}
+                )*
+    end_env begin_group verbatim_env_name end_group {
+    	return {
+        		type: "verbatim",
+                env: env,
+                content: body.join("")
+            }
+        }
+
+verbatim_env_name
+	// standard verbatim enviroments. `verbatim*` must be listed first
+	= "verbatim*"
+    / "verbatim"
+    // comment environment provided by \usepackage{verbatim}
+    / "comment"
+    // lstlisting environment provided by \usepackage{listings}
+    / "lstlistings"
   
 macro "macro" 
   = m:(escape n:char+ {return n.join("")}
