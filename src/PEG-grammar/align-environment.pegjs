@@ -79,12 +79,12 @@ row_items
 
 // These rules use Javascript to do their matching
 // so that they can work on AST nodes instead of strings
-same_line_comment = &(tok:. & {return options.isSameLineComment(tok)}) x:. { return x }
-own_line_comment = &(tok:. & {return options.isOwnLineComment(tok)}) x:. { return x }
+same_line_comment =  tok:. & {return options.isSameLineComment(tok)} { return tok }
+own_line_comment =  tok:. & {return options.isOwnLineComment(tok)} { return tok }
+whitespace =  tok:. & {return options.isWhitespace(tok)} { return tok }
+row_sep =  tok:. & {return options.isRowSep(tok)} { return tok }
+col_sep =  tok:. & {return options.isColSep(tok)} { return tok }
 EOL = !.
-whitespace =  &(tok:. & {return options.isWhitespace(tok)}) x:. { return x }
-row_sep = &(tok:. & {return options.isRowSep(tok)}) x:. { return x }
-col_sep = &(tok:. & {return options.isColSep(tok)}) x:. { return x }    
 
 
 /*
