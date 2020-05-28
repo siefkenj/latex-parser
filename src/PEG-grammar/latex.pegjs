@@ -158,15 +158,9 @@ group "group"
       return { type: "group", content: x };
     }
 
-argument_list "argument list"
-  = whitespace* "[" body:(!"]" x:("," / args_token) { return x; })* "]" {
-      return { type: "argument", content: body, openMark: "[", closeMark: "]" };
-    }
-
 environment "environment"
   = begin_env
     env:group
-    args:argument_list?
     env_comment:env_comment?
     body:(
       !(end_env end_env:group & { return compare_env(env, end_env); }) x:token {
@@ -178,7 +172,6 @@ environment "environment"
       return {
         type: "environment",
         env: env.content,
-        args: args,
         content: env_comment ? [env_comment, ...body] : body,
       };
     }

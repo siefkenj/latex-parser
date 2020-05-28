@@ -362,10 +362,10 @@ describe("AST tests", () => {
             },
             { type: "string", content: "c" },
         ]);
-        // Substitute into an environment's args and body, but not its name (`.env`)
+        // Substitute into an environment's body, but not its name (`.env`)
         ast = macroUtils.trimRenderInfo(
             latexParser.parse(
-                "\\begin{\\xxx a}[\\xxx a]b\\xxx c d\\end{\\xxx a}"
+                "\\begin{\\xxx a}b\\xxx c d\\end{\\xxx a}"
             )
         );
         subbedAst = macroUtils.attachMacroArgs(ast, "xxx", {
@@ -379,25 +379,6 @@ describe("AST tests", () => {
                     { type: "whitespace" },
                     { type: "string", content: "a" },
                 ],
-                args: {
-                    type: "argument",
-                    content: [
-                        {
-                            type: "macro",
-                            content: "xxx",
-                            args: [
-                                {
-                                    type: "argument",
-                                    content: [{ type: "string", content: "a" }],
-                                    openMark: "{",
-                                    closeMark: "}",
-                                },
-                            ],
-                        },
-                    ],
-                    openMark: "[",
-                    closeMark: "]",
-                },
                 content: [
                     { type: "string", content: "b" },
                     {
