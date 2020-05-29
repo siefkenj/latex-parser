@@ -364,9 +364,7 @@ describe("AST tests", () => {
         ]);
         // Substitute into an environment's body, but not its name (`.env`)
         ast = macroUtils.trimRenderInfo(
-            latexParser.parse(
-                "\\begin{\\xxx a}b\\xxx c d\\end{\\xxx a}"
-            )
+            latexParser.parse("\\begin{\\xxx a}b\\xxx c d\\end{\\xxx a}")
         );
         subbedAst = macroUtils.attachMacroArgs(ast, "xxx", {
             signature: "m",
@@ -730,5 +728,22 @@ describe("AST tests", () => {
         expect(
             latexParser.printRaw(macroUtils.cleanEnumerateBody(ast, "xxx"))
         ).toEqual(outStr);
+    });
+
+    it("merges whitespace and parbreaks", () => {
+        // wrap the parbreak in a group so that it doesn't get trimmed by the parser
+        let targetAst = macroUtils.trimRenderInfo(latexParser.parse("{\n\n}"));
+
+        let ast = macroUtils.trimRenderInfo(latexParser.parse("{\n}"));
+        expect(macroUtils.trim(ast)).not.toEqual(targetAst);
+
+        ast = macroUtils.trimRenderInfo(latexParser.parse("{\n\n\n}"));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        ast = macroUtils.trimRenderInfo(latexParser.parse("{\n\n \n}"));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        ast = macroUtils.trimRenderInfo(latexParser.parse("{\n\n \n\n}"));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
     });
 });

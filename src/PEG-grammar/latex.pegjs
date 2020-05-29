@@ -25,7 +25,7 @@ token "token"
   / punctuation
   / x:(!nonchar_token x:. { return x; })+ { return x.join(""); }
 
-parbreak "parbreak" = sp* nl sp* nl+ sp* { return { type: "parbreak" }; }
+parbreak "parbreak" = sp* nl (sp* nl)+ sp* { return { type: "parbreak" }; }
 
 math_token "math token"
   = special_macro
