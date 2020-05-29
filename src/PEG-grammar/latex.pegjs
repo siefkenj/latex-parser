@@ -17,8 +17,6 @@ token "token"
   / alignment_tab
   / parbreak
   / macro_parameter
-  / superscript
-  / subscript
   / ignore
   / number
   / whitespace
@@ -34,12 +32,6 @@ math_token "math token"
   / whitespace* x:group whitespace* { return x; }
   / whitespace* x:alignment_tab whitespace* { return x; }
   / whitespace* x:macro_parameter whitespace* { return x; }
-  / whitespace* superscript whitespace* x:math_token {
-      return { type: "superscript", content: x };
-    }
-  / whitespace* subscript whitespace* x:math_token {
-      return { type: "subscript", content: x };
-    }
   / ignore
   / whitespace
   / .
@@ -55,8 +47,6 @@ args_token "args token"
   / alignment_tab
   / sp* nl sp* nl+ sp* { return { type: "parbreak" }; }
   / macro_parameter
-  / superscript
-  / subscript
   / ignore
   / number
   / whitespace
@@ -72,8 +62,6 @@ nonchar_token "nonchar token"
   / alignment_tab
   / nl
   / macro_parameter
-  / superscript
-  / subscript
   / ignore
   / sp
   / punctuation
@@ -98,20 +86,21 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
     }
   // verbatim environment
   / verbatim_environment
-  //display math with \[...\]
+  // display math with \[...\]
   / begin_display_math
     x:(!end_display_math x:math_token { return x; })*
     end_display_math { return { type: "displaymath", content: x }; }
-  //inline math with \(...\)
+  // inline math with \(...\)
   / begin_inline_math
     x:(!end_inline_math x:math_token { return x; })*
     end_inline_math { return { type: "inlinemath", content: x }; }
-  //display math with $$ $$
+  // display math with $$...$$
   / math_shift
     math_shift
     x:(!(math_shift math_shift) x:math_token { return x; })*
     math_shift
     math_shift { return { type: "displaymath", content: x }; }
+  // math with $...$
   / math_environment
   / environment
 

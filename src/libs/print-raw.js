@@ -13,7 +13,7 @@ export function printRaw(node) {
         return node.map(printRaw).join("");
     }
     // tmp variables
-    let argsString = "";
+    let argsString = "", escape;
     switch (node.type) {
         case "argument":
             return node.openMark + printRaw(node.content) + node.closeMark;
@@ -39,25 +39,12 @@ export function printRaw(node) {
             return "$" + printRaw(node.content) + "$";
         case "macro":
             argsString = node.args == null ? "" : printRaw(node.args);
-            return ESCAPE + printRaw(node.content) + argsString;
+            escape = node.escapeToken == null ? ESCAPE : node.escapeToken;
+            return escape + printRaw(node.content) + argsString;
         case "parbreak":
             return "\n\n";
         case "string":
             return node.content;
-        case "subscript":
-            if (node.content.type === "group") {
-                // Groups are already wrapped in {...}. We don't want
-                // to double do it!
-                return "_" + printRaw(node.content);
-            }
-            return "_{" + printRaw(node.content) + "}";
-        case "superscript":
-            if (node.content.type === "group") {
-                // Groups are already wrapped in {...}. We don't want
-                // to double do it!
-                return "^" + printRaw(node.content);
-            }
-            return "^{" + printRaw(node.content) + "}";
         case "verb":
             return (
                 ESCAPE +

@@ -13,6 +13,8 @@ import { printRaw } from "./print-raw";
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS = {
     "\\": { signature: "o" },
+    "_": { signature: "m" },
+    "^": { signature: "m" },
     mathbb: { signature: "m" },
     mathcal: { signature: "m" },
     mathscr: { signature: "m" },

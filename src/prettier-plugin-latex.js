@@ -206,7 +206,8 @@ function printMacro(path, print, mode = "tree") {
         }
     }
     // An array with all the prettier commands to be rendered by a `fill` or `concat`
-    const flatBody = [].concat([ESCAPE, printRaw(node.content)], ...args);
+    const escape = node.escapeToken == null ? ESCAPE : node.escapeToken;
+    const flatBody = [].concat([escape, printRaw(node.content)], ...args);
 
     if (mode === "tree") {
         if (renderInfo.hangingIndent) {
@@ -500,20 +501,6 @@ function printLatexAst(path, options, print) {
             return concat([hardline, hardline]);
         case "string":
             return node.content;
-        case "subscript":
-            // TODO we should pre-process to add groups instead
-            if (node.content.type !== "group") {
-                // We always want a script to be surrounded by a group
-                return concat(["_", "{", path.call(print, "content"), "}"]);
-            }
-            return concat(["_", path.call(print, "content")]);
-        case "superscript":
-            // TODO we should pre-process to add groups instead
-            if (node.content.type !== "group") {
-                // We always want a script to be surrounded by a group
-                return concat(["^", "{", path.call(print, "content"), "}"]);
-            }
-            return concat(["^", path.call(print, "content")]);
         case "verb":
             return concat([
                 ESCAPE,
