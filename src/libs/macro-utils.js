@@ -1,6 +1,6 @@
-import { walkAst, trimRenderInfo, updateRenderInfo, match, trim } from "./ast";
+import { walkAst, trimRenderInfo, updateRenderInfo, match, trim, processEnvironment } from "./ast";
 
-export { trimRenderInfo, match, trim };
+export { trimRenderInfo, match, trim, processEnvironment };
 
 /**
  * Returns true if a `\documentclass` macro is detected,
@@ -149,40 +149,6 @@ export function cleanEnumerateBody(ast, itemName = "item") {
     }
 
     return [].concat(segments[0], ...macros);
-}
-
-/**
- * Recursively search for and process an environment. Arguments are
- * consumed according to the `signature` specified. The body is processed
- * with the specified `processContent` function (if specified). Any specified `renderInfo`
- * is attached to the environment node.
- *
- * @param {object} ast
- * @param {string} envName
- * @param {object} envInfo
- * @returns - a new AST
- */
-export function processEnvironment(ast, envName, envInfo) {
-    return walkAst(
-        ast,
-        (node) => {
-            const ret = { ...node };
-            // XXX Should process the environment arguments here!
-
-            updateRenderInfo(ret, envInfo.renderInfo);
-            if (typeof envInfo.processContent === "function") {
-                // process the body of the environment if a processing function was supplied
-                ret.content = envInfo.processContent(ret.content);
-            }
-            if (typeof envInfo.processNode === "function") {
-                // process the node itself if a processing function was supplied
-                envInfo.processNode(ret);
-            }
-
-            return ret;
-        },
-        (node) => match.environment(node, envName)
-    );
 }
 
 /**

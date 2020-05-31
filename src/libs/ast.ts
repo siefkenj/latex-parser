@@ -442,6 +442,36 @@ export function attachMacroArgsInArray(
 }
 
 /**
+ * Search from the start of an array and pick off any arguments matching the passed-in
+ * argspec string.
+ *
+ * @param {[object]} ast
+ * @param {string} macroName
+ * @param {object} macroInfo
+ * @returns {[object]}
+ */
+export function getArgsInArray(
+    ast: Ast.Node[],
+    signature: string
+): {
+    arguments: Ast.Argument[];
+    rest: Ast.Node[];
+} {
+    const args: Ast.Argument[] = [];
+    let rest = ast;
+    for (const argSpec of parseArgspec(signature)) {
+        const { rest: after, argument } = gobbleSingleArgument(rest, argSpec);
+        if (argument) {
+            // If we found an argument keep it for later
+            args.push(argument);
+        }
+        rest = after;
+    }
+
+    return { arguments: args, rest };
+}
+
+/**
  * Recursively search for and attach the arguments for a
  * particular macro to its AST node. `macroInfo` should
  * contain a `signature` property which specifies the arguments
@@ -466,6 +496,59 @@ export function attachMacroArgs(
         },
         (node) => Array.isArray(node),
         { triggerTime: "late" }
+    );
+}
+
+/**
+ * Recursively search for and process an environment. Arguments are
+ * consumed according to the `signature` specified. The body is processed
+ * with the specified `processContent` function (if specified). Any specified `renderInfo`
+ * is attached to the environment node.
+ *
+ * @param {object} ast
+ * @param {string} envName
+ * @param {object} envInfo
+ * @returns - a new AST
+ */
+export function processEnvironment(
+    ast: Ast.Ast,
+    envName: string,
+    envInfo: {
+        renderInfo?: object;
+        processContent?: (ast: Ast.Node[]) => Ast.Node[];
+        processNode?: (ast: Ast.Node) => void;
+        signature?: string;
+    }
+) {
+    return walkAst(
+        ast,
+        (node: Ast.Ast) => {
+            const ret = { ...node } as Ast.Environment;
+            // We don't process arguments if there is an existing `args` property.
+            if (typeof envInfo.signature === "string" && ret.args == null) {
+                const { arguments: args, rest } = getArgsInArray(
+                    ret.content,
+                    envInfo.signature
+                );
+                if (args.length > 0) {
+                    ret.args = args;
+                    ret.content = rest;
+                }
+            }
+
+            updateRenderInfo(ret, envInfo.renderInfo);
+            if (typeof envInfo.processContent === "function") {
+                // process the body of the environment if a processing function was supplied
+                ret.content = envInfo.processContent(ret.content);
+            }
+            if (typeof envInfo.processNode === "function") {
+                // process the node itself if a processing function was supplied
+                envInfo.processNode(ret);
+            }
+
+            return ret;
+        },
+        (node: Ast.Ast) => match.environment(node, envName)
     );
 }
 

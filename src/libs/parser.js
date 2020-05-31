@@ -12,7 +12,7 @@ import { printRaw } from "./print-raw";
 // A list of macros to be specially treated. The agument signature
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS = {
-    "\\": { signature: "o" },
+    "\\": { signature: "!s o" },
     _: { signature: "m" },
     "^": { signature: "m" },
     mathbb: { signature: "m" },
