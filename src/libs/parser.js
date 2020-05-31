@@ -1,11 +1,11 @@
 import PegParser from "../PEG-grammar/latex.pegjs";
 import {
-    attachMacroArgs,
     cleanEnumerateBody,
     processEnvironment,
     trim,
     trimEnvironmentContents,
 } from "./macro-utils";
+import { attachMacroArgs } from "./ast";
 
 import { printRaw } from "./print-raw";
 
@@ -13,7 +13,7 @@ import { printRaw } from "./print-raw";
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS = {
     "\\": { signature: "o" },
-    "_": { signature: "m" },
+    _: { signature: "m" },
     "^": { signature: "m" },
     mathbb: { signature: "m" },
     mathcal: { signature: "m" },
@@ -101,9 +101,7 @@ function processSpecialEnvironments(ast) {
  * @returns
  */
 function attachSpecialMacroArgs(ast) {
-    for (const [macroName, macroInfo] of Object.entries(SPECIAL_MACROS)) {
-        ast = attachMacroArgs(ast, macroName, macroInfo);
-    }
+    ast = attachMacroArgs(ast, SPECIAL_MACROS)
 
     return ast;
 }

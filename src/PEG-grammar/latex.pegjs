@@ -32,6 +32,12 @@ math_token "math token"
   / whitespace* x:group whitespace* { return x; }
   / whitespace* x:alignment_tab whitespace* { return x; }
   / whitespace* x:macro_parameter whitespace* { return x; }
+  / whitespace* superscript whitespace* {
+      return { type: "macro", content: "^", escapeToken: "" };
+    }
+  / whitespace* subscript whitespace* {
+      return { type: "macro", content: "_", escapeToken: "" };
+    }
   / ignore
   / whitespace
   / .
