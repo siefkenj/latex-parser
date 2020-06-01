@@ -2,6 +2,15 @@
   function compare_env(g1, g2) {
     return g1.content.join("") == g2.content.join("");
   }
+
+  function createNode(type, extra={}) {
+    const ret = {type, ...extra};
+    // Add a non-enumerable location property to `ret`. Since it is
+    // non-enumerable, it won't clutter up the syntax tree when printed.
+    Object.defineProperty(ret, "loc", {value: location()});
+
+    return ret;
+  }
 }
 
 document "document" = token*
@@ -12,7 +21,7 @@ token "token"
   / full_comment
   / group
   / math_shift eq:(!math_shift t:math_token { return t; })+ math_shift {
-      return { type: "inlinemath", content: eq };
+      return createNode("inlinemath", { content: eq });
     }
   / alignment_tab
   / parbreak
@@ -23,7 +32,7 @@ token "token"
   / punctuation
   / x:(!nonchar_token x:. { return x; })+ { return x.join(""); }
 
-parbreak "parbreak" = sp* nl (sp* nl)+ sp* { return { type: "parbreak" }; }
+parbreak "parbreak" = sp* nl (sp* nl)+ sp* { return createNode("parbreak"); }
 
 math_token "math token"
   = special_macro
@@ -33,10 +42,10 @@ math_token "math token"
   / whitespace* x:alignment_tab whitespace* { return x; }
   / whitespace* x:macro_parameter whitespace* { return x; }
   / whitespace* superscript whitespace* {
-      return { type: "macro", content: "^", escapeToken: "" };
+      return createNode("macro", { content: "^", escapeToken: "" });
     }
   / whitespace* subscript whitespace* {
-      return { type: "macro", content: "_", escapeToken: "" };
+      return createNode("macro", { content: "_", escapeToken: "" });
     }
   / ignore
   / whitespace
@@ -48,10 +57,10 @@ args_token "args token"
   / full_comment
   / group
   / math_shift eq:(!math_shift t:math_token { return t; })+ math_shift {
-      return { type: "inlinemath", content: eq };
+      return createNode("inlinemath", { content: eq });
     }
   / alignment_tab
-  / sp* nl sp* nl+ sp* { return { type: "parbreak" }; }
+  / sp* nl sp* nl+ sp* { return createNode("parbreak"); }
   / macro_parameter
   / ignore
   / number
@@ -74,7 +83,7 @@ nonchar_token "nonchar token"
   / EOF
 
 whitespace "whitespace"
-  = (nl sp* / sp+ nl !comment sp* !nl / sp+) { return { type: "whitespace" }; }
+  = (nl sp* / sp+ nl !comment sp* !nl / sp+) { return createNode("whitespace"); }
 
 number "number"
   = a:num+ "." b:num+ { return a.join("") + "." + b.join(""); }
@@ -88,24 +97,24 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
     e:.
     x:(!(end:. & { return end == e; }) x:. { return x; })*
     (end:. & { return end == e; }) {
-      return { type: "verb", env: env, escape: e, content: x.join("") };
+      return createNode("verb", { env: env, escape: e, content: x.join("") });
     }
   // verbatim environment
   / verbatim_environment
   // display math with \[...\]
   / begin_display_math
     x:(!end_display_math x:math_token { return x; })*
-    end_display_math { return { type: "displaymath", content: x }; }
+    end_display_math { return createNode("displaymath", { content: x }); }
   // inline math with \(...\)
   / begin_inline_math
     x:(!end_inline_math x:math_token { return x; })*
-    end_inline_math { return { type: "inlinemath", content: x }; }
+    end_inline_math { return createNode("inlinemath", { content: x }); }
   // display math with $$...$$
   / math_shift
     math_shift
     x:(!(math_shift math_shift) x:math_token { return x; })*
     math_shift
-    math_shift { return { type: "displaymath", content: x }; }
+    math_shift { return createNode("displaymath", { content: x }); }
   // math with $...$
   / math_environment
   / environment
@@ -127,11 +136,10 @@ verbatim_environment "verbatim environment"
     begin_group
     verbatim_env_name
     end_group {
-      return {
-        type: "verbatim",
+      return createNode("verbatim", {
         env: env,
         content: body.join(""),
-      };
+      });
     }
 
 verbatim_env_name
@@ -145,12 +153,12 @@ verbatim_env_name
 
 macro "macro"
   = m:(escape n:char+ { return n.join(""); } / escape n:. { return n; }) {
-      return { type: "macro", content: m };
+      return createNode("macro", { content: m });
     }
 
 group "group"
   = begin_group x:(!end_group c:token { return c; })* end_group {
-      return { type: "group", content: x };
+      return createNode("group", { content: x });
     }
 
 environment "environment"
@@ -164,11 +172,10 @@ environment "environment"
     )*
     end_env
     group {
-      return {
-        type: "environment",
+      return createNode("environment", {
         env: env.content,
         content: env_comment ? [env_comment, ...body] : body,
-      };
+      });
     }
 
 math_environment "math environment"
@@ -189,61 +196,44 @@ math_environment "math environment"
     begin_group
     math_env_name
     end_group {
-      return {
-        type: "mathenv",
+      return createNode("mathenv", {
         env: env,
         content: env_comment ? [env_comment, ...body] : body,
-      };
+      });
     }
 
 // group that assumes you're in math mode.  If you use "\text{}" this isn't a good idea....
 math_group "math group"
   = begin_group x:(!end_group c:math_token { return c; })* end_group {
-      return { type: "group", content: x };
+      return createNode("group", { content: x });
     }
 
 full_comment "full comment"
   // comment that detects whether it is at the end of a line or on a new line
   = start_of_line x:comment {
-      return { type: "comment", content: x, sameline: false };
+      return createNode("comment", { content: x, sameline: false });
     }
   / leading_sp x:comment {
-      return {
-        type: "comment",
-        content: x,
-        sameline: false,
-        leadingWhitespace: true,
-      };
+      return createNode("comment", { content: x, sameline: false, leadingWhitespace: true });
     }
   / sp* nl leading_sp? x:comment_and_parbreak {
-      return {
-        type: "comment",
-        content: x,
-        sameline: false,
-        suffixParbreak: true,
-      };
+      return createNode("comment", { content: x, sameline: false, suffixParbreak: true });
     }
   / sp* nl leading_sp? x:comment {
-      return { type: "comment", content: x, sameline: false };
+      return createNode("comment", { content: x, sameline: false });
     }
   / x:comment_and_parbreak {
-      return {
-        type: "comment",
-        content: x,
-        sameline: true,
-        suffixParbreak: true,
-      };
+      return createNode("comment", { content: x, sameline: true, suffixParbreak: true });
     }
-  / x:comment { return { type: "comment", content: x, sameline: true }; }
+  / x:comment { return createNode("comment", { content: x, sameline: true }); }
 
 env_comment "environment comment"
   = sp:sp* comment:comment {
-      return {
-        type: "comment",
+      return createNode("comment", {
         content: comment,
         sameline: true,
         leadingWhitespace: sp.length > 0,
-      };
+      });
     }
 
 begin_display_math = escape "["

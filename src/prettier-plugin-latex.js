@@ -549,8 +549,8 @@ export const parsers = {
     "latex-parser": {
         parse,
         astFormat: "latex-ast",
-        locStart: () => 0,
-        locEnd: () => 1,
+        locStart: (node) => node.loc ? node.loc.start.offset: 0,
+        locEnd: (node) => node.loc ? node.loc.end.offset: 1,
     },
 };
 

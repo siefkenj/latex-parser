@@ -3,6 +3,13 @@ import * as Ast from "./ast-types";
 import { printRaw } from "./print-raw";
 import { parse as parseArgspec } from "./argspec-parser";
 
+export type EnvInfo = {
+    renderInfo?: object;
+    processContent?: (ast: Ast.Node[]) => Ast.Node[];
+    processNode?: (ast: Ast.Node) => void;
+    signature?: string;
+};
+
 /**
  * Walk the AST and replace a node with `callback(node)` whenever
  * `callbackTrigger(node)` returns true.
@@ -109,7 +116,9 @@ export function trimRenderInfo(ast: Ast.Ast) {
  * @param {[object]} ast
  * @returns {[object]}
  */
-export function trim(ast: Ast.Node[]): Ast.Node[] {
+export function trim(ast: Ast.Node[]): Ast.Node[]
+export function trim(ast: Ast.Ast): Ast.Ast
+export function trim(ast: Ast.Node[] | Ast.Ast): any {
     if (!Array.isArray(ast)) {
         console.warn("Trying to trim a non-array ast", ast);
         return ast;
@@ -513,12 +522,7 @@ export function attachMacroArgs(
 export function processEnvironment(
     ast: Ast.Ast,
     envName: string,
-    envInfo: {
-        renderInfo?: object;
-        processContent?: (ast: Ast.Node[]) => Ast.Node[];
-        processNode?: (ast: Ast.Node) => void;
-        signature?: string;
-    }
+    envInfo: EnvInfo
 ) {
     return walkAst(
         ast,

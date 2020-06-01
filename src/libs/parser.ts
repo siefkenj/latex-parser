@@ -1,11 +1,12 @@
-import PegParser from "../PEG-grammar/latex.pegjs";
+import PegParser from "./latex-pegjs";
 import {
     cleanEnumerateBody,
     processEnvironment,
     trim,
     trimEnvironmentContents,
 } from "./macro-utils";
-import { attachMacroArgs } from "./ast";
+import { attachMacroArgs, EnvInfo } from "./ast";
+import * as Ast from "./ast-types"
 
 import { printRaw } from "./print-raw";
 
@@ -47,13 +48,18 @@ const SPECIAL_MACROS = {
     includegraphics: { signature: "o m" },
 };
 
-const SPECIAL_ENVIRONMENTS = {
+interface SpecialEnvSpec {
+    [key: string]: EnvInfo
+}
+
+const SPECIAL_ENVIRONMENTS:SpecialEnvSpec = {
     document: { processContent: trim },
     // Enumerate environments
-    enumerate: { signature: "o", processContent: cleanEnumerateBody },
-    itemize: { signature: "o", processContent: cleanEnumerateBody },
-    description: { signature: "o", processContent: cleanEnumerateBody },
-    parts: { signature: "o", processContent: cleanEnumerateBody },
+    // XXX TODO, clean up these types
+    enumerate: { signature: "o", processContent: cleanEnumerateBody as any },
+    itemize: { signature: "o", processContent: cleanEnumerateBody as any },
+    description: { signature: "o", processContent: cleanEnumerateBody as any },
+    parts: { signature: "o", processContent: cleanEnumerateBody as any },
     // Aligned environments
     tabular: { signature: "m", renderInfo: { alignContent: true } },
     tabularx: { signature: "m m", renderInfo: { alignContent: true } },
@@ -89,7 +95,7 @@ const SPECIAL_ENVIRONMENTS = {
  * @param {*} ast
  * @returns
  */
-function processSpecialEnvironments(ast) {
+function processSpecialEnvironments(ast: Ast.Ast) {
     for (const [envName, envInfo] of Object.entries(SPECIAL_ENVIRONMENTS)) {
         ast = processEnvironment(ast, envName, envInfo);
     }
@@ -104,7 +110,7 @@ function processSpecialEnvironments(ast) {
  * @param {*} ast
  * @returns
  */
-function attachSpecialMacroArgs(ast) {
+function attachSpecialMacroArgs(ast: Ast.Ast) {
     ast = attachMacroArgs(ast, SPECIAL_MACROS);
 
     return ast;
@@ -117,7 +123,7 @@ function attachSpecialMacroArgs(ast) {
  *
  * @param {*} node
  */
-function wrapStrings(node) {
+function wrapStrings(node: Ast.Ast | string): Ast.Ast {
     if (node == null) {
         return node;
     }
@@ -125,7 +131,7 @@ function wrapStrings(node) {
         return { type: "string", content: node };
     }
     if (Array.isArray(node)) {
-        return node.map(wrapStrings);
+        return node.map(wrapStrings) as any;
     }
     // At this point, `node` must be an object
     // wrap strings that appear in children
@@ -149,8 +155,8 @@ function wrapStrings(node) {
 
     const ret = { ...node };
     for (const prop of childProps) {
-        if (ret[prop] != null) {
-            ret[prop] = wrapStrings(ret[prop]);
+        if (prop in ret) {
+            (ret as any)[prop] = wrapStrings((ret as any)[prop]);
         }
     }
 
