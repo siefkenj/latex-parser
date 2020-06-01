@@ -36,11 +36,15 @@ const SPECIAL_MACROS = {
     text: { signature: "m", renderInfo: { inMathMode: false } },
     frac: { signature: "m m" },
     item: { signature: "o", renderInfo: { hangingIndent: true } },
+    // TeX commands
+    parbox: { signature: "o o o m m" },
     // Preamble macros
     documentclass: { signature: "o m" },
     usepackage: { signature: "o m" },
     newcommand: { signature: "m o o m" },
     definecolor: { signature: "m m m" },
+    // LaTeX commands
+    includegraphics: { signature: "o m" },
 };
 
 const SPECIAL_ENVIRONMENTS = {
@@ -101,7 +105,7 @@ function processSpecialEnvironments(ast) {
  * @returns
  */
 function attachSpecialMacroArgs(ast) {
-    ast = attachMacroArgs(ast, SPECIAL_MACROS)
+    ast = attachMacroArgs(ast, SPECIAL_MACROS);
 
     return ast;
 }

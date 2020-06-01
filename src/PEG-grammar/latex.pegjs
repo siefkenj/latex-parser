@@ -141,7 +141,7 @@ verbatim_env_name
   // comment environment provided by \usepackage{verbatim}
   / "comment"
   // lstlisting environment provided by \usepackage{listings}
-  / "lstlistings"
+  / "lstlisting"
 
 macro "macro"
   = m:(escape n:char+ { return n.join(""); } / escape n:. { return n; }) {
