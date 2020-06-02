@@ -10,6 +10,10 @@ export interface GenericNode {
 interface BaseNode {
     type: string;
     _renderInfo?: object;
+    loc?: {
+        start: { offset: number; line: number; column: number };
+        end: { offset: number; line: number; column: number };
+    };
 }
 
 interface ContentNode extends BaseNode {
@@ -41,7 +45,7 @@ export interface Macro extends BaseNode {
     type: "macro";
     content: string;
     escapeToken?: string;
-    args?: Argument[]
+    args?: Argument[];
 }
 
 export interface Environment extends ContentNode {
@@ -95,3 +99,7 @@ export type Node =
     | Verb;
 
 export type Ast = Node | Node[];
+
+export interface TypeGuard<T> {
+    (node: any): node is T;
+}

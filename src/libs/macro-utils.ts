@@ -1,4 +1,12 @@
-import { walkAst, trimRenderInfo, updateRenderInfo, match, trim, processEnvironment } from "./ast";
+import {
+    walkAst,
+    trimRenderInfo,
+    updateRenderInfo,
+    match,
+    trim,
+    processEnvironment,
+} from "./ast";
+import * as Ast from "./ast-types";
 
 export { trimRenderInfo, match, trim, processEnvironment };
 
@@ -8,7 +16,7 @@ export { trimRenderInfo, match, trim, processEnvironment };
  *
  * @param {[object]} nodes
  */
-export function hasPreambleCode(nodes) {
+export function hasPreambleCode(nodes: Ast.Node[]) {
     return nodes.some((node) => match.macro(node, "documentclass"));
 }
 
@@ -21,18 +29,18 @@ export function hasPreambleCode(nodes) {
  * @param {(string|[string])} macroName
  * @returns {{segments: [object], macros: [object]}}
  */
-export function splitOnMacro(ast, macroName) {
-    if (!Array.isArray(macroName)) {
-        const { segments, separators } = split(ast, (node) =>
-            match.macro(node, macroName)
-        );
-        return { segments, macros: separators };
+export function splitOnMacro(
+    ast: Ast.Node[],
+    macroName: string | string[]
+): { segments: Ast.Ast[][]; macros: Ast.Macro[] } {
+    if (typeof macroName === "string") {
+        macroName = [macroName];
     }
 
     const { segments, separators } = split(ast, (node) =>
-        macroName.some((name) => match.macro(node, name))
+        (macroName as string[]).some((name) => match.macro(node, name))
     );
-    return { segments, macros: separators };
+    return { segments, macros: separators as Ast.Macro[] };
 }
 
 /**
@@ -42,7 +50,10 @@ export function splitOnMacro(ast, macroName) {
  * @param {function} [splitFunc=() => false]
  * @returns {{segments: [object], separators: [object]}}
  */
-function split(nodes, splitFunc = () => false) {
+function split(
+    nodes: Ast.Node[],
+    splitFunc: (node: Ast.Ast) => boolean = () => false
+): { segments: Ast.Ast[][]; separators: Ast.Ast } {
     if (!Array.isArray(nodes)) {
         throw new Error(`Can only split an Array, not ${nodes}`);
     }
@@ -71,7 +82,13 @@ function split(nodes, splitFunc = () => false) {
  * @param {{segments: [[object]], macros: [[object]]}} { segments, macros }
  * @returns {[object]}
  */
-export function unsplitOnMacro({ segments, macros }) {
+export function unsplitOnMacro({
+    segments,
+    macros,
+}: {
+    segments: Ast.Ast[][];
+    macros: Ast.Macro[];
+}) {
     if (segments.length === 0) {
         console.warn("Trying to join zero segments");
         return [];
@@ -106,25 +123,25 @@ export function unsplitOnMacro({ segments, macros }) {
  * @param {string} [itemName="item"]
  * @returns {[object]}
  */
-export function cleanEnumerateBody(ast, itemName = "item") {
+export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
     let { segments, macros } = splitOnMacro(ast, itemName);
     // Trim the content of each block, but make sure there is a space
     // between each macro and the content. Since the first segment of content
     // appears *before* any macro, don't add a space there.
-    segments = segments
+    segments = (segments as Ast.Node[][])
         .map(trim)
         .map((content, i) =>
-            i === 0 || content.length === 0
+            i === 0 || (content as any[]).length === 0
                 ? content
                 : [{ type: "whitespace" }].concat(content)
-        );
+        ) as Ast.Ast[][];
 
     // We want a trailing indent for the `\item` nodes. We will
     // do this with a trick: we will add an argument to the index node
     // with openMark=" " and closeMark=""
-    macros = macros.map((node, i) => {
+    let body: any[] = macros.map((node, i) => {
         const segment = segments[i + 1];
-        const newNode = { ...node };
+        const newNode = { ...node } as Ast.Macro;
         newNode.args = [
             ...(newNode.args || []),
             {
@@ -132,7 +149,7 @@ export function cleanEnumerateBody(ast, itemName = "item") {
                 content: segment,
                 openMark: "",
                 closeMark: "",
-            },
+            } as Ast.Argument,
         ];
         updateRenderInfo(newNode, { inParMode: true });
         return newNode;
@@ -141,14 +158,14 @@ export function cleanEnumerateBody(ast, itemName = "item") {
     // We want a parbreak between each `\item` block and the preceding
     // content. We may or may not start with content, so act accordingly
     if (segments[0].length === 0) {
-        macros = macros.map((macro, i) =>
+        body = body.map((macro, i) =>
             i === 0 ? macro : [{ type: "parbreak" }, macro]
         );
     } else {
-        macros = macros.map((macro) => [{ type: "parbreak" }, macro]);
+        body = body.map((macro) => [{ type: "parbreak" }, macro]);
     }
 
-    return [].concat(segments[0], ...macros);
+    return [].concat(segments[0] as any, ...body);
 }
 
 /**
@@ -157,7 +174,7 @@ export function cleanEnumerateBody(ast, itemName = "item") {
  * @param {*} ast
  * @returns
  */
-export function trimEnvironmentContents(ast) {
+export function trimEnvironmentContents(ast: Ast.Node[]) {
     return walkAst(
         ast,
         (node) => {
@@ -166,12 +183,14 @@ export function trimEnvironmentContents(ast) {
 
             return ret;
         },
-        (node) =>
+        ((node: any) =>
             node != null &&
             (node.type === "environment" ||
                 node.type === "inlinemath" ||
                 node.type === "displaymath" ||
-                node.type === "mathenv")
+                node.type === "mathenv")) as Ast.TypeGuard<
+            Ast.Environment | Ast.InlineMath
+        >
     );
 }
 
@@ -183,28 +202,32 @@ export function trimEnvironmentContents(ast) {
  * @class ReferenceMap
  */
 export class ReferenceMap {
-    constructor(ast) {
+    ast: Ast.Ast;
+    map: Map<Ast.Ast, { previous: Ast.Ast; next: Ast.Ast }>;
+
+    constructor(ast: Ast.Ast) {
         this.ast = ast;
         this.map = new Map();
         walkAst(
             this.ast,
-            (node) => {
-                for (let i = 0; i < node.length; i++) {
-                    this.map.set(node[i], {
-                        previous: node[i - 1],
-                        next: node[i + 1],
+            (nodeList: Ast.Ast[]) => {
+                for (let i = 0; i < nodeList.length; i++) {
+                    this.map.set(nodeList[i], {
+                        previous: nodeList[i - 1],
+                        next: nodeList[i + 1],
                     });
                 }
-                return node;
+                return nodeList;
             },
-            (node) => Array.isArray(node)
+            Array.isArray
         );
     }
-    getPreviousNode(node) {
-        return (this.map.get(node) || {}).previous;
+
+    getPreviousNode(node: Ast.Ast): Ast.Ast {
+        return (this.map.get(node) || ({} as any)).previous;
     }
-    getNextNode(node) {
-        return (this.map.get(node) || {}).next;
+    getNextNode(node: Ast.Ast): Ast.Ast {
+        return (this.map.get(node) || ({} as any)).next;
     }
 }
 
@@ -215,9 +238,11 @@ export class ReferenceMap {
  * @param {object} node
  * @returns {object}
  */
-export function markAlignEnv(node) {
+export function markAlignEnv(node: Ast.Node) {
     return updateRenderInfo(node, { alignedContent: true });
 }
+
+type StringlikeArray = any[] & string;
 
 /**
  * Pegjs operates on strings. However, strings and arrays are very similar!
@@ -227,21 +252,21 @@ export function markAlignEnv(node) {
  * @param {[object]} array
  * @returns {[object]}
  */
-export function decorateArrayForPegjs(array) {
-    array.charAt = function (i) {
+export function decorateArrayForPegjs(array: any[]): StringlikeArray {
+    (array as any).charAt = function (i: number) {
         return this[i];
     };
     // We don't have a hope of imitating `charCodeAt`, so
     // make it something that won't interfere
-    array.charCodeAt = () => 0;
-    array.substring = function (i, j) {
+    (array as any).charCodeAt = () => 0;
+    (array as any).substring = function (i: number, j: number) {
         return this.slice(i, j);
     };
     // This function is called when reporting an error,
     // so we convert back to a string.
-    array.replace = function (a, b) {
+    (array as any).replace = function (a: string, b: string) {
         const ret = JSON.stringify(this);
         return ret.replace(a, b);
     };
-    return array;
+    return array as StringlikeArray;
 }

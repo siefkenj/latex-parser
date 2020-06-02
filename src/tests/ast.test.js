@@ -243,7 +243,7 @@ describe("AST tests", () => {
             "a b c",
         ]) {
             const ast = latexParser.parse(str);
-            const split = macroUtils.splitOnMacro(ast);
+            const split = macroUtils.splitOnMacro(ast, "xxx");
             expect(macroUtils.unsplitOnMacro(split)).toEqual(ast);
         }
     });

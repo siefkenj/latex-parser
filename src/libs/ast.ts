@@ -20,10 +20,11 @@ export type EnvInfo = {
  * @param {{triggerTime: string}} - "early" indicates that `callback` is called before `walkAst` recurses down the tree. "late" calls `callback` after it has recursed.
  * @returns {object}
  */
-export function walkAst(
+export function walkAst<T extends any>(
     ast: Ast.Ast,
-    callback: (ast: Ast.Ast) => any,
-    callbackTrigger = (node: Ast.Ast) => false,
+    callback: (ast: T) => T,
+    callbackTrigger: (node: any) => node is T = ((node: Ast.Ast) =>
+        false) as any,
     options: { triggerTime: "early" | "late" } = { triggerTime: "early" }
 ): Ast.Ast {
     function reapply(node: Ast.Ast) {
@@ -33,14 +34,14 @@ export function walkAst(
     if (ast == null) {
         // Early or late, we callback right before getting a null value
         if (callbackTrigger(ast)) {
-            return callback(ast);
+            return callback(ast) as Ast.Ast;
         }
         return ast;
     }
 
     if (options.triggerTime === "early") {
         if (callbackTrigger(ast)) {
-            ast = callback(ast);
+            (ast as any) = callback(ast);
         }
     }
 
@@ -49,7 +50,7 @@ export function walkAst(
         // run `callback` after recursion for "late" trigger
         if (options.triggerTime === "late") {
             if (callbackTrigger(ast)) {
-                ast = callback(ast);
+                (ast as any) = callback(ast);
             }
         }
         return ast;
@@ -82,7 +83,7 @@ export function walkAst(
     // run `callback` after recursion for "late" trigger
     if (options.triggerTime === "late") {
         if (callbackTrigger(ret)) {
-            ret = callback(ret);
+            (ret as any) = callback(ret);
         }
     }
 
@@ -100,11 +101,13 @@ export function trimRenderInfo(ast: Ast.Ast) {
     return walkAst(
         ast,
         (node) => {
-            const ret = { ...node } as Ast.Node;
+            const ret = { ...node };
             delete ret._renderInfo;
             return ret;
         },
-        (node) => node != null && (node as Ast.Node)._renderInfo != null
+        ((node) =>
+            node != null &&
+            (node as Ast.Node)._renderInfo != null) as Ast.TypeGuard<Ast.Node>
     );
 }
 
@@ -116,8 +119,8 @@ export function trimRenderInfo(ast: Ast.Ast) {
  * @param {[object]} ast
  * @returns {[object]}
  */
-export function trim(ast: Ast.Node[]): Ast.Node[]
-export function trim(ast: Ast.Ast): Ast.Ast
+export function trim(ast: Ast.Node[]): Ast.Node[];
+export function trim(ast: Ast.Ast): Ast.Ast;
 export function trim(ast: Ast.Node[] | Ast.Ast): any {
     if (!Array.isArray(ast)) {
         console.warn("Trying to trim a non-array ast", ast);
@@ -503,7 +506,7 @@ export function attachMacroArgs(
             // attach the macro's arguments to its `.args` property
             return attachMacroArgsInArray(node as Ast.Node[], macros);
         },
-        (node) => Array.isArray(node),
+        Array.isArray,
         { triggerTime: "late" }
     );
 }
@@ -526,8 +529,8 @@ export function processEnvironment(
 ) {
     return walkAst(
         ast,
-        (node: Ast.Ast) => {
-            const ret = { ...node } as Ast.Environment;
+        (node: Ast.Environment) => {
+            const ret = { ...node };
             // We don't process arguments if there is an existing `args` property.
             if (typeof envInfo.signature === "string" && ret.args == null) {
                 const { arguments: args, rest } = getArgsInArray(
@@ -552,7 +555,9 @@ export function processEnvironment(
 
             return ret;
         },
-        (node: Ast.Ast) => match.environment(node, envName)
+        ((node: Ast.Ast) => match.environment(node, envName)) as Ast.TypeGuard<
+            Ast.Environment
+        >
     );
 }
 
