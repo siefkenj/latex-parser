@@ -124,6 +124,7 @@ export function trim(ast: Ast.Ast): Ast.Ast;
 export function trim(ast: Ast.Node[] | Ast.Ast): any {
     if (!Array.isArray(ast)) {
         console.warn("Trying to trim a non-array ast", ast);
+        throw Error("cant")
         return ast;
     }
     if (ast.length === 0) {

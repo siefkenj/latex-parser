@@ -24,6 +24,8 @@ function _printRaw(node: Printable | Printable[]): PrintToken[] {
     // tmp variables
     let argsString, escape;
     switch (node.type) {
+        case "root":
+            return _printRaw(node.content)
         case "argument":
             return [node.openMark, ..._printRaw(node.content), node.closeMark];
         case "comment":

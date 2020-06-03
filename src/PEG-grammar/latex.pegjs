@@ -13,7 +13,7 @@
   }
 }
 
-document "document" = token*
+document "document" = content:token* { return createNode("root", {content}) }
 
 token "token"
   = special_macro

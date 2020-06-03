@@ -298,12 +298,11 @@ function printLatexAst(path, options, print) {
         // We're at the root, so make a map of the ast so that we can
         // "peek" to find previous and next siblings during rendering
         options.referenceMap = new ReferenceMap(node);
-
-        if (Array.isArray(node) && hasPreambleCode(node)) {
-            // If we are rendering the preamble, we want to put newlines instead
-            // of spaces.
-            breakOnAllLines = true;
-        }
+    }
+    if (Array.isArray(node) && hasPreambleCode(node)) {
+        // If we are rendering the preamble, we want to put newlines instead
+        // of spaces.
+        breakOnAllLines = true;
     }
 
     if (node == null) {
@@ -345,6 +344,8 @@ function printLatexAst(path, options, print) {
     // tmp variables
     let content, startToken, bodyStartToken, env;
     switch (node.type) {
+        case "root":
+            return path.call(print, "content");
         case "argument":
             return printArgument(path, print, "tree");
         case "comment":
@@ -549,8 +550,8 @@ export const parsers = {
     "latex-parser": {
         parse,
         astFormat: "latex-ast",
-        locStart: (node) => node.loc ? node.loc.start.offset: 0,
-        locEnd: (node) => node.loc ? node.loc.end.offset: 1,
+        locStart: (node) => (node.loc ? node.loc.start.offset : 0),
+        locEnd: (node) => (node.loc ? node.loc.end.offset : 1),
     },
 };
 

@@ -28,6 +28,7 @@
         "playground": "npm build && cd latex-playground && npm install && npm run build"
     },
     "dependencies": {
+        "@types/prettier": "^2.0.1",
         "prettier": "2.0.2"
     },
     "devDependencies": {

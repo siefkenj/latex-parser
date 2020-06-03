@@ -21,6 +21,9 @@ interface ContentNode extends BaseNode {
 }
 
 // Actual nodes
+interface Root extends ContentNode {
+    type: "root";
+}
 export interface String extends BaseNode {
     type: "string";
     content: string;
@@ -86,6 +89,7 @@ export interface Argument extends ContentNode {
 }
 
 export type Node =
+    | Root
     | String
     | Whitespace
     | Parbreak

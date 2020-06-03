@@ -14,46 +14,46 @@ console.log = (...args) => {
 
 describe("AST tests", () => {
     it("trims whitespace/parbreaks", () => {
-        const targetAst = trimRenderInfo(latexParser.parse("a b c"));
+        const targetAst = trimRenderInfo(latexParser.parse("a b c")).content;
 
         // trim left
-        let ast = trimRenderInfo(latexParser.parse(" a b c"));
+        let ast = trimRenderInfo(latexParser.parse(" a b c")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         // trim right
-        ast = trimRenderInfo(latexParser.parse("a b c "));
+        ast = trimRenderInfo(latexParser.parse("a b c ")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         // trim parbreak
-        ast = trimRenderInfo(latexParser.parse("\n\n\na b c "));
+        ast = trimRenderInfo(latexParser.parse("\n\n\na b c ")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         // trim left and right
-        ast = trimRenderInfo(latexParser.parse("\n\n\na b c\n\n "));
+        ast = trimRenderInfo(latexParser.parse("\n\n\na b c\n\n ")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         // trim everything when there is only whitespace
-        ast = trimRenderInfo(latexParser.parse("\n \n\n "));
+        ast = trimRenderInfo(latexParser.parse("\n \n\n ")).content;
         expect(macroUtils.trim(ast)).toEqual([]);
     });
 
     it("trims whitespace/parbreaks in math environments", () => {
         // Display math
-        let targetAst = trimRenderInfo(latexParser.parse("\\[\\]"));
+        let targetAst = trimRenderInfo(latexParser.parse("\\[\\]").content);
 
-        let ast = trimRenderInfo(latexParser.parse("\\[ \\]"));
+        let ast = trimRenderInfo(latexParser.parse("\\[ \\]")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
-        ast = trimRenderInfo(latexParser.parse("\\[\n\\]"));
+        ast = trimRenderInfo(latexParser.parse("\\[\n\\]")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         // Inline math
-        ast = trimRenderInfo(latexParser.parse("$ $"));
+        ast = trimRenderInfo(latexParser.parse("$ $")).content;
         expect(macroUtils.trim(ast)).toEqual([
             { type: "inlinemath", content: [] },
         ]);
 
-        ast = trimRenderInfo(latexParser.parse("$\n$"));
+        ast = trimRenderInfo(latexParser.parse("$\n$")).content;
         expect(macroUtils.trim(ast)).toEqual([
             { type: "inlinemath", content: [] },
         ]);
@@ -61,24 +61,23 @@ describe("AST tests", () => {
         // Environments
         targetAst = trimRenderInfo(
             latexParser.parse("\\begin{equation}\\end{equation}")
-        );
+        ).content;
 
         ast = trimRenderInfo(
             latexParser.parse("\\begin{equation} \\end{equation}")
-        );
+        ).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         ast = trimRenderInfo(
             latexParser.parse("\\begin{equation}\n \\end{equation}")
-        );
+        ).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
     });
 
     it("Splits and unsplits based on a macro", () => {
         // basic splitting
-        let ast = trimRenderInfo(
-            latexParser.parse("a\\xxx b c\\xxx x y z")
-        );
+        let ast = trimRenderInfo(latexParser.parse("a\\xxx b c\\xxx x y z"))
+            .content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [
                 [
@@ -112,9 +111,7 @@ describe("AST tests", () => {
         });
 
         // macro at start
-        ast = trimRenderInfo(
-            latexParser.parse("\\xxx b c\\xxx x y z")
-        );
+        ast = trimRenderInfo(latexParser.parse("\\xxx b c\\xxx x y z")).content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [
                 [],
@@ -146,7 +143,7 @@ describe("AST tests", () => {
         });
 
         // only macro
-        ast = trimRenderInfo(latexParser.parse("\\xxx"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx")).content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [[], []],
             macros: [
@@ -165,7 +162,7 @@ describe("AST tests", () => {
         });
 
         // no macro
-        ast = trimRenderInfo(latexParser.parse("a b c"));
+        ast = trimRenderInfo(latexParser.parse("a b c")).content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [
                 [
@@ -189,7 +186,7 @@ describe("AST tests", () => {
         ast = attachMacroArgs(
             trimRenderInfo(latexParser.parse("\\xxx a b \\xxx c d")),
             { xxx: { signature: "m" } }
-        );
+        ).content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [
                 [],
@@ -242,7 +239,7 @@ describe("AST tests", () => {
             "\\xxx",
             "a b c",
         ]) {
-            const ast = latexParser.parse(str);
+            const ast = latexParser.parse(str).content;
             const split = macroUtils.splitOnMacro(ast, "xxx");
             expect(macroUtils.unsplitOnMacro(split)).toEqual(ast);
         }
@@ -260,7 +257,7 @@ describe("AST tests", () => {
             ],
         ];
         for (const [inStr, outStr] of STRINGS) {
-            const ast = latexParser.parse(inStr);
+            const ast = latexParser.parse(inStr).content;
             expect(
                 latexParser.printRaw(macroUtils.cleanEnumerateBody(ast))
             ).toEqual(outStr);
@@ -271,7 +268,7 @@ describe("AST tests", () => {
             "\\item4 x \\xxx yo there\\xxx\n\ngood ",
             "\\item4 x\n\n\\xxx yo there\n\n\\xxx good",
         ];
-        let ast = trimRenderInfo(latexParser.parse(inStr));
+        let ast = trimRenderInfo(latexParser.parse(inStr)).content;
         expect(
             latexParser.printRaw(macroUtils.cleanEnumerateBody(ast, "xxx"))
         ).toEqual(outStr);
@@ -279,18 +276,18 @@ describe("AST tests", () => {
 
     it("merges whitespace and parbreaks", () => {
         // wrap the parbreak in a group so that it doesn't get trimmed by the parser
-        let targetAst = trimRenderInfo(latexParser.parse("{\n\n}"));
+        let targetAst = trimRenderInfo(latexParser.parse("{\n\n}")).content;
 
-        let ast = trimRenderInfo(latexParser.parse("{\n}"));
+        let ast = trimRenderInfo(latexParser.parse("{\n}")).content;
         expect(macroUtils.trim(ast)).not.toEqual(targetAst);
 
-        ast = trimRenderInfo(latexParser.parse("{\n\n\n}"));
+        ast = trimRenderInfo(latexParser.parse("{\n\n\n}")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
-        ast = trimRenderInfo(latexParser.parse("{\n\n \n}"));
+        ast = trimRenderInfo(latexParser.parse("{\n\n \n}")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
-        ast = trimRenderInfo(latexParser.parse("{\n\n \n\n}"));
+        ast = trimRenderInfo(latexParser.parse("{\n\n \n\n}")).content;
         expect(macroUtils.trim(ast)).toEqual(targetAst);
     });
 });

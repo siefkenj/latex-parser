@@ -174,7 +174,7 @@ function parse(str = "") {
     let ast = wrapStrings(pegAst);
     ast = attachSpecialMacroArgs(ast);
     ast = processSpecialEnvironments(ast);
-    ast = trim(ast);
+    (ast as any).content = trim((ast as any).content);
     ast = trimEnvironmentContents(ast);
     return ast;
 }

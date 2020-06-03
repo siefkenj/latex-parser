@@ -278,7 +278,7 @@ describe("Macro arguments argspec test", () => {
 
     it("finds macro arguments", () => {
         // basic capture of arguments
-        let ast = trimRenderInfo(latexParser.parse("\\xxx a b c"));
+        let ast = trimRenderInfo(latexParser.parse("\\xxx a b c")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m m" } })
         ).toEqual([
@@ -304,7 +304,7 @@ describe("Macro arguments argspec test", () => {
             { type: "string", content: "c" },
         ]);
         // right associativity of arguments (required for things like `\mathbb`)
-        ast = trimRenderInfo(latexParser.parse("\\xxx\\xxx a b c"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx\\xxx a b c")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m m" } })
         ).toEqual([
@@ -351,7 +351,7 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
         // not enough required arguments still passes
-        ast = trimRenderInfo(latexParser.parse("\\xxx   c"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx   c")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m m" } })
         ).toEqual([
@@ -369,7 +369,7 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
         // Mixed optional and required arguments
-        ast = trimRenderInfo(latexParser.parse("\\xxx   [c] d e f"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx   [c] d e f")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "o m o m" } })
         ).toEqual([
@@ -401,7 +401,7 @@ describe("Macro arguments argspec test", () => {
             { type: "string", content: "f" },
         ]);
         // When given a group argument, extract the group
-        ast = trimRenderInfo(latexParser.parse("\\xxx{c}"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx{c}")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m" } })
         ).toEqual([
@@ -419,7 +419,7 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
         // Find multiple occurrences
-        ast = trimRenderInfo(latexParser.parse("\\xxx a b \\xxx{c}"));
+        ast = trimRenderInfo(latexParser.parse("\\xxx a b \\xxx{c}")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m" } })
         ).toEqual([
@@ -452,7 +452,7 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
         // Recursively apply substitutions in groups
-        ast = trimRenderInfo(latexParser.parse("{a\\xxx b}c"));
+        ast = trimRenderInfo(latexParser.parse("{a\\xxx b}c")).content;
         let subbedAst = attachMacroArgs(ast, {
             xxx: {
                 signature: "m",
@@ -509,7 +509,7 @@ describe("Macro arguments argspec test", () => {
         // Substitute into an environment's body, but not its name (`.env`)
         ast = trimRenderInfo(
             latexParser.parse("\\begin{\\xxx a}b\\xxx c d\\end{\\xxx a}")
-        );
+        ).content;
         subbedAst = attachMacroArgs(ast, {
             xxx: {
                 signature: "m",
@@ -543,7 +543,7 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
         // Parse in math environment
-        ast = trimRenderInfo(latexParser.parse("$b\\xxx c$"));
+        ast = trimRenderInfo(latexParser.parse("$b\\xxx c$")).content;
         subbedAst = attachMacroArgs(ast, {
             xxx: {
                 signature: "m",
@@ -574,7 +574,7 @@ describe("Macro arguments argspec test", () => {
             latexParser.parse(
                 "\\verb|\\xxx a|\\begin{verbatim}\\xxx a\\end{verbatim}"
             )
-        );
+        ).content;
         subbedAst = attachMacroArgs(ast, {
             xxx: {
                 signature: "m",
@@ -626,7 +626,7 @@ describe("Macro arguments argspec test", () => {
     it("Optional and mandatory arguments parse with no whitespace", () => {
         // Calling `attachMacroArgs` on a macro that already has
         // args, should do nothing (i.e., no eat the next argument.)
-        let ast = latexParser.parse("\\xxx[a]{b}");
+        let ast = latexParser.parse("\\xxx[a]{b}").content;
         let subbedAst = attachMacroArgs(ast, {
             xxx: {
                 signature: "o m",

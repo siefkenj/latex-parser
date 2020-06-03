@@ -174,7 +174,7 @@ export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
  * @param {*} ast
  * @returns
  */
-export function trimEnvironmentContents(ast: Ast.Node[]) {
+export function trimEnvironmentContents(ast: Ast.Ast) {
     return walkAst(
         ast,
         (node) => {
