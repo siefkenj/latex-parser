@@ -23,18 +23,6 @@ describe("Basic parse", () => {
         latexParser.parse(String.raw`\[x^2\]`);
     });
 
-    it("Fails on malformed string", () => {
-        const BAD_STRING = "$x^2{\\beg";
-        try {
-            latexParser.parse(BAD_STRING);
-        } catch (e) {
-            // We want an error here. Returning undefined
-            // signifies the test passed.
-            return;
-        }
-        throw new Error(`Was supposed to fail parsing '${BAD_STRING}'`);
-    });
-
     it("Parses text", () => {
         latexParser.parse("hi, I am text");
     });
@@ -92,5 +80,25 @@ describe("Basic ast", () => {
     it("Puts braces around arguments", () => {
         const parsed = latexParser.parse("\\mathbb X");
         expect(latexParser.printRaw(parsed)).toEqual("\\mathbb{X}");
+    });
+
+    it("Parses unbalanced groups/unbalanced math", () => {
+        let parsed = latexParser.parse("{");
+        expect(latexParser.printRaw(parsed)).toEqual("{");
+
+        parsed = latexParser.parse("}");
+        expect(latexParser.printRaw(parsed)).toEqual("}");
+
+        parsed = latexParser.parse("$$");
+        expect(latexParser.printRaw(parsed)).toEqual("$$");
+
+        parsed = latexParser.parse("$$$");
+        expect(latexParser.printRaw(parsed)).toEqual("$$$");
+
+        parsed = latexParser.parse("$$x$");
+        expect(latexParser.printRaw(parsed)).toEqual("$$x$");
+
+        parsed = latexParser.parse("{{{}{}}{}{{{}");
+        expect(latexParser.printRaw(parsed)).toEqual("{{{}{}}{}{{{}");
     });
 });

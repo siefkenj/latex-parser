@@ -30,7 +30,12 @@ token "token"
   / number
   / whitespace
   / punctuation
-  / x:(!nonchar_token x:. { return x; })+ { return x.join(""); }
+  / $(!nonchar_token .)+
+  // If all else fails, we allow special tokens. If one of these
+  // is matched, it means there is an unbalanced group.
+  / begin_group
+  / end_group
+  / math_shift
 
 parbreak "parbreak" = sp* nl (sp* nl)+ sp* { return createNode("parbreak"); }
 
@@ -66,7 +71,12 @@ args_token "args token"
   / number
   / whitespace
   / punctuation
-  / x:(!(nonchar_token / "," / "]") x:. { return x; })+ { return x.join(""); }
+  / $(!nonchar_token .)+
+  // If all else fails, we allow special tokens. If one of these
+  // is matched, it means there is an unbalanced group.
+  / begin_group
+  / end_group
+  / math_shift
 
 nonchar_token "nonchar token"
   = escape
