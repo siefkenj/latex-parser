@@ -1,13 +1,30 @@
-import PegParser from "../PEG-grammar/align-environment.pegjs";
+import PegParser from "./align-environment-pegjs";
 import { match, decorateArrayForPegjs } from "./macro-utils";
+import * as Ast from "./ast-types";
 
-export function createMatchers(rowSepMacros, colSep) {
+// The types returned by the grammar
+
+interface RowItems {
+    cells: Ast.Node[][];
+    colSeps: Ast.String[];
+}
+
+interface Row extends RowItems {
+    rowSep: Ast.Macro | null;
+    trailingComment: Ast.Comment | null;
+}
+
+export function createMatchers(rowSepMacros: string[], colSep: string[]) {
     return {
-        isRowSep: (node) => rowSepMacros.some((sep) => match.macro(node, sep)),
-        isColSep: (node) => colSep.some((sep) => match.string(node, sep)),
-        isWhitespace: (node) => match.whitespace(node),
-        isSameLineComment: (node) => match.comment(node) && node.sameline,
-        isOwnLineComment: (node) => match.comment(node) && !node.sameline,
+        isRowSep: (node: Ast.Node) =>
+            rowSepMacros.some((sep) => match.macro(node, sep)),
+        isColSep: (node: Ast.Node) =>
+            colSep.some((sep) => match.string(node, sep)),
+        isWhitespace: (node: Ast.Node) => match.whitespace(node),
+        isSameLineComment: (node: Ast.Node) =>
+            match.comment(node) && node.sameline,
+        isOwnLineComment: (node: Ast.Node) =>
+            match.comment(node) && !node.sameline,
     };
 }
 
@@ -31,10 +48,10 @@ export function createMatchers(rowSepMacros, colSep) {
  * @returns
  */
 export function parseAlignEnvironment(
-    ast,
+    ast: Ast.Node[],
     colSep = ["&"],
     rowSepMacros = ["\\", "hline", "cr"]
-) {
+): Row[] {
     if (!Array.isArray(ast)) {
         throw new Error("You must pass an array of nodes");
     }

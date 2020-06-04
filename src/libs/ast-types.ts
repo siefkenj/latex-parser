@@ -9,7 +9,7 @@ export interface GenericNode {
 // Abstract nodes
 interface BaseNode {
     type: string;
-    _renderInfo?: object;
+    _renderInfo?: any;
     loc?: {
         start: { offset: number; line: number; column: number };
         end: { offset: number; line: number; column: number };
@@ -21,7 +21,7 @@ interface ContentNode extends BaseNode {
 }
 
 // Actual nodes
-interface Root extends ContentNode {
+export interface Root extends ContentNode {
     type: "root";
 }
 export interface String extends BaseNode {
@@ -42,6 +42,7 @@ export interface Comment extends BaseNode {
     content: string;
     sameline?: boolean;
     suffixParbreak?: boolean;
+    leadingWhitespace?: boolean;
 }
 
 export interface Macro extends BaseNode {
@@ -102,7 +103,7 @@ export type Node =
     | Group
     | Verb;
 
-export type Ast = Node | Node[];
+export type Ast = Node | Argument | Node[];
 
 export interface TypeGuard<T> {
     (node: any): node is T;

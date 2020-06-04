@@ -27,8 +27,8 @@ function printPrettier(source = "", options = {}) {
         useTabs: true,
         tabWidth: 4,
         ...options,
-        parser: "latex-parser",
-        plugins: [prettierPluginLatex],
+        parser: "latex-parser" as any,
+        plugins: [prettierPluginLatex as any],
     });
 }
 

@@ -56,8 +56,8 @@ describe("Prettier tests", () => {
                     "\n" +
                     "\\begin{enumerate}\n" +
                     "\t\\item hi there this \\emph{is\n" +
-                    "\t\tstuff $\\mathbb{4}somegoods\n" +
-                    "\t\ttuff$ is really, really\n" +
+                    "\t\tstuff $\\mathbb{4}somegoodst\n" +
+                    "\t\tuff$ is really, really\n" +
                     "\t\tgreat!}\n" +
                     "\n" +
                     "\t\\item and other stuff\n" +
@@ -159,7 +159,7 @@ describe("Prettier tests", () => {
             { inStr: "$%\n$", outStr: "$%\n$" },
             { inStr: "$a%\n$", outStr: "$a%\n$" },
             { inStr: "$\na%\n$", outStr: "$a%\n$" },
-            { inStr: "$%x\na%\n$", outStr: "$%x\na%\n$" },
+            { inStr: "$%xmom\na%\n$", outStr: "$%xmom\na%\n$" },
         ];
 
         const formatter = (x) =>
@@ -449,7 +449,7 @@ describe("Prettier tests", () => {
             expect(inStr).toFormatAs(outStr, formatter);
         }
     });
-    
+
     it("matrix environment with comments at start", () => {
         const STRINGS = [
             {
@@ -482,7 +482,7 @@ describe("Prettier tests", () => {
             expect(inStr).toFormatAs(outStr, formatter);
         }
     });
-    
+
     it("matrix environment alignment of cell items", () => {
         const STRINGS = [
             {
@@ -508,27 +508,28 @@ describe("Prettier tests", () => {
         }
     });
 
-    it.skip("prints latex code", () => {
-        //const TEX = String.raw`\hi 22, I am % cool !
-        let TEX = "a%\n  b";
-        TEX = String.raw`\begin{xx}
-\end{xx}
-`;
-        const parsed = latexParser.parse(TEX);
-        console.log("PARSED", parsed);
-        const formatted = Prettier.format(TEX, {
-            printWidth: 30,
-            useTabs: true,
-            parser: "latex-parser",
-            plugins: [prettierPluginLatex],
-        });
-        origLog("Raw print:", latexParser.printRaw(parsed));
-        origLog(`Formatted as: '${formatted}'`);
-        //        console.log(TEX);
-        //        console.log(formatted);
+    it("comments at the end of an arguments list get a closing newline", () => {
+        const STRINGS = [
+            {
+                inStr: "\\mathbb{x%matrix\n}",
+                outStr: "\\mathbb{x%matrix\n}",
+            },
+        ];
+
+        const formatter = (x) =>
+            Prettier.format(x, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
     });
 
-    it.skip("Formats aligned environments", () => {
+    it("Formats aligned environments", () => {
         const STRINGS = [
             {
                 inStr: "\\begin{align}ab& c\\\\d&eee\\end{align}",
@@ -560,24 +561,5 @@ describe("Prettier tests", () => {
             });
             expect(formatted).toEqual(outStr);
         }
-
-        let ast; //= latexParser.parse("ab&c\\\\d&eee\\hline");
-        //let split = prettierPluginLatex.formatAlignedContent(ast);
-        //console.log(ast);
-        //console.log(split);
-
-        const TEX = "$a*\n\\begin{matrix}a\\\\ bbb\\end{matrix}*c$";
-        const parsed = latexParser.parse(TEX);
-        console.log("PARSED", parsed);
-        const formatted = Prettier.format(TEX, {
-            printWidth: 30,
-            useTabs: true,
-            parser: "latex-parser",
-            plugins: [prettierPluginLatex],
-        });
-        origLog("Raw print:", latexParser.printRaw(parsed));
-        origLog(`Formatted as: '${formatted}'`);
-        //console.log(TEX);
-        //console.log(formatted);
     });
 });

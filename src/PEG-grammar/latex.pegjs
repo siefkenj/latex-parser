@@ -156,6 +156,8 @@ verbatim_env_name
   // standard verbatim enviroments. `verbatim*` must be listed first
   = "verbatim*"
   / "verbatim"
+  / "filecontents*"
+  / "filecontents"
   // comment environment provided by \usepackage{verbatim}
   / "comment"
   // lstlisting environment provided by \usepackage{listings}

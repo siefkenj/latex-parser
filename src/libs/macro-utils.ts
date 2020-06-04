@@ -203,7 +203,10 @@ export function trimEnvironmentContents(ast: Ast.Ast) {
  */
 export class ReferenceMap {
     ast: Ast.Ast;
-    map: Map<Ast.Ast, { previous: Ast.Ast; next: Ast.Ast }>;
+    map: Map<
+        Ast.Ast,
+        { previous?: Ast.Ast; next?: Ast.Ast; renderCache?: any }
+    >;
 
     constructor(ast: Ast.Ast) {
         this.ast = ast;
@@ -223,10 +226,35 @@ export class ReferenceMap {
         );
     }
 
-    getPreviousNode(node: Ast.Ast): Ast.Ast {
+    /**
+     * Associate render-specific data with this node. This data
+     * will be overwritten if `setRenderCache` is called twice.
+     *
+     * @param {Ast.Ast} node
+     * @param {*} data
+     * @memberof ReferenceMap
+     */
+    setRenderCache(node: any, data: any): void {
+        const currData = this.map.get(node) || {};
+        this.map.set(node, { ...currData, renderCache: data });
+    }
+
+    /**
+     * Retrieve data associated with `node` via `setRenderCache`
+     *
+     * @param {Ast.Ast} node
+     * @returns {(object | undefined)}
+     * @memberof ReferenceMap
+     */
+    getRenderCache(node: any): object | any[] | undefined {
+        return this.map.get(node)?.renderCache;
+    }
+
+    getPreviousNode(node: Ast.Ast): Ast.Node | undefined {
         return (this.map.get(node) || ({} as any)).previous;
     }
-    getNextNode(node: Ast.Ast): Ast.Ast {
+
+    getNextNode(node: Ast.Ast): Ast.Node | undefined {
         return (this.map.get(node) || ({} as any)).next;
     }
 }
@@ -269,4 +297,13 @@ export function decorateArrayForPegjs(array: any[]): StringlikeArray {
         return ret.replace(a, b);
     };
     return array as StringlikeArray;
+}
+
+export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
+    const ret: [T, U][] = [];
+    const len = Math.min(array1.length, array2.length);
+    for (let i = 0; i < len; i++) {
+        ret.push([array1[i], array2[i]]);
+    }
+    return ret;
 }
