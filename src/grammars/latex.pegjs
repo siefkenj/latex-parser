@@ -3,17 +3,17 @@
     return g1.content.join("") == g2.content.join("");
   }
 
-  function createNode(type, extra={}) {
-    const ret = {type, ...extra};
+  function createNode(type, extra = {}) {
+    const ret = { type, ...extra };
     // Add a non-enumerable location property to `ret`. Since it is
     // non-enumerable, it won't clutter up the syntax tree when printed.
-    Object.defineProperty(ret, "loc", {value: location()});
+    Object.defineProperty(ret, "loc", { value: location() });
 
     return ret;
   }
 }
 
-document "document" = content:token* { return createNode("root", {content}) }
+document "document" = content:token* { return createNode("root", { content }); }
 
 token "token"
   = special_macro
@@ -93,7 +93,9 @@ nonchar_token "nonchar token"
   / EOF
 
 whitespace "whitespace"
-  = (nl sp* / sp+ nl !comment sp* !nl / sp+) { return createNode("whitespace"); }
+  = (nl sp* / sp+ nl !comment sp* !nl / sp+) {
+      return createNode("whitespace");
+    }
 
 number "number"
   = a:num+ "." b:num+ { return a.join("") + "." + b.join(""); }
@@ -107,7 +109,11 @@ special_macro "special macro" // for the special macros like \[ \] and \begin{} 
     e:.
     x:(!(end:. & { return end == e; }) x:. { return x; })*
     (end:. & { return end == e; }) {
-      return createNode("verb", { env: env, escape: e, content: x.join("") });
+      return createNode("verb", {
+        env: env,
+        escape: e,
+        content: x.join(""),
+      });
     }
   // verbatim environment
   / verbatim_environment
@@ -226,18 +232,37 @@ full_comment "full comment"
       return createNode("comment", { content: x, sameline: false });
     }
   / leading_sp x:comment {
-      return createNode("comment", { content: x, sameline: false, leadingWhitespace: true });
+      return createNode("comment", {
+        content: x,
+        sameline: false,
+        leadingWhitespace: true,
+      });
     }
   / sp* nl leading_sp? x:comment_and_parbreak {
-      return createNode("comment", { content: x, sameline: false, suffixParbreak: true });
+      return createNode("comment", {
+        content: x,
+        sameline: false,
+        suffixParbreak: true,
+      });
     }
   / sp* nl leading_sp? x:comment {
       return createNode("comment", { content: x, sameline: false });
     }
-  / x:comment_and_parbreak {
-      return createNode("comment", { content: x, sameline: true, suffixParbreak: true });
+  / spaces:sp* x:comment_and_parbreak {
+      return createNode("comment", {
+        content: x,
+        sameline: true,
+        suffixParbreak: true,
+        leadingWhitespace: spaces.length > 0,
+      });
     }
-  / x:comment { return createNode("comment", { content: x, sameline: true }); }
+  / spaces:sp* x:comment {
+      return createNode("comment", {
+        content: x,
+        sameline: true,
+        leadingWhitespace: spaces.length > 0,
+      });
+    }
 
 env_comment "environment comment"
   = sp:sp* comment:comment {

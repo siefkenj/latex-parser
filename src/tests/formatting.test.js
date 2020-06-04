@@ -560,4 +560,84 @@ describe("Prettier tests", () => {
             expect(formatted).toEqual(outStr);
         }
     });
+    it("Allows indenting of `printRaw` content", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{x}{%\n}\\end{x}",
+                outStr: "\\begin{x}\n\t{%\n\t}\n\\end{x}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+    });
+    it("Linebreaks before and after \\section command", () => {
+        const STRINGS = [
+            {
+                inStr: "\\section{x}",
+                outStr: "\\section{x}",
+            },
+            {
+                inStr: "\\section{x}a",
+                outStr: "\\section{x}\na",
+            },
+            {
+                inStr: "\\section{x} a",
+                outStr: "\\section{x}\na",
+            },
+            {
+                inStr: "\\section{x}% a comment",
+                outStr: "\\section{x}% a comment",
+            },
+            {
+                inStr: "\\section{x} % a sameline comment",
+                outStr: "\\section{x} % a sameline comment",
+            },
+            {
+                inStr: "x\\section{x} a",
+                outStr: "x\n\\section{x}\na",
+            },
+            {
+                inStr: "x \\section{x} a",
+                outStr: "x\n\\section{x}\na",
+            },
+            {
+                inStr: "x\n\\section{x} a",
+                outStr: "x\n\\section{x}\na",
+            },
+            {
+                inStr: "%comment\n\\section{x} a",
+                outStr: "%comment\n\\section{x}\na",
+            },
+            {
+                inStr: "x\n\n\\section{x} a",
+                outStr: "x\n\n\\section{x}\na",
+            },
+            {
+                inStr: "\\begin{x}\\end{x}\\section{x}\\begin{x}\\end{x}",
+                outStr: "\\begin{x}\n\\end{x}\n\\section{x}\n\\begin{x}\n\\end{x}",
+            },
+            {
+                inStr: "\\begin{x}\\end{x}%xxx\n\\section{x}\\begin{x}\\end{x}",
+                outStr: "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+    });
 });

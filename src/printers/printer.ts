@@ -22,6 +22,7 @@ import {
     printEnvironment,
     printAlignedEnvironment,
 } from "./environment";
+import { linebreak } from "../libs/print-raw";
 
 export function printLatexAst(
     path: PrettierTypes.FastPath,
@@ -64,7 +65,12 @@ export function printLatexAst(
         case "displaymath":
             return printDisplayMath(path, print, options);
         case "group":
-            return concat(["{", printRaw(node.content), "}"]);
+            // When we print a group, we are conservative and do a raw print of its contents.
+            // However, we want to use `linebreak`s instead of literal `\n` tokens.
+            const content = printRaw(node.content, {
+                asArray: true,
+            }).map((token) => (token === linebreak ? hardline : token));
+            return concat(["{", ...content, "}"]);
         case "inlinemath":
             return printInlineMath(path, print, options);
         case "macro":

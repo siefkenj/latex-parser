@@ -25,13 +25,23 @@ function _printRaw(node: Printable | Printable[]): PrintToken[] {
     let argsString, escape;
     switch (node.type) {
         case "root":
-            return _printRaw(node.content)
+            return _printRaw(node.content);
         case "argument":
             return [node.openMark, ..._printRaw(node.content), node.closeMark];
         case "comment":
             var suffix = node.suffixParbreak ? "" : linebreak;
+            // A comment is responsible for printing its own leading whitespace
+            var leadingWhitespace = "";
+            if (node.sameline && node.leadingWhitespace) {
+                leadingWhitespace = " ";
+            }
             if (node.sameline) {
-                return ["%", ..._printRaw(node.content), suffix];
+                return [
+                    leadingWhitespace,
+                    "%",
+                    ..._printRaw(node.content),
+                    suffix,
+                ];
             }
             return [linebreak, "%", ..._printRaw(node.content), suffix];
         case "environment":

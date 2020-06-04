@@ -97,6 +97,7 @@ export const {
     hardline,
     lineSuffix,
     lineSuffixBoundary,
+    breakParent,
     indent,
     markAsRoot,
 } = ((Prettier as any).doc as PrettierTypes.doc).builders;
@@ -175,16 +176,48 @@ export function formatDocArray(
 
                 break;
             case "macro":
+                if (renderInfo.breakBefore || renderInfo.breakAround) {
+                    // Commands like \section{} should always be preceded by a hardline
+                    if (previousNode) {
+                        if (ret[ret.length-1] === line || ret[ret.length-1] === hardline) {
+                            // We may be replacing a hardline here for no reason. However,
+                            // if there is already a hardline, we don't want to continue
+                            // and accidentally add too many linebreaks
+                            ret.pop()
+                            ret.push(hardline);
+                        } else if (
+                            !match.comment(previousNode) &&
+                            !match.parbreak(previousNode)
+                        ) {
+                            ret.push(hardline);
+                        }
+                    }
+                }
                 // Macros marked as `inParMode` should be unwrapped
                 // unless they have a hanging indent, in which case the macro
                 // has already be wrapped in an `indent` block
-                if (renderInfo.inParMode && !renderInfo.hangingIndent && renderCache) {
+                if (
+                    renderInfo.inParMode &&
+                    !renderInfo.hangingIndent &&
+                    renderCache
+                ) {
                     ret.push(
                         (renderCache as any).content,
                         ...((renderCache as any).rawArgs || [])
                     );
                 } else {
                     ret.push(printedNode);
+                }
+                if (renderInfo.breakAfter || renderInfo.breakAround) {
+                    // Commands like \section{} should always be followed by a hardline
+                    if (nextNode) {
+                        if (match.whitespace(nextNode)) {
+                            ret.push(hardline);
+                            i++;
+                        } else if (!match.comment(nextNode)) {
+                            ret.push(hardline);
+                        }
+                    }
                 }
                 break;
             case "parbreak":

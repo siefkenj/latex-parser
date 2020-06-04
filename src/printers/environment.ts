@@ -57,14 +57,6 @@ export function printEnvironment(
         (node.content[0].type === "comment" && node.content[0].sameline)
     ) {
         bodyStartToken.pop();
-        // If there is leading whitespace before the sameline comment,
-        // we do want to preserve that.
-        if (
-            node.content.length > 0 &&
-            (node.content[0] as any).leadingWhitespace
-        ) {
-            bodyStartToken.push(" ");
-        }
     }
 
     return concat([

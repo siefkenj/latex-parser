@@ -22,6 +22,16 @@ export function printComment(
         options
     );
 
-    const content: PrettierTypes.Doc[] = ["%" + printRaw(node.content)];
-    return concat(content)
+    // If a comment is on the same line as other content and it has leading whitespace,
+    // add a single whitespace token.
+    let leadingWhitespace = "";
+    if (node.leadingWhitespace && node.sameline) {
+        leadingWhitespace = " ";
+    }
+
+    const content: PrettierTypes.Doc[] = [
+        leadingWhitespace,
+        "%" + printRaw(node.content),
+    ];
+    return concat(content);
 }

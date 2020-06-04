@@ -46,9 +46,13 @@ const SPECIAL_MACROS = {
     definecolor: { signature: "m m m" },
     // LaTeX commands
     includegraphics: { signature: "o m" },
-    section: { signature: "s m" },
-    subsection: { signature: "s m" },
-    subsubsection: { signature: "s m" },
+    part: { signature: "s o m", renderInfo: { breakAround: true } },
+    chapter: { signature: "s o m", renderInfo: { breakAround: true } },
+    section: { signature: "s o m", renderInfo: { breakAround: true } },
+    subsection: { signature: "s o m", renderInfo: { breakAround: true } },
+    subsubsection: { signature: "s o m", renderInfo: { breakAround: true } },
+    paragraph: { signature: "s o m", renderInfo: { breakAround: true } },
+    subparagraph: { signature: "s o m", renderInfo: { breakAround: true } },
 };
 
 interface SpecialEnvSpec {
