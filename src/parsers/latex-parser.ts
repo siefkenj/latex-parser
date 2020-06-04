@@ -1,11 +1,11 @@
 import Prettier from "prettier/standalone";
-import * as prettierPluginLatex from "./prettier-plugin-latex";
-import { parse, printRaw } from "./libs/parser";
+import * as prettierPluginLatex from "../prettier-plugin-latex";
+import { parse, printRaw } from "./parser";
 import {
     parseAlignEnvironment,
     createMatchers,
-} from "./libs/align-environment-parser";
-import * as macroUtils from "./libs/macro-utils";
+} from "./align-environment-parser";
+import * as macroUtils from "../libs/macro-utils";
 
 const astParsers = {
     parseAlignEnvironment,

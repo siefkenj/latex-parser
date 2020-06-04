@@ -1,4 +1,4 @@
-import { parse } from "./libs/parser";
+import { parse } from "./parsers/parser";
 import { printLatexAst } from "./printers/printer";
 import * as Ast from "./libs/ast-types";
 

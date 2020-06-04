@@ -14,8 +14,8 @@ import {
     joinWithSoftline,
     formatDocArray,
 } from "./common";
-import { parseAlignEnvironment } from "../libs/align-environment-parser";
-import { printRaw } from "../libs/parser";
+import { parseAlignEnvironment } from "../parsers/align-environment-parser";
+import { printRaw } from "../parsers/parser";
 
 export function printVerbatimEnvironment(
     path: PrettierTypes.FastPath,

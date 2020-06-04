@@ -1,7 +1,5 @@
 import Prettier from "prettier/standalone";
-import { origLog } from "./parser.test";
 
-import * as latexParser from "../latex-parser";
 import * as prettierPluginLatex from "../prettier-plugin-latex";
 
 expect.extend({

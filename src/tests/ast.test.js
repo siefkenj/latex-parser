@@ -1,6 +1,6 @@
 import util from "util";
 
-import * as latexParser from "../libs/parser";
+import * as latexParser from "../parsers/parser";
 import * as macroUtils from "../libs/macro-utils";
 import { attachMacroArgs, trimRenderInfo } from "../libs/ast";
 

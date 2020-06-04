@@ -1,6 +1,6 @@
 import util from "util";
 
-import * as latexParser from "../latex-parser";
+import * as latexParser from "../parsers/latex-parser";
 import * as argspecParser from "../libs/argspec-parser";
 import {
     gobbleSingleArgument,

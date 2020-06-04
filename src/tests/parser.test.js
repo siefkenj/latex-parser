@@ -1,6 +1,6 @@
 import util from "util";
 
-import * as latexParser from "../libs/parser";
+import * as latexParser from "../parsers/parser";
 
 /* eslint-env jest */
 

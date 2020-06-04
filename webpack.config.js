@@ -3,7 +3,7 @@ const path = require("path");
 
 module.exports = {
     entry: {
-        "latex-parser": "./src/latex-parser.js",
+        "latex-parser": "./src/parsers/latex-parser.ts",
     },
     mode: "development",
     devtool: "source-map",

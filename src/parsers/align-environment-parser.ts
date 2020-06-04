@@ -1,6 +1,6 @@
-import PegParser from "./align-environment-pegjs";
-import { match, decorateArrayForPegjs } from "./macro-utils";
-import * as Ast from "./ast-types";
+import { AlignEnvironmentPegParser as PegParser } from "./pegjs-parsers";
+import { match, decorateArrayForPegjs } from "../libs/macro-utils";
+import * as Ast from "../libs/ast-types";
 
 // The types returned by the grammar
 

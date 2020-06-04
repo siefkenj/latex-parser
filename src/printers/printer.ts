@@ -1,7 +1,6 @@
 import Prettier from "prettier/standalone";
-import { parse, printRaw } from "../libs/parser";
+import { parse, printRaw } from "../parsers/parser";
 import { ReferenceMap, trim } from "../libs/macro-utils";
-import { parseAlignEnvironment } from "../libs/align-environment-parser";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
 

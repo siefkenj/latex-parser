@@ -1,14 +1,14 @@
-import PegParser from "./latex-pegjs";
+import { LatexPegParser as PegParser } from "./pegjs-parsers";
 import {
     cleanEnumerateBody,
     processEnvironment,
     trim,
     trimEnvironmentContents,
-} from "./macro-utils";
-import { attachMacroArgs, EnvInfo } from "./ast";
-import * as Ast from "./ast-types"
+} from "../libs/macro-utils";
+import { attachMacroArgs, EnvInfo } from "../libs/ast";
+import * as Ast from "../libs/ast-types";
 
-import { printRaw } from "./print-raw";
+import { printRaw } from "../libs/print-raw";
 
 // A list of macros to be specially treated. The agument signature
 // for these macros is given in the `xparse` syntax.
@@ -46,13 +46,16 @@ const SPECIAL_MACROS = {
     definecolor: { signature: "m m m" },
     // LaTeX commands
     includegraphics: { signature: "o m" },
+    section: { signature: "s m" },
+    subsection: { signature: "s m" },
+    subsubsection: { signature: "s m" },
 };
 
 interface SpecialEnvSpec {
-    [key: string]: EnvInfo
+    [key: string]: EnvInfo;
 }
 
-const SPECIAL_ENVIRONMENTS:SpecialEnvSpec = {
+const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     document: { processContent: trim },
     // Enumerate environments
     // XXX TODO, clean up these types
