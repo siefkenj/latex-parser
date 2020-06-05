@@ -1,7 +1,7 @@
 {
     "name": "latex-parser",
     "description": "JavaScript LaTeX parser and beautifier",
-    "version": "0.3.0",
+    "version": "0.4.0",
     "author": {
         "name": "Jason Siefken",
         "email": "siefkenj@gmail.com"
@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@types/prettier": "^2.0.1",
-        "prettier": "2.0.2"
+        "prettier": "2.0.5"
     },
     "devDependencies": {
         "@babel/core": "7.9.0",

@@ -124,7 +124,7 @@ export function trim(ast: Ast.Ast): Ast.Ast;
 export function trim(ast: Ast.Node[] | Ast.Ast): any {
     if (!Array.isArray(ast)) {
         console.warn("Trying to trim a non-array ast", ast);
-        throw Error("cant")
+        throw Error("cant");
         return ast;
     }
     if (ast.length === 0) {
@@ -377,7 +377,12 @@ export function gobbleSingleArgument(
  */
 export function attachMacroArgsInArray(
     ast: Ast.Node[],
-    macros: { [macroName: string]: { signature: string; renderInfo?: object } }
+    macros: {
+        [macroName: string]: {
+            signature?: string;
+            renderInfo?: object;
+        };
+    }
 ): Ast.Node[] {
     // Some preliminaries that are only used if `ast` is an array.
     let currIndex: number;
@@ -497,7 +502,7 @@ export function getArgsInArray(
  */
 export function attachMacroArgs(
     ast: Ast.Ast,
-    macros: { [macroName: string]: { signature: string; renderInfo?: object } }
+    macros: { [macroName: string]: { signature?: string; renderInfo?: object } }
 ) {
     // We only gobble arguments when we find a macro in an array, so
     // recurse looking for arrays and then gobble.

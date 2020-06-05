@@ -45,6 +45,8 @@ const SPECIAL_MACROS = {
     newcommand: { signature: "m o o m" },
     definecolor: { signature: "m m m" },
     // LaTeX commands
+    ref: { signature: "m" },
+    label: { signature: "m" },
     includegraphics: { signature: "o m" },
     part: { signature: "s o m", renderInfo: { breakAround: true } },
     chapter: { signature: "s o m", renderInfo: { breakAround: true } },
@@ -53,6 +55,20 @@ const SPECIAL_MACROS = {
     subsubsection: { signature: "s o m", renderInfo: { breakAround: true } },
     paragraph: { signature: "s o m", renderInfo: { breakAround: true } },
     subparagraph: { signature: "s o m", renderInfo: { breakAround: true } },
+    author: { signature: "m", renderInfo: { breakAround: true } },
+    maketitle: { renderInfo: { breakAround: true } },
+    appendix: { renderInfo: { breakAround: true } },
+    doublespacing: { renderInfo: { breakAround: true } },
+    singlespacing: { renderInfo: { breakAround: true } },
+    noindent: { renderInfo: { breakAround: true } },
+    smallskip: { renderInfo: { breakAround: true } },
+    medskip: { renderInfo: { breakAround: true } },
+    bigskip: { renderInfo: { breakAround: true } },
+    printbibliography: { renderInfo: { breakAround: true } },
+    addtocontents: { signature: "m m", renderInfo: { breakAround: true } },
+    bibliography: { signature: "m", renderInfo: { breakAround: true } },
+    bibliographystyle: { signature: "m", renderInfo: { breakAround: true } },
+    caption: { signature: "m", renderInfo: { breakAround: true } },
 };
 
 interface SpecialEnvSpec {
@@ -67,6 +83,7 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     itemize: { signature: "o", processContent: cleanEnumerateBody as any },
     description: { signature: "o", processContent: cleanEnumerateBody as any },
     parts: { signature: "o", processContent: cleanEnumerateBody as any },
+    table: { signature: "o" },
     // Aligned environments
     tabular: { signature: "m", renderInfo: { alignContent: true } },
     tabularx: { signature: "m m", renderInfo: { alignContent: true } },

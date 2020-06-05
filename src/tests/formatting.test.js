@@ -628,6 +628,14 @@ describe("Prettier tests", () => {
                 inStr: "\\begin{x}\\end{x}%xxx\n\\section{x}\\begin{x}\\end{x}",
                 outStr: "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
             },
+            {
+                inStr: "\\maketitle a",
+                outStr: "\\maketitle\na",
+            },
+            {
+                inStr: "\\maketitle\\maketitle",
+                outStr: "\\maketitle\n\\maketitle",
+            },
         ];
 
         for (const { inStr, outStr } of STRINGS) {
