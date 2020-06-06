@@ -42,6 +42,12 @@ const obj = {
             e.message = "Failed to parse LaTeX source " + e.message;
             throw e;
         }
+        // A parsed AST is wrapped in a type === "root" node.
+        // We want to operate on the contents array instead,
+        // so unwrap it.
+        if (ast.type === "root") {
+            ast = ast.content;
+        }
 
         // If `parserSource` is given, use Pegjs to generate a parser
         let parser = null;

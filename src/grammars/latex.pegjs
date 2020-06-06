@@ -7,7 +7,7 @@
     const ret = { type, ...extra };
     // Add a non-enumerable location property to `ret`. Since it is
     // non-enumerable, it won't clutter up the syntax tree when printed.
-    Object.defineProperty(ret, "loc", { value: location() });
+    Object.defineProperty(ret, "loc", { value: location(), enumerable: false });
 
     return ret;
   }
@@ -37,7 +37,14 @@ token "token"
   / end_group
   / math_shift
 
-parbreak "parbreak" = sp* nl (sp* nl)+ sp* { return createNode("parbreak"); }
+parbreak "parbreak"
+  = (
+    // Comments eat the whitespace in front of them, so if a
+    // parbreak is follwed by a comment, we don't want to eat that
+    // whitespace.
+    sp* nl (sp* nl)+ sp* !full_comment
+    / sp* nl (sp* nl)+
+  ) { return createNode("parbreak"); }
 
 math_token "math token"
   = special_macro
@@ -55,28 +62,6 @@ math_token "math token"
   / ignore
   / whitespace
   / .
-
-args_token "args token"
-  = special_macro
-  / macro
-  / full_comment
-  / group
-  / math_shift eq:(!math_shift t:math_token { return t; })+ math_shift {
-      return createNode("inlinemath", { content: eq });
-    }
-  / alignment_tab
-  / sp* nl sp* nl+ sp* { return createNode("parbreak"); }
-  / macro_parameter
-  / ignore
-  / number
-  / whitespace
-  / punctuation
-  / $(!nonchar_token .)+
-  // If all else fails, we allow special tokens. If one of these
-  // is matched, it means there is an unbalanced group.
-  / begin_group
-  / end_group
-  / math_shift
 
 nonchar_token "nonchar token"
   = escape

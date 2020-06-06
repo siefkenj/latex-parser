@@ -40,11 +40,13 @@ const SPECIAL_MACROS = {
     // TeX commands
     parbox: { signature: "o o o m m" },
     // Preamble macros
-    documentclass: { signature: "o m" },
-    usepackage: { signature: "o m" },
+    documentclass: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
+    usepackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
     newcommand: { signature: "m o o m" },
     definecolor: { signature: "m m m" },
+    geometry: { signature: "m", renderInfo: { breakAround: true, pgfkeysArgs: true } },
     // LaTeX commands
+    setlength: { signature: "m m", renderInfo: { breakAround: true } },
     ref: { signature: "m" },
     label: { signature: "m" },
     includegraphics: { signature: "o m" },
@@ -69,6 +71,15 @@ const SPECIAL_MACROS = {
     bibliography: { signature: "m", renderInfo: { breakAround: true } },
     bibliographystyle: { signature: "m", renderInfo: { breakAround: true } },
     caption: { signature: "m", renderInfo: { breakAround: true } },
+    // Tikz
+    pgfkeys: {
+        signature: "m",
+        renderInfo: { breakAround: true, pgfkeysArgs: true },
+    },
+    pgfplotstabletypeset: {
+        signature: "o m",
+        renderInfo: { breakAround: true, pgfkeysArgs: true },
+    },
 };
 
 interface SpecialEnvSpec {
@@ -110,6 +121,9 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     Bmatrix: { renderInfo: { alignContent: true } },
     Vmatrix: { renderInfo: { alignContent: true } },
     smallmatrix: { renderInfo: { alignContent: true } },
+    // TikZ
+    tikzpicture: { signature: "o", renderInfo: { pgfkeysArgs: true } },
+    axis: { signature: "o", renderInfo: { pgfkeysArgs: true } },
 };
 
 /**

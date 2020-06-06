@@ -100,6 +100,7 @@ export const {
     breakParent,
     indent,
     markAsRoot,
+    join,
 } = ((Prettier as any).doc as PrettierTypes.doc).builders;
 
 /**
@@ -179,11 +180,14 @@ export function formatDocArray(
                 if (renderInfo.breakBefore || renderInfo.breakAround) {
                     // Commands like \section{} should always be preceded by a hardline
                     if (previousNode) {
-                        if (ret[ret.length-1] === line || ret[ret.length-1] === hardline) {
+                        if (
+                            ret[ret.length - 1] === line ||
+                            ret[ret.length - 1] === hardline
+                        ) {
                             // We may be replacing a hardline here for no reason. However,
                             // if there is already a hardline, we don't want to continue
                             // and accidentally add too many linebreaks
-                            ret.pop()
+                            ret.pop();
                             ret.push(hardline);
                         } else if (
                             !match.comment(previousNode) &&
