@@ -42,14 +42,14 @@ parbreak "parbreak"
     // Comments eat the whitespace in front of them, so if a
     // parbreak is follwed by a comment, we don't want to eat that
     // whitespace.
-    sp* nl (sp* nl)+ sp* !full_comment
+    sp* nl (sp* nl)+ sp* !comment_start
     / sp* nl (sp* nl)+
   ) { return createNode("parbreak"); }
 
 math_token "math token"
   = special_macro
   / macro
-  / x:full_comment { return x; }
+  / full_comment
   / whitespace* x:group whitespace* { return x; }
   / whitespace* x:alignment_tab whitespace* { return x; }
   / whitespace* x:macro_parameter whitespace* { return x; }
@@ -78,7 +78,7 @@ nonchar_token "nonchar token"
   / EOF
 
 whitespace "whitespace"
-  = (nl sp* / sp+ nl !comment sp* !nl / sp+) {
+  = (nl sp* / sp+ nl !comment_start sp* !nl / sp+) {
       return createNode("whitespace");
     }
 
@@ -167,7 +167,7 @@ group "group"
 environment "environment"
   = begin_env
     env:group
-    env_comment:env_comment?
+    env_comment:sameline_comment?
     body:(
       !(end_env end_env:group & { return compare_env(env, end_env); }) x:token {
           return x;
@@ -186,7 +186,7 @@ math_environment "math environment"
     begin_group
     env:math_env_name
     end_group
-    env_comment:env_comment?
+    env_comment:sameline_comment?
     body:(
       !(
           end_env
@@ -209,53 +209,6 @@ math_environment "math environment"
 math_group "math group"
   = begin_group x:(!end_group c:math_token { return c; })* end_group {
       return createNode("group", { content: x });
-    }
-
-full_comment "full comment"
-  // comment that detects whether it is at the end of a line or on a new line
-  = start_of_line x:comment {
-      return createNode("comment", { content: x, sameline: false });
-    }
-  / leading_sp x:comment {
-      return createNode("comment", {
-        content: x,
-        sameline: false,
-        leadingWhitespace: true,
-      });
-    }
-  / sp* nl leading_sp? x:comment_and_parbreak {
-      return createNode("comment", {
-        content: x,
-        sameline: false,
-        suffixParbreak: true,
-      });
-    }
-  / sp* nl leading_sp? x:comment {
-      return createNode("comment", { content: x, sameline: false });
-    }
-  / spaces:sp* x:comment_and_parbreak {
-      return createNode("comment", {
-        content: x,
-        sameline: true,
-        suffixParbreak: true,
-        leadingWhitespace: spaces.length > 0,
-      });
-    }
-  / spaces:sp* x:comment {
-      return createNode("comment", {
-        content: x,
-        sameline: true,
-        leadingWhitespace: spaces.length > 0,
-      });
-    }
-
-env_comment "environment comment"
-  = sp:sp* comment:comment {
-      return createNode("comment", {
-        content: comment,
-        sameline: true,
-        leadingWhitespace: sp.length > 0,
-      });
     }
 
 begin_display_math = escape "["
@@ -335,20 +288,59 @@ punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]]
 // catcode 14, including the newline
 comment_start = "%"
 
-comment_and_parbreak
-  = comment_start c:(!nl c:. { return c; })* &parbreak { return c.join(""); } // parbreaks following a comment are preserved
+// A comment consumes any whitespace that comes before it.
+// It can be the only thing on a line, or can come at the end of a line.
+// A comment will consume the newline that follows it, unless that newline
+// is part of a parbreak.
+full_comment "full comment"
+  = ownline_comment
+  / sameline_comment
+
+// A comment that appears on a line of its own
+ownline_comment
+  // `leading_sp` is whitespace that starts at the beginning fo a line.
+  // A comment is `sameline` if it is on the same line as other content.
+  // The existance of leading whitespace for a `sameline == false` comment
+  // isn't important, but we record it anyways.
+  //
+  // We look for `(sp nl)?` at the start so that we eat excess whitespace that occurs before
+  // a comment on a new line. Otherwise, the newline itself is counted as whitespace. For example:
+  // ```x
+  //    %comment```
+  // would be parsed as "x, <whitespace (from the newline)>, comment". We don't want this. We want
+  // to parse it as "x, comment".
+  = (sp* nl)? leading_sp:leading_sp comment:comment {
+      return createNode("comment", {
+        ...comment,
+        sameline: false,
+        leadingWhitespace: leading_sp.length > 0,
+      });
+    }
+
+// A comment that appears at the end of a line
+sameline_comment
+  = spaces:sp* x:comment {
+      return createNode("comment", {
+        ...x,
+        sameline: true,
+        leadingWhitespace: spaces.length > 0,
+      });
+    }
 
 comment "comment"
   // A comment normally consumes the next newline and all leading whitespace.
   // The exception is if the next line consists solely of a comment. In that case,
   // consume the newline but leave the whitespace (`full_comment` will eat the
   // leading whitspace)
-  = comment_start
+  = comment_start c:(!nl c:. { return c; })* &parbreak {
+      return { content: c.join(""), suffixParbreak: true };
+    } // parbreaks following a comment are preserved
+  / comment_start
     c:(!nl c:. { return c; })*
-    (nl sp* !comment_start / nl / EOF) { return c.join(""); } // if a comment is not followed by a parbreak, the newline is consumed
+    (nl sp* !comment_start / nl / EOF) { return { content: c.join("") }; } // if a comment is not followed by a parbreak, the newline is consumed
 
 // Whitespace at the start of a line only
-leading_sp = start_of_line sp+ { return " "; }
+leading_sp = $(start_of_line sp*)
 
 start_of_line
   = & {
