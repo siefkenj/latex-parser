@@ -92,6 +92,7 @@ describe("Prettier tests", () => {
             { inStr: "x % abc\n\ny", outStr: "x % abc\n\ny" },
             { inStr: "x % abc\n\n", outStr: "x % abc" },
             { inStr: "x\n%\n\ny", outStr: "x\n%\n\ny" },
+            { inStr: "%\n%\n\ny", outStr: "%\n%\n\ny" },
             {
                 inStr: "\\begin{a}\n%\n\\end{a}",
                 outStr: "\\begin{a}\n\t%\n\\end{a}",
