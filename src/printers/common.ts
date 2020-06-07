@@ -155,6 +155,7 @@ export function formatDocArray(
                 break;
             case "environment":
             case "displaymath":
+            case "mathenv":
                 // Environments always start on a new line (unless they are the first
                 // item). Peek to see if there is a newline inserted already.
                 if (previousNode && previousNode?.type !== "parbreak") {
