@@ -51,7 +51,6 @@ const SPECIAL_MACROS = {
     newenvironment: { signature: "m o o m" },
     renewenvironment: { signature: "m o o m" },
     providecommand: { signature: "m o o m" },
-    newtheorem: { signature: "m o m o" },
     definecolor: { signature: "m m m" },
     geometry: {
         signature: "m",
