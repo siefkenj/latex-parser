@@ -623,11 +623,13 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{x}\\end{x}\\section{x}\\begin{x}\\end{x}",
-                outStr: "\\begin{x}\n\\end{x}\n\\section{x}\n\\begin{x}\n\\end{x}",
+                outStr:
+                    "\\begin{x}\n\\end{x}\n\\section{x}\n\\begin{x}\n\\end{x}",
             },
             {
                 inStr: "\\begin{x}\\end{x}%xxx\n\\section{x}\\begin{x}\\end{x}",
-                outStr: "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
+                outStr:
+                    "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
             },
             {
                 inStr: "\\maketitle a",
@@ -636,6 +638,45 @@ describe("Prettier tests", () => {
             {
                 inStr: "\\maketitle\\maketitle",
                 outStr: "\\maketitle\n\\maketitle",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+    });
+
+    it("Formats matrix environments with optional arguments", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{NiceArray}a&b&c\\end{NiceArray}",
+                outStr: "\\begin{NiceArray}{a}\n\t & b & c\n\\end{NiceArray}",
+            },
+            {
+                inStr: "\\begin{NiceArray}[abc]a&b&c\\end{NiceArray}",
+                outStr:
+                    "\\begin{NiceArray}[abc]{a}\n\t & b & c\n\\end{NiceArray}",
+            },
+            {
+                inStr: "\\begin{NiceArray}[abc]a[x]&b&c\\end{NiceArray}",
+                outStr:
+                    "\\begin{NiceArray}[abc]{a}[x]\n\t & b & c\n\\end{NiceArray}",
+            },
+            {
+                inStr: "\\begin{NiceArray}[abc]a [x]&b&c\\end{NiceArray}",
+                outStr:
+                    "\\begin{NiceArray}[abc]{a}\n\t[x] & b & c\n\\end{NiceArray}",
+            },
+            {
+                inStr: "\\begin{NiceArray} a [x]&b&c\\end{NiceArray}",
+                outStr:
+                    "\\begin{NiceArray}{a}\n\t[x] & b & c\n\\end{NiceArray}",
             },
         ];
 

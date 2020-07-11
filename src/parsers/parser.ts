@@ -46,11 +46,12 @@ const SPECIAL_MACROS = {
     // Preamble macros
     documentclass: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
     usepackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
-    newcommand: { signature: "m o o m", renderInfo:{breakAround: true} },
-    renewcommand: { signature: "m o o m", renderInfo:{breakAround: true} },
+    newcommand: { signature: "m o o m", renderInfo: { breakAround: true } },
+    renewcommand: { signature: "m o o m", renderInfo: { breakAround: true } },
     newenvironment: { signature: "m o o m" },
     renewenvironment: { signature: "m o o m" },
     providecommand: { signature: "m o o m" },
+    newtheorem: { signature: "m o m o" },
     definecolor: { signature: "m m m" },
     geometry: {
         signature: "m",
@@ -123,6 +124,14 @@ const SPECIAL_MACROS = {
         signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
     },
+    // nicematrix
+    NiceMatrixOptions: {
+        signature: "m",
+        renderInfo: { breakAround: true, pgfkeysArgs: true },
+    },
+    mymacro: {
+        signature: "o m o",
+    },
 };
 
 interface SpecialEnvSpec {
@@ -175,6 +184,67 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     // TikZ
     tikzpicture: { signature: "o", renderInfo: { pgfkeysArgs: true } },
     axis: { signature: "o", renderInfo: { pgfkeysArgs: true } },
+    // nicematrix
+    NiceTabular: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    NiceMatrixBlock: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    NiceArrayWithDelims: {
+        signature: "m m o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    NiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    pNiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    bNiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    BNiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    vNiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    VNiceArray: {
+        signature: "o m !o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    NiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    pNiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    bNiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    BNiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    vNiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
+    VNiceMatrix: {
+        signature: "!o",
+        renderInfo: { pgfkeysArgs: true, alignContent: true },
+    },
 };
 
 /**
