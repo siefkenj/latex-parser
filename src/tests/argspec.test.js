@@ -653,4 +653,130 @@ describe("Macro arguments argspec test", () => {
             },
         ]);
     });
+
+    it("Optional arguments may be omitted", () => {
+        // Calling `attachMacroArgs` on a macro that already has
+        // args, should do nothing (i.e., no eat the next argument.)
+        let ast = latexParser.parse("\\xxx a{b}").content;
+        let subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "o m",
+            },
+        });
+        expect(subbedAst).toEqual([
+            {
+                type: "macro",
+                content: "xxx",
+                args: [
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "a" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                ],
+            },
+            { type: "group", content: [{ type: "string", content: "b" }] },
+        ]);
+
+        ast = latexParser.parse("\\xxx a b").content;
+        subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "o m",
+            },
+        });
+        expect(subbedAst).toEqual([
+            {
+                type: "macro",
+                content: "xxx",
+                args: [
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "a" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                ],
+            },
+            { type: "whitespace" },
+            { type: "string", content: "b" },
+        ]);
+
+        ast = latexParser.parse("\\xxx a [b]").content;
+        subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "m o",
+            },
+        });
+        expect(subbedAst).toEqual([
+            {
+                type: "macro",
+                content: "xxx",
+                args: [
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "a" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "b" }],
+                        openMark: "[",
+                        closeMark: "]",
+                    },
+                ],
+            },
+        ]);
+
+        ast = latexParser.parse("\\xxx a b").content;
+        subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "m o",
+            },
+        });
+        expect(subbedAst).toEqual([
+            {
+                type: "macro",
+                content: "xxx",
+                args: [
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "a" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                ],
+            },
+            { type: "whitespace" },
+            { type: "string", content: "b" },
+        ]);
+
+        ast = latexParser.parse("\\xxx a b").content;
+        subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "m o m",
+            },
+        });
+        expect(subbedAst).toEqual([
+            {
+                type: "macro",
+                content: "xxx",
+                args: [
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "a" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                    {
+                        type: "argument",
+                        content: [{ type: "string", content: "b" }],
+                        openMark: "{",
+                        closeMark: "}",
+                    },
+                ],
+            },
+        ]);
+    });
 });

@@ -326,18 +326,22 @@ export function gobbleSingleArgument(
         // argument and an optional argument is the same for our purposes.
         // We're not going to fail to parse because of a missing argument.
         case "optional":
-            // If we're here, we have custom braces to match
-            var [openMarkPos, closeMarkPos] = findBracePositions();
-            if (openMarkPos != null && closeMarkPos != null) {
-                argument = {
-                    type: "argument",
-                    content: nodes.slice(openMarkPos + 1, closeMarkPos),
-                    openMark: openMark,
-                    closeMark: closeMark,
-                };
-                rest.length = 0;
-                rest.push(...nodes.slice(closeMarkPos + 1));
-                break;
+            // We have already gobbled whitespace, so at this point, `currNode`
+            // is either an openMark or we don't have an optional argument.
+            if (match.string(currNode, openMark)) {
+                // If we're here, we have custom braces to match
+                const [openMarkPos, closeMarkPos] = findBracePositions();
+                if (openMarkPos != null && closeMarkPos != null) {
+                    argument = {
+                        type: "argument",
+                        content: nodes.slice(openMarkPos + 1, closeMarkPos),
+                        openMark: openMark,
+                        closeMark: closeMark,
+                    };
+                    rest.length = 0;
+                    rest.push(...nodes.slice(closeMarkPos + 1));
+                    break;
+                }
             }
             break;
         case "optionalStar":
