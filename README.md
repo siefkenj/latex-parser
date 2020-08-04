@@ -20,6 +20,7 @@ processing stage).
 To build the `playground`, run
 
 	npm install
+	npm run build
 	npm run playground
 
 for development, you can run
