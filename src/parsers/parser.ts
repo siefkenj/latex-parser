@@ -5,14 +5,14 @@ import {
     trim,
     trimEnvironmentContents,
 } from "../libs/macro-utils";
-import { attachMacroArgs, EnvInfo } from "../libs/ast";
+import { attachMacroArgs, EnvInfo, MacroInfo } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
 
 // A list of macros to be specially treated. The agument signature
 // for these macros is given in the `xparse` syntax.
-const SPECIAL_MACROS = {
+const SPECIAL_MACROS: SpecialMacroSpec = {
     "\\": { signature: "!s o" },
     _: { signature: "m" },
     "^": { signature: "m" },
@@ -137,6 +137,9 @@ const SPECIAL_MACROS = {
 interface SpecialEnvSpec {
     [key: string]: EnvInfo;
 }
+interface SpecialMacroSpec {
+    [key: string]: MacroInfo;
+}
 
 const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     document: { processContent: trim },
@@ -254,8 +257,11 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
  * @param {*} ast
  * @returns
  */
-function processSpecialEnvironments(ast: Ast.Ast) {
-    for (const [envName, envInfo] of Object.entries(SPECIAL_ENVIRONMENTS)) {
+function processSpecialEnvironments(
+    ast: Ast.Ast,
+    specialEnvironments = SPECIAL_ENVIRONMENTS
+) {
+    for (const [envName, envInfo] of Object.entries(specialEnvironments)) {
         ast = processEnvironment(ast, envName, envInfo);
     }
 
@@ -269,8 +275,8 @@ function processSpecialEnvironments(ast: Ast.Ast) {
  * @param {*} ast
  * @returns
  */
-function attachSpecialMacroArgs(ast: Ast.Ast) {
-    ast = attachMacroArgs(ast, SPECIAL_MACROS);
+function attachSpecialMacroArgs(ast: Ast.Ast, specialMacros = SPECIAL_MACROS) {
+    ast = attachMacroArgs(ast, specialMacros);
 
     return ast;
 }
@@ -328,11 +334,23 @@ function wrapStrings(node: Ast.Ast | string): Ast.Ast {
  * @param {string} [str=""] - LaTeX string input
  * @returns - AST for LaTeX string
  */
-function parse(str = "") {
+function parse(
+    str = "",
+    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+) {
+    const specialMacros: SpecialMacroSpec = { ...SPECIAL_MACROS };
+    const specialEnvironments: SpecialEnvSpec = { ...SPECIAL_ENVIRONMENTS };
+    // Combine the special macros/environments with the passed in ones
+    if (options) {
+        const { macros, environments } = options;
+        Object.assign(specialMacros, macros);
+        Object.assign(specialEnvironments, environments);
+    }
+
     const pegAst = PegParser.parse(str);
     let ast = wrapStrings(pegAst);
-    ast = attachSpecialMacroArgs(ast);
-    ast = processSpecialEnvironments(ast);
+    ast = attachSpecialMacroArgs(ast, specialMacros);
+    ast = processSpecialEnvironments(ast, specialEnvironments);
     (ast as any).content = trim((ast as any).content);
     ast = trimEnvironmentContents(ast);
     return ast;

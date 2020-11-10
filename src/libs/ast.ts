@@ -4,9 +4,82 @@ import { printRaw } from "./print-raw";
 import { parse as parseArgspec } from "./argspec-parser";
 
 export type EnvInfo = {
-    renderInfo?: object;
+    renderInfo?: {
+        /**
+         * Whether the body of the environment should be treated as math mode
+         *
+         * @type {boolean}
+         */
+        inMathMode?: boolean;
+        /**
+         * Whether to align the environment contents based on `&` and `\\` delimiters
+         * (like a matrix or tabular environment).
+         *
+         * @type {boolean}
+         */
+        alignContent?: boolean;
+        /**
+         * Whether the arguments should be treated as pgfkeys-type arguments.
+         *
+         * @type {boolean}
+         */
+        pgfkeysArgs?: boolean;
+    };
+    /**
+     * Function to process the body of an environment. The return value of `processContent`
+     * is treated as the new body.
+     *
+     */
     processContent?: (ast: Ast.Node[]) => Ast.Node[];
-    processNode?: (ast: Ast.Node) => void;
+    /**
+     * The environment signature as an xparse argument specification string.
+     *
+     * @type {string}
+     */
+    signature?: string;
+};
+
+export type MacroInfo = {
+    renderInfo?: {
+        /**
+         * Whether the macro's contents wraps along with the current
+         * paragraph or displays as it's own block.
+         *
+         * @type {boolean}
+         */
+        inParMode?: boolean;
+        /**
+         * Whether the arguments should be processed as pgfkeys-type arguments.
+         *
+         * @type {boolean}
+         */
+        pgfkeysArgs?: boolean;
+        /**
+         * Whether there should be line breaks before and after the macro
+         * (e.g., like the \section{...} command.)
+         *
+         * @type {boolean}
+         */
+        breakAround?: boolean;
+        /**
+         * Whether the contents of the macro should be assumed to be in math mode.
+         *
+         * @type {boolean}
+         */
+        inMathMode?: boolean;
+        /**
+         * Whether the arguments should be rendered with a hanging indent when the wrap
+         * (like the arguments to \item in an enumerate environment.)
+         *
+         * @type {boolean}
+         */
+        hangingIndent?: boolean;
+    };
+    /**
+     * The macro signature as an xparse argument specification string.
+     *
+     * @type {string}
+     */
     signature?: string;
 };
 
@@ -557,10 +630,6 @@ export function processEnvironment(
             if (typeof envInfo.processContent === "function") {
                 // process the body of the environment if a processing function was supplied
                 ret.content = envInfo.processContent(ret.content);
-            }
-            if (typeof envInfo.processNode === "function") {
-                // process the node itself if a processing function was supplied
-                envInfo.processNode(ret);
             }
 
             return ret;
