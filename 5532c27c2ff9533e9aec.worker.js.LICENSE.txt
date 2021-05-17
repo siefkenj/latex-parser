@@ -1,0 +1,191 @@
+/*! ../grammars/align-environment.pegjs */
+
+/*! ../grammars/latex.pegjs */
+
+/*! ../grammars/pgfkeys.pegjs */
+
+/*! ../grammars/xparse-argspec.pegjs */
+
+/*! ../libs/ast */
+
+/*! ../libs/macro-utils */
+
+/*! ../libs/print-raw */
+
+/*! ../parsers/align-environment-parser */
+
+/*! ../parsers/parser */
+
+/*! ../parsers/pegjs-parsers */
+
+/*! ../parsers/pgfkeys-parser */
+
+/*! ../prettier-plugin-latex */
+
+/*! ./../webpack/buildin/global.js */
+
+/*! ./align-environment-parser */
+
+/*! ./argspec-parser */
+
+/*! ./argument */
+
+/*! ./ast */
+
+/*! ./comment */
+
+/*! ./common */
+
+/*! ./environment */
+
+/*! ./macro */
+
+/*! ./math */
+
+/*! ./parser */
+
+/*! ./parsers/parser */
+
+/*! ./pegjs-parsers */
+
+/*! ./print-raw */
+
+/*! ./printers/printer */
+
+/*! ./root */
+
+/*! exports provided: LatexPegParser, AlignEnvironmentPegParser, ArgSpecPegParser, PgfkeysParser */
+
+/*! exports provided: createMatchers, parseAlignEnvironment */
+
+/*! exports provided: createMatchers, parsePgfkeys */
+
+/*! exports provided: formatEnvSurround, joinWithSoftline, getNodeInfo, ESCAPE, concat, group, fill, ifBreak, line, softline, hardline, lineSuffix, lineSuffixBoundary, breakParent, indent, markAsRoot, join, formatDocArray */
+
+/*! exports provided: languages, parsers, printers */
+
+/*! exports provided: linebreak, printRaw */
+
+/*! exports provided: parse, printRaw */
+
+/*! exports provided: parse, printRaw, printPrettier, prettierPluginLatex, Prettier, astParsers */
+
+/*! exports provided: printArgument */
+
+/*! exports provided: printComment */
+
+/*! exports provided: printInlineMath, printDisplayMath */
+
+/*! exports provided: printLatexAst */
+
+/*! exports provided: printMacro */
+
+/*! exports provided: printRaw, parse */
+
+/*! exports provided: printRoot */
+
+/*! exports provided: printVerbatimEnvironment, printEnvironment, printAlignedEnvironment, formatAlignedContent */
+
+/*! exports provided: trimRenderInfo, match, trim, processEnvironment, hasPreambleCode, splitOnMacro, unsplitOnMacro, cleanEnumerateBody, trimEnvironmentContents, ReferenceMap, markAlignEnv, decorateArrayForPegjs, zip */
+
+/*! exports provided: walkAst, trimRenderInfo, trim, updateRenderInfo, gobbleSingleArgument, attachMacroArgsInArray, getArgsInArray, attachMacroArgs, processEnvironment, match */
+
+/*! no static exports found */
+
+/*! prettier/standalone */
+
+/*!*************************!*\
+        !*** ./src/libs/ast.ts ***!
+        \*************************/
+
+/*!******************************!*\
+        !*** ./src/printers/math.ts ***!
+        \******************************/
+
+/*!******************************!*\
+        !*** ./src/printers/root.ts ***!
+        \******************************/
+
+/*!*******************************!*\
+        !*** ./src/libs/print-raw.ts ***!
+        \*******************************/
+
+/*!*******************************!*\
+        !*** ./src/parsers/parser.ts ***!
+        \*******************************/
+
+/*!*******************************!*\
+        !*** ./src/printers/macro.ts ***!
+        \*******************************/
+
+/*!********************************!*\
+        !*** ./src/printers/common.ts ***!
+        \********************************/
+
+/*!*********************************!*\
+        !*** ./src/libs/macro-utils.ts ***!
+        \*********************************/
+
+/*!*********************************!*\
+        !*** ./src/printers/comment.ts ***!
+        \*********************************/
+
+/*!*********************************!*\
+        !*** ./src/printers/printer.ts ***!
+        \*********************************/
+
+/*!**********************************!*\
+        !*** ./src/grammars/latex.pegjs ***!
+        \**********************************/
+
+/*!**********************************!*\
+        !*** ./src/printers/argument.ts ***!
+        \**********************************/
+
+/*!***********************************!*\
+        !*** (webpack)/buildin/global.js ***!
+        \***********************************/
+
+/*!************************************!*\
+        !*** ./src/grammars/pgfkeys.pegjs ***!
+        \************************************/
+
+/*!************************************!*\
+        !*** ./src/libs/argspec-parser.ts ***!
+        \************************************/
+
+/*!*************************************!*\
+        !*** ./src/parsers/latex-parser.ts ***!
+        \*************************************/
+
+/*!*************************************!*\
+        !*** ./src/printers/environment.ts ***!
+        \*************************************/
+
+/*!**************************************!*\
+        !*** ./src/parsers/pegjs-parsers.js ***!
+        \**************************************/
+
+/*!**************************************!*\
+        !*** ./src/prettier-plugin-latex.ts ***!
+        \**************************************/
+
+/*!***************************************!*\
+        !*** ./src/parsers/pgfkeys-parser.ts ***!
+        \***************************************/
+
+/*!*******************************************!*\
+        !*** ./src/grammars/xparse-argspec.pegjs ***!
+        \*******************************************/
+
+/*!*********************************************!*\
+        !*** ./node_modules/prettier/standalone.js ***!
+        \*********************************************/
+
+/*!**********************************************!*\
+        !*** ./src/grammars/align-environment.pegjs ***!
+        \**********************************************/
+
+/*!*************************************************!*\
+        !*** ./src/parsers/align-environment-parser.ts ***!
+        \*************************************************/
