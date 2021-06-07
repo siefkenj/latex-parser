@@ -1,3 +1,4 @@
+import type { Doc } from "prettier";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
 import {
@@ -21,7 +22,7 @@ export function printArgument(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Argument;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,
@@ -78,7 +79,7 @@ export function printArgument(
  *
  * @param {Ast.Node[]} nodes
  * @param {{ openMark: string; closeMark: string; leadingComment: Ast.Comment | null }} braces - A `leadingComment` is a comment that appears as the first item in the environment (e.g. `\pgfkeys{%comment\na,b,c}`)
- * @returns {PrettierTypes.Doc}
+ * @returns {Doc}
  */
 function printPgfkeysArgument(
     nodes: Ast.Node[],
@@ -87,10 +88,10 @@ function printPgfkeysArgument(
         closeMark: string;
         leadingComment: Ast.Comment | null | undefined;
     }
-): PrettierTypes.Doc {
+): Doc {
     const parsed = parsePgfkeys(nodes);
 
-    const content: PrettierTypes.Doc[] = [];
+    const content: Doc[] = [];
     for (const part of parsed) {
         const isLastItem = part === parsed[parsed.length - 1];
 
@@ -111,7 +112,7 @@ function printPgfkeysArgument(
             }
         }
         if (part.trailingComment) {
-            const leadingContent: PrettierTypes.Doc[] = part.itemParts
+            const leadingContent: Doc[] = part.itemParts
                 ? [" "]
                 : [];
             if (part.leadingParbreak) {
@@ -135,7 +136,7 @@ function printPgfkeysArgument(
         }
     }
 
-    let leadingComment: PrettierTypes.Doc[] = [""];
+    let leadingComment: Doc[] = [""];
     if (braces.leadingComment) {
         if (braces.leadingComment.leadingWhitespace) {
             leadingComment.push(" ");

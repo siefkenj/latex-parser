@@ -1,3 +1,4 @@
+import type { Doc } from "prettier";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
 import {
@@ -15,7 +16,7 @@ export function printComment(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Comment;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,

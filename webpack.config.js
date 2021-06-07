@@ -10,7 +10,7 @@ module.exports = {
     output: {
         filename: "[name].js",
         path: path.resolve(__dirname, "dist"),
-        library: "latex",
+        library: { type: "umd", name: "LatexParser" },
         globalObject: `(() => {
             if (typeof self !== 'undefined') {
                 return self;
@@ -22,7 +22,6 @@ module.exports = {
                 return Function('return this')();
             }
         })()`,
-        libraryTarget: "umd",
     },
     module: {
         rules: [
@@ -32,8 +31,9 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                use: "ts-loader",
+                loader: "ts-loader",
                 exclude: /node_modules/,
+                options: { compilerOptions: { outDir: "./dist" } },
             },
         ],
     },

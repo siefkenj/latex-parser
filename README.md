@@ -17,17 +17,22 @@ processing stage).
 ## Development
 
 `node.js` and `npm` are used to package and bundle *latex-parser*.
-To build the `playground`, run
 
 	npm install
 	npm run build
-	npm run playground
 
 for development, you can run
 
 	webpack --watch
 
 to automatically rebuild files as they change.
+
+## Playground
+
+You use the [Playground](https://siefkenj.github.io/latex-parser-playground) to view
+how latex is parsed/pretty-printed. To run your own version, visit the [playground repository](https://github.com/siefkenj/latex-parser-playground),
+and make a local clone. After running `npm install`, run `npm link` in your local `latex-parser` repository. Then, run `npm link latex-ast-parser`
+in the local playground repository. This will mirror your development version of latex-parser in the playground.
 
 ## Related Projects
 

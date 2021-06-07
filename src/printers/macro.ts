@@ -1,13 +1,14 @@
+import type { Doc } from "prettier";
 import { zip } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
-import { getNodeInfo, softline, fill, concat, hardline, line, ESCAPE, indent } from "./common";
+import { getNodeInfo, fill, concat, ESCAPE, indent } from "./common";
 
 export function printMacro(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Macro;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,
@@ -35,7 +36,7 @@ export function printMacro(
     }
 
     if (renderInfo.hangingIndent) {
-        return indent(fill([content, ...rawArgs]))
+        return indent(fill([content, ...rawArgs]));
     }
 
     return concat([content, ...rawArgs]);

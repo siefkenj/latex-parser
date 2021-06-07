@@ -1,5 +1,6 @@
-import Prettier from "prettier/standalone";
-import { ReferenceMap, zip, match } from "../libs/macro-utils";
+import { builders } from "prettier/doc";
+import type { Doc } from "prettier";
+import { ReferenceMap, match } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
 import { printRaw } from "../parsers/parser";
@@ -101,7 +102,7 @@ export const {
     indent,
     markAsRoot,
     join,
-} = ((Prettier as any).doc as PrettierTypes.doc).builders;
+} = builders;
 
 /**
  * Given an array of nodes and the corresponding printed versions, prepares
@@ -111,26 +112,22 @@ export const {
  *
  * @export
  * @param {Ast.Node[]} nodes
- * @param {PrettierTypes.Doc[]} docArray
+ * @param {Doc[]} docArray
  * @param {*} options
- * @returns {PrettierTypes.Doc[]}
+ * @returns {Doc[]}
  */
 export function formatDocArray(
     nodes: Ast.Node[],
-    docArray: PrettierTypes.Doc[],
+    docArray: Doc[],
     options: any
-): PrettierTypes.Doc[] {
-    const ret: PrettierTypes.Doc[] = [];
+): Doc[] {
+    const ret: Doc[] = [];
 
     for (let i = 0; i < nodes.length; i++) {
         const rawNode = nodes[i];
         const printedNode = docArray[i];
-        const {
-            renderInfo,
-            referenceMap,
-            previousNode,
-            nextNode,
-        } = getNodeInfo(rawNode, options);
+        const { renderInfo, referenceMap, previousNode, nextNode } =
+            getNodeInfo(rawNode, options);
         const renderCache =
             referenceMap && referenceMap.getRenderCache(rawNode);
 
