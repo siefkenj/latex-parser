@@ -1,3 +1,4 @@
+import type { Doc } from "prettier";
 import { zip, trim } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
@@ -21,7 +22,7 @@ export function printVerbatimEnvironment(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.VerbatimEnvironment;
 
     const env = formatEnvSurround(node as any);
@@ -33,7 +34,7 @@ export function printEnvironment(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Environment;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,
@@ -72,7 +73,7 @@ export function printAlignedEnvironment(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Environment;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,

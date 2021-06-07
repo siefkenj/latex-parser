@@ -1,3 +1,4 @@
+import type { Doc } from "prettier";
 import { zip, match } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
@@ -18,7 +19,7 @@ export function printInlineMath(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.InlineMath;
 
     // Since `$$` starts display math mode (in plain TeX),
@@ -45,7 +46,7 @@ export function printDisplayMath(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.InlineMath;
 
     let content = path.map(print, "content");

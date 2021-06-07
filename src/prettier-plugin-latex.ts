@@ -1,8 +1,10 @@
+import type { Plugin, Printer } from "prettier";
+
 import { parse } from "./parsers/parser";
 import { printLatexAst } from "./printers/printer";
 import * as Ast from "./libs/ast-types";
 
-export const languages = [
+const languages = [
     {
         name: "latex",
         extensions: [".tex"],
@@ -10,7 +12,7 @@ export const languages = [
     },
 ];
 
-export const parsers = {
+const parsers = {
     "latex-parser": {
         parse,
         astFormat: "latex-ast",
@@ -19,8 +21,12 @@ export const parsers = {
     },
 };
 
-export const printers = {
+const printers = {
     "latex-ast": {
         print: printLatexAst,
-    },
+    } as Printer,
 };
+
+const plugin: Plugin = { languages, parsers, printers };
+
+export default plugin;

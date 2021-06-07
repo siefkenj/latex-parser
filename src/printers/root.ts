@@ -1,3 +1,4 @@
+import type { Doc } from "prettier";
 import { zip, hasPreambleCode } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
@@ -7,7 +8,7 @@ export function printRoot(
     path: PrettierTypes.FastPath,
     print: PrettierTypes.RecursivePrintFunc,
     options: any
-): PrettierTypes.Doc {
+): Doc {
     const node = path.getNode() as Ast.Root;
     const { renderInfo, previousNode, nextNode, referenceMap } = getNodeInfo(
         node,

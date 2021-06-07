@@ -1,94 +1,8 @@
+/** We recreate several of the Prettier types because the types supplied by prettier have some errors in them... */
+
+import type { Doc } from "prettier";
 // https://github.com/prettier/prettier/blob/master/src/doc/index.js
-export type Doc =
-    | string
-    | Align
-    | BreakParent
-    | Concat
-    | Fill
-    | Group
-    | IfBreak
-    | Indent
-    | Line
-    | LineSuffix
-    | LineSuffixBoundary;
-
-interface Align {
-    type: "align";
-    contents: Doc;
-    n: number | string | { type: "root" };
-}
-
-interface BreakParent {
-    type: "break-parent";
-}
-
-interface Concat {
-    type: "concat";
-    parts: Doc[];
-}
-
-interface Fill {
-    type: "fill";
-    parts: Doc[];
-}
-
-interface Group {
-    type: "group";
-    contents: Doc;
-    break: boolean;
-    expandedStates: Doc[];
-}
-
-interface IfBreak {
-    type: "if-break";
-    breakContents: Doc;
-    flatContents: Doc;
-}
-
-interface Indent {
-    type: "indent";
-    contents: Doc;
-}
-
-interface Line {
-    type: "line";
-    soft?: boolean;
-    hard?: boolean;
-    literal?: boolean;
-}
-
-interface LineSuffix {
-    type: "line-suffix";
-    contents: Doc;
-}
-
-interface LineSuffixBoundary {
-    type: "line-suffix-boundary";
-}
-
-export interface doc {
-    builders: {
-        addAlignmentToDoc: (doc: Doc, size: number, tabWidth: number) => Doc;
-        align: (n: Align["n"], contents: Doc) => Align;
-        breakParent: BreakParent;
-        concat(contents: Doc[]): Concat;
-        conditionalGroup(states: Doc[], opts?: { shouldBreak: boolean }): Group;
-        dedent(contents: Doc): Align;
-        dedentToRoot(contents: Doc): Align;
-        fill(parts: Doc[]): Fill;
-        group(contents: Doc, opts?: { shouldBreak: boolean }): Group;
-        hardline: Concat;
-        ifBreak(breakContents: Doc, flatContents: Doc): IfBreak;
-        indent(contents: Doc): Indent;
-        join(separator: Doc, parts: Doc[]): Concat;
-        line: Line;
-        lineSuffix(contents: Doc): LineSuffix;
-        lineSuffixBoundary: LineSuffixBoundary;
-        literalline: Concat;
-        markAsRoot(contents: Doc): Align;
-        softline: Line;
-    };
-}
+export { Doc };
 
 // https://github.com/prettier/prettier/blob/master/src/common/fast-path.js
 export interface FastPath<T = any> {
@@ -99,19 +13,26 @@ export interface FastPath<T = any> {
     getParentNode(count?: number): null | T;
     call<U>(callback: (path: this) => U, ...names: PropertyKey[]): U;
     each(callback: (path: this) => void, ...names: PropertyKey[]): void;
-    map<U>(callback: (path: this, index: number) => U, ...names: PropertyKey[]): U[];
+    map<U>(
+        callback: (path: this, index: number) => U,
+        ...names: PropertyKey[]
+    ): U[];
 }
 
 export interface PrintFunc {
-    (path: FastPath, options: ParserOptions, print: (path: FastPath) => Doc): Doc
+    (
+        path: FastPath,
+        options: ParserOptions,
+        print: (path: FastPath) => Doc
+    ): Doc;
 }
 
 export interface RecursivePrintFunc<U = any> {
-    (path: U, index?: number): Doc
+    (path: U, index?: number): Doc;
 }
 
 export interface Options extends Partial<RequiredOptions> {}
-export interface RequiredOptions extends Options {
+export interface RequiredOptions {
     /**
      * Print semicolons at the ends of statements.
      * @default true
@@ -131,7 +52,7 @@ export interface RequiredOptions extends Options {
      * Print trailing commas wherever possible.
      * @default 'es5'
      */
-    trailingComma: 'none' | 'es5' | 'all';
+    trailingComma: "none" | "es5" | "all";
     /**
      * Print spaces between brackets in object literals.
      * @default true
@@ -179,12 +100,12 @@ export interface RequiredOptions extends Options {
      * In some cases you may want to rely on editor/viewer soft wrapping instead, so this option allows you to opt out.
      * @default 'preserve'
      */
-    proseWrap: 'always' | 'never' | 'preserve';
+    proseWrap: "always" | "never" | "preserve";
     /**
      * Include parentheses around a sole arrow function parameter.
      * @default 'always'
      */
-    arrowParens: 'avoid' | 'always';
+    arrowParens: "avoid" | "always";
     /**
      * The plugin API is in a beta state.
      */
@@ -193,17 +114,17 @@ export interface RequiredOptions extends Options {
      * How to handle whitespaces in HTML.
      * @default 'css'
      */
-    htmlWhitespaceSensitivity: 'css' | 'strict' | 'ignore';
+    htmlWhitespaceSensitivity: "css" | "strict" | "ignore";
     /**
      * Which end of line characters to apply.
      * @default 'lf'
      */
-    endOfLine: 'auto' | 'lf' | 'crlf' | 'cr';
+    endOfLine: "auto" | "lf" | "crlf" | "cr";
     /**
      * Change when properties in objects are quoted.
      * @default 'as-needed'
      */
-    quoteProps: 'as-needed' | 'consistent' | 'preserve';
+    quoteProps: "as-needed" | "consistent" | "preserve";
     /**
      * Whether or not to indent the code inside <script> and <style> tags in Vue files.
      * @default false

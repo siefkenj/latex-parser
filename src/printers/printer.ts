@@ -1,17 +1,8 @@
-import Prettier from "prettier/standalone";
-import { parse, printRaw } from "../parsers/parser";
-import { ReferenceMap, trim } from "../libs/macro-utils";
-import * as Ast from "../libs/ast-types";
+import { printRaw } from "../parsers/parser";
+import { ReferenceMap } from "../libs/macro-utils";
 import * as PrettierTypes from "./prettier-types";
 
-import {
-    softline,
-    concat,
-    hardline,
-    line,
-    ESCAPE,
-    getNodeInfo,
-} from "./common";
+import { concat, hardline, line, ESCAPE, getNodeInfo } from "./common";
 import { printMacro } from "./macro";
 import { printArgument } from "./argument";
 import { printRoot } from "./root";
@@ -39,8 +30,6 @@ export function printLatexAst(
         return node;
     }
 
-    // tmp variables
-    let content, startToken, bodyStartToken, env;
     switch (node.type) {
         case "root":
             // Create the ReferenceMap from the root node, so that

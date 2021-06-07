@@ -1,6 +1,5 @@
 import Prettier from "prettier/standalone";
-
-import * as prettierPluginLatex from "../prettier-plugin-latex";
+import prettierPluginLatex from "../prettier-plugin-latex";
 
 expect.extend({
     toFormatAs(inStr, outStr, formatter) {
@@ -125,6 +124,14 @@ describe("Prettier tests", () => {
                 inStr: "\\begin{a}\\end{a}\n\\begin{a}\\end{a}",
                 outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
             },
+//            {
+//                inStr: "%x\n\n%y",
+//                outStr: "%x\n\n%y",
+//            },
+//            {
+//                inStr: "x\n\n%y",
+//                outStr: "x\n\n%y",
+//            },
         ];
 
         const formatter = (x) =>
