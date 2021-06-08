@@ -151,4 +151,65 @@ describe("Processing environments tests", () => {
         subbedAst = processEnvironment(ast, "xxx", { signature: "o m" });
         expect(subbedAst).toEqual(targetAst);
     });
+
+    it("environment's body is processed to remove surrounding whitespace", () => {
+        let ast = latexParser.parse("\\begin{xxx}\n\nx\n\\end{xxx}");
+        let targetAst = {
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [{ type: "string", content: "x" }],
+                },
+            ],
+        };
+        expect(ast).toEqual(targetAst);
+
+        // parbreaks after sameline leading comments are removed
+        ast = latexParser.parse("\\begin{xxx}%\n\nx\n\\end{xxx}");
+        targetAst = {
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [
+                        {
+                            type: "comment",
+                            content: "",
+                            suffixParbreak: false,
+                            sameline: true,
+                            leadingWhitespace: false,
+                        },
+                        { type: "string", content: "x" },
+                    ],
+                },
+            ],
+        };
+        expect(ast).toEqual(targetAst);
+
+        // no whitespace is included after sameline leading comment
+        ast = latexParser.parse("\\begin{xxx}%\nx\n\\end{xxx}");
+        targetAst = {
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [
+                        {
+                            type: "comment",
+                            content: "",
+                            suffixParbreak: false,
+                            sameline: true,
+                            leadingWhitespace: false,
+                        },
+                        { type: "string", content: "x" },
+                    ],
+                },
+            ],
+        };
+        expect(ast).toEqual(targetAst);
+    });
 });

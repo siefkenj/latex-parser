@@ -37,8 +37,7 @@ describe("Prettier tests", () => {
             { inStr: "$x^{21}$", outStr: "$x^{21}$" },
             {
                 inStr: "\\begin{enumerate}\\item a b c\\item\\end{enumerate}",
-                outStr:
-                    "\\begin{enumerate}\n\t\\item a b c\n\n\t\\item\n\\end{enumerate}",
+                outStr: "\\begin{enumerate}\n\t\\item a b c\n\n\t\\item\n\\end{enumerate}",
             },
             {
                 inStr:
@@ -62,8 +61,7 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{xx}\\begin{yy}x\\end{yy}\\end{xx}",
-                outStr:
-                    "\\begin{xx}\n\t\\begin{yy}\n\t\tx\n\t\\end{yy}\n\\end{xx}",
+                outStr: "\\begin{xx}\n\t\\begin{yy}\n\t\tx\n\t\\end{yy}\n\\end{xx}",
             },
             { inStr: "\\begin{xx}\\end{xx}", outStr: "\\begin{xx}\n\\end{xx}" },
         ];
@@ -124,14 +122,14 @@ describe("Prettier tests", () => {
                 inStr: "\\begin{a}\\end{a}\n\\begin{a}\\end{a}",
                 outStr: "\\begin{a}\n\\end{a}\n\\begin{a}\n\\end{a}",
             },
-//            {
-//                inStr: "%x\n\n%y",
-//                outStr: "%x\n\n%y",
-//            },
-//            {
-//                inStr: "x\n\n%y",
-//                outStr: "x\n\n%y",
-//            },
+            {
+                inStr: "%x\n\n%y",
+                outStr: "%x\n\n%y",
+            },
+            {
+                inStr: "x\n\n%y",
+                outStr: "x\n\n%y",
+            },
         ];
 
         const formatter = (x) =>
@@ -290,10 +288,8 @@ describe("Prettier tests", () => {
                 outStr: "\\begin{comment}\n\n\n  $\\end{comment}",
             },
             {
-                inStr:
-                    "\\begin{a}\\begin{comment}\n\n\n  $\\end{comment}\\end{a}",
-                outStr:
-                    "\\begin{a}\n\t\\begin{comment}\n\n\n  $\\end{comment}\n\\end{a}",
+                inStr: "\\begin{a}\\begin{comment}\n\n\n  $\\end{comment}\\end{a}",
+                outStr: "\\begin{a}\n\t\\begin{comment}\n\n\n  $\\end{comment}\n\\end{a}",
             },
         ];
 
@@ -319,6 +315,14 @@ describe("Prettier tests", () => {
             {
                 inStr: "\\begin{a}%xx\n\\end{a}",
                 outStr: "\\begin{a}%xx\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}%xx\nx\\end{a}",
+                outStr: "\\begin{a}%xx\n\tx\n\\end{a}",
+            },
+            {
+                inStr: "\\begin{a}%xx\n\nx\n\n\n\\end{a}",
+                outStr: "\\begin{a}%xx\n\tx\n\\end{a}",
             },
             {
                 inStr: "\\begin{a} %xx\n\\end{a}",
@@ -384,8 +388,7 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{matrix}a\\\\b\\\\c\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\ta \\\\\n\tb \\\\\n\tc\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta \\\\\n\tb \\\\\n\tc\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}a&b\\\\c&d\\end{matrix}",
@@ -393,23 +396,19 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{matrix}axxx&b\\\\c&d\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\taxxx & b \\\\\n\tc    & d\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\taxxx & b \\\\\n\tc    & d\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}axxx&b\\\\c&dxxx\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\taxxx & b    \\\\\n\tc    & dxxx\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\taxxx & b    \\\\\n\tc    & dxxx\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}a\\\\[4pt]b\\\\c\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\ta \\\\[4pt]\n\tb \\\\\n\tc\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta \\\\[4pt]\n\tb \\\\\n\tc\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}a\\\\%\nb\\\\c\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\ta \\\\ %\n\tb \\\\\n\tc\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta \\\\ %\n\tb \\\\\n\tc\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}\n%xx\n\\end{matrix}",
@@ -433,13 +432,11 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{matrix}x&y\\\\%xx\n  %yyy\n\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\tx & y \\\\ %xx\n\t%yyy\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\tx & y \\\\ %xx\n\t%yyy\n\\end{matrix}",
             },
             {
                 inStr: "\\begin{matrix}x\n%y\n\\\\z\\\\%ww\n\\end{matrix}",
-                outStr:
-                    "\\begin{matrix}\n\tx %y\n\t\\\\\n\tz \\\\ %ww\n\\end{matrix}",
+                outStr: "\\begin{matrix}\n\tx %y\n\t\\\\\n\tz \\\\ %ww\n\\end{matrix}",
             },
         ];
 
@@ -539,8 +536,7 @@ describe("Prettier tests", () => {
         const STRINGS = [
             {
                 inStr: "\\begin{align}ab& c\\\\d&eee\\end{align}",
-                outStr:
-                    "\\begin{align}\n\tab & c   \\\\\n\td  & eee\n\\end{align}",
+                outStr: "\\begin{align}\n\tab & c   \\\\\n\td  & eee\n\\end{align}",
             },
             {
                 inStr: "\\begin{align}& c\\\\d&e\\end{align}",
@@ -548,13 +544,11 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{align}a&b\\\\[44pt]d&e\\\\xx&yy\\end{align}",
-                outStr:
-                    "\\begin{align}\n\ta  & b  \\\\[44pt]\n\td  & e  \\\\\n\txx & yy\n\\end{align}",
+                outStr: "\\begin{align}\n\ta  & b  \\\\[44pt]\n\td  & e  \\\\\n\txx & yy\n\\end{align}",
             },
             {
                 inStr: "\\begin{align}a\\\\\\hline bbb\\end{align}",
-                outStr:
-                    "\\begin{align}\n\ta   \\\\\n\t\\hline\n\tbbb\n\\end{align}",
+                outStr: "\\begin{align}\n\ta   \\\\\n\t\\hline\n\tbbb\n\\end{align}",
             },
         ];
 
@@ -630,13 +624,11 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{x}\\end{x}\\section{x}\\begin{x}\\end{x}",
-                outStr:
-                    "\\begin{x}\n\\end{x}\n\\section{x}\n\\begin{x}\n\\end{x}",
+                outStr: "\\begin{x}\n\\end{x}\n\\section{x}\n\\begin{x}\n\\end{x}",
             },
             {
                 inStr: "\\begin{x}\\end{x}%xxx\n\\section{x}\\begin{x}\\end{x}",
-                outStr:
-                    "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
+                outStr: "\\begin{x}\n\\end{x}%xxx\n\\section{x}\n\\begin{x}\n\\end{x}",
             },
             {
                 inStr: "\\maketitle a",
@@ -667,23 +659,19 @@ describe("Prettier tests", () => {
             },
             {
                 inStr: "\\begin{NiceArray}[abc]a&b&c\\end{NiceArray}",
-                outStr:
-                    "\\begin{NiceArray}[abc]{a}\n\t & b & c\n\\end{NiceArray}",
+                outStr: "\\begin{NiceArray}[abc]{a}\n\t & b & c\n\\end{NiceArray}",
             },
             {
                 inStr: "\\begin{NiceArray}[abc]a[x]&b&c\\end{NiceArray}",
-                outStr:
-                    "\\begin{NiceArray}[abc]{a}[x]\n\t & b & c\n\\end{NiceArray}",
+                outStr: "\\begin{NiceArray}[abc]{a}[x]\n\t & b & c\n\\end{NiceArray}",
             },
             {
                 inStr: "\\begin{NiceArray}[abc]a [x]&b&c\\end{NiceArray}",
-                outStr:
-                    "\\begin{NiceArray}[abc]{a}\n\t[x] & b & c\n\\end{NiceArray}",
+                outStr: "\\begin{NiceArray}[abc]{a}\n\t[x] & b & c\n\\end{NiceArray}",
             },
             {
                 inStr: "\\begin{NiceArray} a [x]&b&c\\end{NiceArray}",
-                outStr:
-                    "\\begin{NiceArray}{a}\n\t[x] & b & c\n\\end{NiceArray}",
+                outStr: "\\begin{NiceArray}{a}\n\t[x] & b & c\n\\end{NiceArray}",
             },
         ];
 

@@ -141,7 +141,8 @@ export function formatDocArray(
                 if (
                     !rawNode.sameline &&
                     previousNode &&
-                    !match.comment(previousNode)
+                    !match.comment(previousNode) &&
+                    !match.parbreak(previousNode)
                 ) {
                     ret.push(hardline);
                 }

@@ -179,7 +179,15 @@ export function trimEnvironmentContents(ast: Ast.Ast) {
         ast,
         (node) => {
             const ret = { ...node };
-            ret.content = trim(ret.content);
+            // If the first thing in the environment is a sameline comment,
+            // we actually want to start trimming *after* it.
+            let firstNode = ret.content[0];
+            if (match.comment(firstNode) && firstNode.sameline) {
+                firstNode = { ...firstNode, suffixParbreak: false };
+                ret.content = [firstNode, ...trim(ret.content.slice(1))];
+            } else {
+                ret.content = trim(ret.content);
+            }
 
             return ret;
         },
