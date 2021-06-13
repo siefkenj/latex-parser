@@ -24,6 +24,12 @@ export type EnvInfo = {
          * @type {boolean}
          */
         pgfkeysArgs?: boolean;
+        /**
+         * Whether the environment is a Tikz environment whose body consists of tikz commands.
+         *
+         * @type {boolean}
+         */
+        tikzEnvironment?: boolean;
     };
     /**
      * Function to process the body of an environment. The return value of `processContent`
@@ -74,6 +80,13 @@ export type MacroInfo = {
          * @type {boolean}
          */
         hangingIndent?: boolean;
+        /**
+         * Whether the arguments should be rendered as a tikz command (with
+         * semicolon at the end).
+         *
+         * @type {boolean}
+         */
+        tikzCommand?: boolean;
     };
     /**
      * The macro signature as an xparse argument specification string.
@@ -643,11 +656,11 @@ export function processEnvironment(
  * Functions to match different types of nodes.
  */
 export const match = {
-    macro(node: any, macroName: string): node is Ast.Macro {
+    macro(node: any, macroName?: string): node is Ast.Macro {
         if (node == null) {
             return false;
         }
-        return node.type === "macro" && node.content === macroName;
+        return node.type === "macro" && (macroName == null || node.content === macroName);
     },
     environment(node: any, envName: string): node is Ast.Environment {
         if (node == null) {
@@ -676,7 +689,7 @@ export const match = {
         }
         return node.type === "whitespace";
     },
-    string(node: any, value: string): node is Ast.String {
+    string(node: any, value?: string): node is Ast.String {
         if (node == null) {
             return false;
         }

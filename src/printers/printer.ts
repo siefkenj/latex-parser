@@ -1,6 +1,7 @@
 import { printRaw } from "../parsers/parser";
 import { ReferenceMap } from "../libs/macro-utils";
-import * as PrettierTypes from "./prettier-types";
+import type * as PrettierTypes from "./prettier-types";
+import type * as Ast from "../libs/ast-types";
 
 import { concat, hardline, line, ESCAPE, getNodeInfo } from "./common";
 import { printMacro } from "./macro";
@@ -20,7 +21,7 @@ export function printLatexAst(
     options: PrettierTypes.Options & { referenceMap?: ReferenceMap },
     print: PrettierTypes.RecursivePrintFunc
 ) {
-    const node = path.getValue();
+    const node = path.getValue() as Ast.Node | Ast.Argument;
     const { renderInfo } = getNodeInfo(node, options);
 
     if (node == null) {

@@ -1,7 +1,7 @@
 {
     "name": "latex-ast-parser",
     "description": "JavaScript LaTeX parser and beautifier",
-    "version": "0.5.5",
+    "version": "0.6.0",
     "author": {
         "name": "Jason Siefken",
         "email": "siefkenj@gmail.com"
@@ -26,7 +26,8 @@
     },
     "dependencies": {
         "@types/prettier": "^2.2.3",
-        "prettier": "2.3.1"
+        "prettier": "2.3.1",
+        "prettier-plugin-pegjs": "^0.4.0"
     },
     "devDependencies": {
         "@babel/core": "7.14.3",

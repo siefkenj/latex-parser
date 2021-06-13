@@ -158,4 +158,20 @@ describe("Pgfkeys tests", () => {
             expect(inStr).toFormatAs(outStr, formatter);
         }
     });
+    it("Pgfkeys properly deals comments inside/outside of groups", () => {
+        const STRINGS = [
+            {
+                inStr: "\\pgfkeys{a,\n%comment\n%comment2\n}",
+                outStr: "\\pgfkeys{\n\ta,\n\t%comment\n\t%comment2\n}",
+            },
+            {
+                inStr: "\\pgfkeys{a={x\n%p\n%q\nz}\n}",
+                outStr: "\\pgfkeys{\n\ta={x\n\t%p\n\t%q\n\tz}\n}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            expect(inStr).toFormatAs(outStr, formatter);
+        }
+    });
 });

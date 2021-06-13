@@ -685,4 +685,43 @@ describe("Prettier tests", () => {
             expect(formatted).toEqual(outStr);
         }
     });
+
+    it("breakAround commands", () => {
+        const STRINGS = [
+            {
+                inStr: "\\geometry{x}\\geometry{y}",
+                outStr: "\\geometry{x}\n\\geometry{y}",
+            },
+            {
+                inStr: "a\\geometry{x}\\geometry{y}",
+                outStr: "a\n\\geometry{x}\n\\geometry{y}",
+            },
+            {
+                inStr: "a\\geometry{x}\\geometry{y}b",
+                outStr: "a\n\\geometry{x}\n\\geometry{y}\nb",
+            },
+            {
+                inStr: "\\geometry{x} %xx\n\\geometry{y}",
+                outStr: "\\geometry{x} %xx\n\\geometry{y}",
+            },
+            {
+                inStr: "\\geometry{x}\n%xx\n\\geometry{y}",
+                outStr: "\\geometry{x}\n%xx\n\\geometry{y}",
+            },
+            {
+                inStr: "\\geometry{x}\n\n\\geometry{y}",
+                outStr: "\\geometry{x}\n\n\\geometry{y}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+    });
 });

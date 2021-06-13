@@ -119,11 +119,11 @@ export function unsplitOnMacro({
  * This function attaches content following a `\item` to the `\item` macro with
  * `openMark` and `closeMark` set to empty. This allows hanging-indents to be rendered.
  *
- * @param {[object]} ast
- * @param {string} [itemName="item"]
- * @returns {[object]}
+ * @param ast
+ * @param [itemName="item"]
+ * @returns
  */
-export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
+export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item"): Ast.Node[] {
     let { segments, macros } = splitOnMacro(ast, itemName);
     // Trim the content of each block, but make sure there is a space
     // between each macro and the content. Since the first segment of content
@@ -271,8 +271,8 @@ export class ReferenceMap {
  * Adds `_renderInfo.alignedContent = true` to the specified node.
  *
  * @export
- * @param {object} node
- * @returns {object}
+ * @param node
+ * @returns
  */
 export function markAlignEnv(node: Ast.Node) {
     return updateRenderInfo(node, { alignedContent: true });

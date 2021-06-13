@@ -311,7 +311,15 @@ ownline_comment
     //    %comment```
     // would be parsed as "x, <whitespace (from the newline)>, comment". We don't want this. We want
     // to parse it as "x, comment".
-    = (sp* nl)? leading_sp:leading_sp comment:comment {
+    = (sp* nl)? leading_sp:leading_sp comment:comment &comment {
+            return createNode("comment", {
+                ...comment,
+                sameline: false,
+                leadingWhitespace: leading_sp.length > 0,
+                suffixComment: true,
+            });
+        }
+    / (sp* nl)? leading_sp:leading_sp comment:comment {
             return createNode("comment", {
                 ...comment,
                 sameline: false,
@@ -321,7 +329,15 @@ ownline_comment
 
 // A comment that appears at the end of a line
 sameline_comment
-    = spaces:sp* x:comment {
+    = spaces:sp* x:comment &comment {
+            return createNode("comment", {
+                ...x,
+                sameline: true,
+                leadingWhitespace: spaces.length > 0,
+                suffixComment: true,
+            });
+        }
+    / spaces:sp* x:comment {
             return createNode("comment", {
                 ...x,
                 sameline: true,

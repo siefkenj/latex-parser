@@ -58,16 +58,16 @@ export function joinWithSoftline(arr: any[]) {
 }
 
 export function getNodeInfo(
-    node: any,
+    node: Ast.Node | Ast.Argument,
     options: PrettierTypes.Options & { referenceMap?: ReferenceMap }
 ): {
-    renderInfo: any;
+    renderInfo: Ast.RenderInfo;
     renderCache?: object;
     previousNode?: Ast.Node;
     nextNode?: Ast.Node;
     referenceMap?: ReferenceMap;
 } {
-    const renderInfo = node._renderInfo || {};
+    const renderInfo: Ast.RenderInfo = node._renderInfo || {};
     const previousNode =
         options.referenceMap && options.referenceMap.getPreviousNode(node);
     const nextNode =
@@ -185,7 +185,7 @@ export function formatDocArray(
                         ) {
                             // We may be replacing a hardline here for no reason. However,
                             // if there is already a hardline, we don't want to continue
-                            // and accidentally add too many linebreaks
+                            // and accidentally add too many line breaks
                             ret.pop();
                             ret.push(hardline);
                         } else if (
@@ -217,7 +217,10 @@ export function formatDocArray(
                         if (match.whitespace(nextNode)) {
                             ret.push(hardline);
                             i++;
-                        } else if (!match.comment(nextNode)) {
+                        } else if (
+                            !match.comment(nextNode) &&
+                            !match.parbreak(nextNode)
+                        ) {
                             ret.push(hardline);
                         }
                     }

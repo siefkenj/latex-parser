@@ -9,8 +9,11 @@ import { attachMacroArgs, EnvInfo, MacroInfo } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
+import {
+    parseTikzEnvironment,
+} from "./tikz-environment";
 
-// A list of macros to be specially treated. The agument signature
+// A list of macros to be specially treated. The argument signature
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS: SpecialMacroSpec = {
     "\\": { signature: "!s o" },
@@ -95,6 +98,10 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
     bibliographystyle: { signature: "m", renderInfo: { breakAround: true } },
     caption: { signature: "m", renderInfo: { breakAround: true } },
     // Tikz
+    tikz: {
+        signature: "m",
+        renderInfo: { breakAround: true },
+    },
     pgfkeys: {
         signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
@@ -145,10 +152,10 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     document: { processContent: trim },
     // Enumerate environments
     // XXX TODO, clean up these types
-    enumerate: { signature: "o", processContent: cleanEnumerateBody as any },
-    itemize: { signature: "o", processContent: cleanEnumerateBody as any },
-    description: { signature: "o", processContent: cleanEnumerateBody as any },
-    parts: { signature: "o", processContent: cleanEnumerateBody as any },
+    enumerate: { signature: "o", processContent: cleanEnumerateBody },
+    itemize: { signature: "o", processContent: cleanEnumerateBody },
+    description: { signature: "o", processContent: cleanEnumerateBody },
+    parts: { signature: "o", processContent: cleanEnumerateBody },
     table: { signature: "o" },
     // Aligned environments
     tabular: { signature: "m", renderInfo: { alignContent: true } },
@@ -185,7 +192,16 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     remark: { signature: "!o" },
     example: { signature: "!o" },
     // TikZ
-    tikzpicture: { signature: "o", renderInfo: { pgfkeysArgs: true } },
+    tikzpicture: {
+        signature: "o",
+        processContent: parseTikzEnvironment,
+        renderInfo: { pgfkeysArgs: true, tikzEnvironment: true },
+    },
+    scope: {
+        signature: "o",
+        processContent: parseTikzEnvironment,
+        renderInfo: { pgfkeysArgs: true, tikzEnvironment: true },
+    },
     axis: { signature: "o", renderInfo: { pgfkeysArgs: true } },
     // nicematrix
     NiceTabular: {
@@ -331,7 +347,7 @@ function wrapStrings(node: Ast.Ast | string): Ast.Ast {
 /**
  * Parse the LeTeX string to an AST.
  *
- * @param {string} [str=""] - LaTeX string input
+ * @param - LaTeX string input
  * @returns - AST for LaTeX string
  */
 function parse(

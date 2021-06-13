@@ -5,6 +5,7 @@ type PrintToken = string | typeof linebreak;
 
 export const linebreak = Symbol("linebreak");
 const ESCAPE = "\\";
+export const TIKZ_COMMAND_END = ";";
 
 /**
  * Renders the AST to an array inserting `linebreak` where needed;
@@ -29,7 +30,8 @@ function _printRaw(node: Printable | Printable[]): PrintToken[] {
         case "argument":
             return [node.openMark, ..._printRaw(node.content), node.closeMark];
         case "comment":
-            var suffix = node.suffixParbreak ? "" : linebreak;
+            var suffix =
+                node.suffixParbreak || node.suffixComment ? "" : linebreak;
             // A comment is responsible for printing its own leading whitespace
             var leadingWhitespace = "";
             if (node.sameline && node.leadingWhitespace) {

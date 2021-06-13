@@ -1,15 +1,28 @@
 export type GenericAst = GenericNode | GenericNode[];
 
+export interface RenderInfo {
+    alignContent?: boolean;
+    tikzCommand?: boolean;
+    tikzEnvironment?: boolean;
+    pgfkeysArgs?: boolean;
+    inMathMode?: boolean;
+    hangingIndent?: boolean;
+    inParMode?: boolean;
+    breakAround?: boolean;
+    breakBefore?: boolean;
+    breakAfter?: boolean;
+}
+
 export interface GenericNode {
     [x: string]: any;
     type: string;
-    _renderInfo?: object;
+    _renderInfo?: RenderInfo;
 }
 
 // Abstract nodes
 interface BaseNode {
     type: string;
-    _renderInfo?: any;
+    _renderInfo?: RenderInfo;
     loc?: {
         start: { offset: number; line: number; column: number };
         end: { offset: number; line: number; column: number };
@@ -43,6 +56,7 @@ export interface Comment extends BaseNode {
     sameline?: boolean;
     suffixParbreak?: boolean;
     leadingWhitespace?: boolean;
+    suffixComment?: boolean;
 }
 
 export interface Macro extends BaseNode {

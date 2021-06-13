@@ -3,6 +3,7 @@ import type { Plugin, Printer } from "prettier";
 import { parse } from "./parsers/parser";
 import { printLatexAst } from "./printers/printer";
 import * as Ast from "./libs/ast-types";
+import { parseTikzEnvironment } from "./parsers/tikz-environment";
 
 const languages = [
     {
