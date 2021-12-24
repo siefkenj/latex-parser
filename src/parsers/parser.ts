@@ -46,8 +46,15 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
     // Preamble macros
     documentclass: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
     usepackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
-    newcommand: { signature: "m o o m", renderInfo: { breakAround: true } },
-    renewcommand: { signature: "m o o m", renderInfo: { breakAround: true } },
+    // \newcommand arg signature from https://www.texdev.net/2020/08/19/the-good-the-bad-and-the-ugly-creating-document-commands
+    newcommand: {
+        signature: "s +m O{0} +o +m",
+        renderInfo: { breakAround: true },
+    },
+    renewcommand: {
+        signature: "s +m O{0} +o +m",
+        renderInfo: { breakAround: true },
+    },
     newenvironment: { signature: "m o o m" },
     renewenvironment: { signature: "m o o m" },
     providecommand: { signature: "m o o m" },
