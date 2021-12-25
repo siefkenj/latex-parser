@@ -5,95 +5,47 @@ import {
     trim,
     trimEnvironmentContents,
 } from "../libs/macro-utils";
-import { attachMacroArgs, EnvInfo, MacroInfo } from "../libs/ast";
+import { attachMacroArgs } from "../libs/ast";
+import * as xparseLibs from "../package-specific-macros/xparse";
+import * as latex2eLibs from "../package-specific-macros/latex2e";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
+import {
+    SpecialEnvSpec,
+    SpecialMacroSpec,
+} from "../package-specific-macros/types";
 
-// A list of macros to be specially treated. The agument signature
+const LIB_SPECIAL_MACROS: SpecialMacroSpec = {};
+const LIB_SPECIAL_ENVS: SpecialEnvSpec = {};
+Object.assign(LIB_SPECIAL_MACROS, latex2eLibs.macros, xparseLibs.macros);
+Object.assign(LIB_SPECIAL_ENVS, latex2eLibs.environments, xparseLibs.macros);
+
+// A list of macros to be specially treated. The argument signature
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS: SpecialMacroSpec = {
-    "\\": { signature: "!s o" },
-    _: { signature: "m" },
-    "^": { signature: "m" },
     mathbb: { signature: "m" },
-    mathcal: { signature: "m" },
     mathscr: { signature: "m" },
     mathfrak: { signature: "m" },
     mathrm: { signature: "m" },
-    textrm: { signature: "m", renderInfo: { inParMode: true } },
-    textsf: { signature: "m", renderInfo: { inParMode: true } },
-    texttt: { signature: "m", renderInfo: { inParMode: true } },
-    textit: { signature: "m", renderInfo: { inParMode: true } },
-    textsl: { signature: "m", renderInfo: { inParMode: true } },
-    textsc: { signature: "m", renderInfo: { inParMode: true } },
-    textbf: { signature: "m", renderInfo: { inParMode: true } },
     textlf: { signature: "m", renderInfo: { inParMode: true } },
-    emph: { signature: "m", renderInfo: { inParMode: true } },
-    textup: { signature: "m" },
-    textnormal: { signature: "m" },
-    uppercase: { signature: "m" },
-    footnote: { signature: "o m", renderInfo: { inParMode: true } },
-    footnotemark: { signature: "o" },
     text: { signature: "m", renderInfo: { inMathMode: false } },
-    frac: { signature: "m m" },
-    item: { signature: "o", renderInfo: { hangingIndent: true } },
-    // TeX commands
-    parbox: { signature: "o o o m m" },
-    framebox: { signature: "o o m" },
-    input: { signature: "m" },
-    include: { signature: "m" },
     // Preamble macros
-    documentclass: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
-    usepackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
+    RequirePackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
     // \newcommand arg signature from https://www.texdev.net/2020/08/19/the-good-the-bad-and-the-ugly-creating-document-commands
-    newcommand: {
-        signature: "s +m O{0} +o +m",
-        renderInfo: { breakAround: true },
-    },
-    renewcommand: {
-        signature: "s +m O{0} +o +m",
-        renderInfo: { breakAround: true },
-    },
-    newenvironment: { signature: "m o o m" },
-    renewenvironment: { signature: "m o o m" },
-    providecommand: { signature: "m o o m" },
-    newtheorem: { signature: "m o m o" },
-    definecolor: { signature: "m m m" },
+    DeclareOption: { signature: "m m" },
+    DeclareMathOperator: { signature: "s m" },
     geometry: {
         signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
     },
     // LaTeX commands
-    marginpar: { signature: "o m", renderInfo: { breakAround: true } },
     setlength: { signature: "m m", renderInfo: { breakAround: true } },
-    hspace: { signature: "s m" },
-    vspace: { signature: "s m", renderInfo: { breakAround: true } },
     ref: { signature: "s m" },
     cref: { signature: "s m" },
     pageref: { signature: "s m" },
     cpageref: { signature: "s m" },
     label: { signature: "m" },
-    includegraphics: {
-        signature: "o m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    part: { signature: "s o m", renderInfo: { breakAround: true } },
-    chapter: { signature: "s o m", renderInfo: { breakAround: true } },
-    section: { signature: "s o m", renderInfo: { breakAround: true } },
-    subsection: { signature: "s o m", renderInfo: { breakAround: true } },
-    subsubsection: { signature: "s o m", renderInfo: { breakAround: true } },
-    paragraph: { signature: "s o m", renderInfo: { breakAround: true } },
-    subparagraph: { signature: "s o m", renderInfo: { breakAround: true } },
-    author: { signature: "m", renderInfo: { breakAround: true } },
-    maketitle: { renderInfo: { breakAround: true } },
-    appendix: { renderInfo: { breakAround: true } },
-    doublespacing: { renderInfo: { breakAround: true } },
-    singlespacing: { renderInfo: { breakAround: true } },
-    noindent: { renderInfo: { breakAround: true } },
-    smallskip: { renderInfo: { breakAround: true } },
-    medskip: { renderInfo: { breakAround: true } },
-    bigskip: { renderInfo: { breakAround: true } },
     printbibliography: { renderInfo: { breakAround: true } },
     addtocontents: { signature: "m m", renderInfo: { breakAround: true } },
     addcontentsline: { signature: "m m m", renderInfo: { breakAround: true } },
@@ -140,25 +92,11 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
         signature: "o m o",
     },
 };
-
-interface SpecialEnvSpec {
-    [key: string]: EnvInfo;
-}
-interface SpecialMacroSpec {
-    [key: string]: MacroInfo;
-}
-
 const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
-    document: { processContent: trim },
     // Enumerate environments
     // XXX TODO, clean up these types
-    enumerate: { signature: "o", processContent: cleanEnumerateBody as any },
-    itemize: { signature: "o", processContent: cleanEnumerateBody as any },
-    description: { signature: "o", processContent: cleanEnumerateBody as any },
     parts: { signature: "o", processContent: cleanEnumerateBody as any },
-    table: { signature: "o" },
     // Aligned environments
-    tabular: { signature: "m", renderInfo: { alignContent: true } },
     tabularx: { signature: "m m", renderInfo: { alignContent: true } },
     // Math environments
     "equation*": { renderInfo: { inMathMode: true } },
@@ -174,7 +112,6 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     "flalign*": { renderInfo: { inMathMode: true, alignContent: true } },
     flalign: { renderInfo: { inMathMode: true, alignContent: true } },
     split: { renderInfo: { inMathMode: true } },
-    math: { renderInfo: { inMathMode: true } },
     displaymath: { renderInfo: { inMathMode: true } },
     matrix: { renderInfo: { alignContent: true } },
     bmatrix: { renderInfo: { alignContent: true } },
@@ -333,6 +270,27 @@ function wrapStrings(node: Ast.Ast | string): Ast.Ast {
     }
 
     return ret;
+}
+
+for (const key in SPECIAL_MACROS) {
+    if (key in LIB_SPECIAL_MACROS) {
+        console.log(
+            "Duplicate definition of macro",
+            key,
+            SPECIAL_MACROS[key],
+            LIB_SPECIAL_MACROS[key]
+        );
+    }
+}
+for (const key in SPECIAL_ENVIRONMENTS) {
+    if (key in LIB_SPECIAL_ENVS) {
+        console.log(
+            "Duplicate definition of environment",
+            key,
+            SPECIAL_ENVIRONMENTS[key],
+            LIB_SPECIAL_ENVS[key]
+        );
+    }
 }
 
 /**

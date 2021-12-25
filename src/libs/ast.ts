@@ -633,9 +633,8 @@ export function processEnvironment(
 
             return ret;
         },
-        ((node: Ast.Ast) => match.environment(node, envName)) as Ast.TypeGuard<
-            Ast.Environment
-        >
+        ((node: Ast.Ast) =>
+            match.environment(node, envName)) as Ast.TypeGuard<Ast.Environment>
     );
 }
 
@@ -643,19 +642,22 @@ export function processEnvironment(
  * Functions to match different types of nodes.
  */
 export const match = {
-    macro(node: any, macroName: string): node is Ast.Macro {
+    macro(node: any, macroName?: string): node is Ast.Macro {
         if (node == null) {
             return false;
         }
-        return node.type === "macro" && node.content === macroName;
+        return (
+            node.type === "macro" &&
+            (macroName == null || node.content === macroName)
+        );
     },
-    environment(node: any, envName: string): node is Ast.Environment {
+    environment(node: any, envName?: string): node is Ast.Environment {
         if (node == null) {
             return false;
         }
         return (
             (node.type === "environment" || node.type === "mathenv") &&
-            printRaw(node.env) === envName
+            (envName == null || printRaw(node.env) === envName)
         );
     },
     comment(node: any): node is Ast.Comment {
