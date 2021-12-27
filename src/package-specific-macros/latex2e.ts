@@ -128,7 +128,7 @@ export const macros: SpecialMacroSpec = {
         renderInfo: { breakAround: true },
     },
     newtheorem: {
-        signature: "m o m o",
+        signature: "s m o m o",
         renderInfo: { breakAround: true },
     },
     newfont: {
@@ -228,6 +228,7 @@ export const macros: SpecialMacroSpec = {
     mathit: { signature: "m" },
     mathnormal: { signature: "m" },
     mathcal: { signature: "m" },
+    mathrm: { signature: "m" },
 };
 
 export const environments: SpecialEnvSpec = {

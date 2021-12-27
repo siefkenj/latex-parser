@@ -8,6 +8,7 @@ import {
 import { attachMacroArgs } from "../libs/ast";
 import * as xparseLibs from "../package-specific-macros/xparse";
 import * as latex2eLibs from "../package-specific-macros/latex2e";
+import * as mathtoolsLibs from "../package-specific-macros/mathtools";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
@@ -18,23 +19,27 @@ import {
 
 const LIB_SPECIAL_MACROS: SpecialMacroSpec = {};
 const LIB_SPECIAL_ENVS: SpecialEnvSpec = {};
-Object.assign(LIB_SPECIAL_MACROS, latex2eLibs.macros, xparseLibs.macros);
-Object.assign(LIB_SPECIAL_ENVS, latex2eLibs.environments, xparseLibs.macros);
+Object.assign(
+    LIB_SPECIAL_MACROS,
+    latex2eLibs.macros,
+    xparseLibs.macros,
+    mathtoolsLibs.macros
+);
+Object.assign(
+    LIB_SPECIAL_ENVS,
+    latex2eLibs.environments,
+    xparseLibs.environments,
+    mathtoolsLibs.environments
+);
 
 // A list of macros to be specially treated. The argument signature
 // for these macros is given in the `xparse` syntax.
 const SPECIAL_MACROS: SpecialMacroSpec = {
-    mathbb: { signature: "m" },
-    mathscr: { signature: "m" },
-    mathfrak: { signature: "m" },
-    mathrm: { signature: "m" },
     textlf: { signature: "m", renderInfo: { inParMode: true } },
-    text: { signature: "m", renderInfo: { inMathMode: false } },
     // Preamble macros
     RequirePackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
     // \newcommand arg signature from https://www.texdev.net/2020/08/19/the-good-the-bad-and-the-ugly-creating-document-commands
     DeclareOption: { signature: "m m" },
-    DeclareMathOperator: { signature: "s m" },
     geometry: {
         signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
@@ -99,27 +104,7 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
     // Aligned environments
     tabularx: { signature: "m m", renderInfo: { alignContent: true } },
     // Math environments
-    "equation*": { renderInfo: { inMathMode: true } },
-    equation: { renderInfo: { inMathMode: true } },
-    "align*": { renderInfo: { inMathMode: true, alignContent: true } },
-    align: { renderInfo: { inMathMode: true, alignContent: true } },
-    "alignat*": { renderInfo: { inMathMode: true, alignContent: true } },
-    alignat: { renderInfo: { inMathMode: true, alignContent: true } },
-    "gather*": { renderInfo: { inMathMode: true } },
-    gather: { renderInfo: { inMathMode: true } },
-    "multline*": { renderInfo: { inMathMode: true } },
-    multline: { renderInfo: { inMathMode: true } },
-    "flalign*": { renderInfo: { inMathMode: true, alignContent: true } },
-    flalign: { renderInfo: { inMathMode: true, alignContent: true } },
-    split: { renderInfo: { inMathMode: true } },
     displaymath: { renderInfo: { inMathMode: true } },
-    matrix: { renderInfo: { alignContent: true } },
-    bmatrix: { renderInfo: { alignContent: true } },
-    pmatrix: { renderInfo: { alignContent: true } },
-    vmatrix: { renderInfo: { alignContent: true } },
-    Bmatrix: { renderInfo: { alignContent: true } },
-    Vmatrix: { renderInfo: { alignContent: true } },
-    smallmatrix: { renderInfo: { alignContent: true } },
     // Typical amsthm environments
     theorem: { signature: "o" },
     lemma: { signature: "o" },
@@ -303,8 +288,14 @@ function parse(
     str = "",
     options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
 ) {
-    const specialMacros: SpecialMacroSpec = { ...SPECIAL_MACROS };
-    const specialEnvironments: SpecialEnvSpec = { ...SPECIAL_ENVIRONMENTS };
+    const specialMacros: SpecialMacroSpec = {
+        ...SPECIAL_MACROS,
+        ...LIB_SPECIAL_MACROS,
+    };
+    const specialEnvironments: SpecialEnvSpec = {
+        ...SPECIAL_ENVIRONMENTS,
+        ...LIB_SPECIAL_ENVS,
+    };
     // Combine the special macros/environments with the passed in ones
     if (options) {
         const { macros, environments } = options;

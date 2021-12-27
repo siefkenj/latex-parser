@@ -164,6 +164,32 @@ export function walkAst<T extends any>(
 }
 
 /**
+ * Walk through the AST and replace each node matched by `matcher` with `replacer`.
+ * `replacer` receives as its first argument the node that was matched and may
+ * return a node or an array of nodes.
+ *
+ * `replacer` can remove an element entirely by returning an empty array or null
+ */
+export function replaceNode(
+    ast: Ast.Ast,
+    replacer: (node: Ast.Node) => Ast.Node | Ast.Node[] | null,
+    matcher: (node: Ast.Node) => boolean
+): Ast.Ast {
+    return walkAst(
+        ast,
+        (array: Ast.Node[]) =>
+            array.flatMap((node) => {
+                if (matcher(node)) {
+                    return replacer(node) || [];
+                } else {
+                    return node;
+                }
+            }),
+        Array.isArray
+    );
+}
+
+/**
  * Removes any `_renderInfo` tags present in the AST.
  *
  * @export
@@ -519,6 +545,17 @@ export function attachMacroArgsInArray(
             if (argument) {
                 // If we found an argument keep it for later
                 args.push(argument);
+            } else {
+                // If we didn't find an argument, it was probably an optional
+                // argument. We want to preserve the number of arguments
+                // so that if we choose to "execute" this macro, it will be easy
+                // to find what corresponds to #1,#2, etc.. So, we push a blank argument.
+                args.push({
+                    type: "argument",
+                    openMark: "",
+                    closeMark: "",
+                    content: [],
+                });
             }
             rest = after;
         }
@@ -678,7 +715,7 @@ export const match = {
         }
         return node.type === "whitespace";
     },
-    string(node: any, value: string): node is Ast.String {
+    string(node: any, value?: string): node is Ast.String {
         if (node == null) {
             return false;
         }
@@ -691,5 +728,21 @@ export const match = {
             return false;
         }
         return node.type === "group";
+    },
+    argument(node: any): node is Ast.Argument {
+        if (node == null) {
+            return false;
+        }
+        return node.type === "argument";
+    },
+    blankArgument(node: any): boolean {
+        if (!match.argument(node)) {
+            return false;
+        }
+        return (
+            node.openMark === "" &&
+            node.closeMark === "" &&
+            node.content.length === 0
+        );
     },
 };

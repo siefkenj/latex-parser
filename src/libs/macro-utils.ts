@@ -87,7 +87,7 @@ export function unsplitOnMacro({
     macros,
 }: {
     segments: Ast.Ast[][];
-    macros: Ast.Macro[];
+    macros: Ast.Node[] | Ast.Node[][];
 }) {
     if (segments.length === 0) {
         console.warn("Trying to join zero segments");

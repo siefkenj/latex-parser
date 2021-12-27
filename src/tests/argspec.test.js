@@ -350,7 +350,8 @@ describe("Macro arguments argspec test", () => {
                 ],
             },
         ]);
-        // not enough required arguments still passes
+        // not enough required arguments still passes. Un-found arguments
+        // are replaced with blank arguments
         ast = trimRenderInfo(latexParser.parse("\\xxx   c")).content;
         expect(
             attachMacroArgsInArray(ast, { xxx: { signature: "m m" } })
@@ -364,6 +365,12 @@ describe("Macro arguments argspec test", () => {
                         content: [{ type: "string", content: "c" }],
                         openMark: "{",
                         closeMark: "}",
+                    },
+                    {
+                        type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
                     },
                 ],
             },
@@ -388,6 +395,12 @@ describe("Macro arguments argspec test", () => {
                         content: [{ type: "string", content: "d" }],
                         openMark: "{",
                         closeMark: "}",
+                    },
+                    {
+                        type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
                     },
                     {
                         type: "argument",
@@ -595,7 +608,25 @@ describe("Macro arguments argspec test", () => {
                 signature: "m",
             },
         });
-        expect(subbedAst).toEqual(ast);
+        expect(subbedAst).toEqual({
+            type: "root",
+            content: [
+                {
+                    type: "macro",
+                    content: "xxx",
+                    args: [
+                        {
+                            type: "argument",
+                            content: [],
+                            openMark: "",
+                            closeMark: "",
+                        },
+                    ],
+                },
+                { type: "parbreak" },
+                { type: "string", content: "y" },
+            ],
+        });
         // A comment interrupts finding an argument
         ast = latexParser.parse("\\xxx %comment\ny");
         subbedAst = attachMacroArgs(ast, {
@@ -603,7 +634,30 @@ describe("Macro arguments argspec test", () => {
                 signature: "m",
             },
         });
-        expect(subbedAst).toEqual(ast);
+        expect(subbedAst).toEqual({
+            type: "root",
+            content: [
+                {
+                    type: "macro",
+                    content: "xxx",
+                    args: [
+                        {
+                            type: "argument",
+                            content: [],
+                            openMark: "",
+                            closeMark: "",
+                        },
+                    ],
+                },
+                {
+                    type: "comment",
+                    content: "comment",
+                    sameline: true,
+                    leadingWhitespace: true,
+                },
+                { type: "string", content: "y" },
+            ],
+        });
     });
 
     it("Doesn't gobble arguments twice", () => {
@@ -670,6 +724,12 @@ describe("Macro arguments argspec test", () => {
                 args: [
                     {
                         type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
+                    },
+                    {
+                        type: "argument",
                         content: [{ type: "string", content: "a" }],
                         openMark: "{",
                         closeMark: "}",
@@ -690,6 +750,12 @@ describe("Macro arguments argspec test", () => {
                 type: "macro",
                 content: "xxx",
                 args: [
+                    {
+                        type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
+                    },
                     {
                         type: "argument",
                         content: [{ type: "string", content: "a" }],
@@ -746,6 +812,12 @@ describe("Macro arguments argspec test", () => {
                         openMark: "{",
                         closeMark: "}",
                     },
+                    {
+                        type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
+                    },
                 ],
             },
             { type: "whitespace" },
@@ -768,6 +840,12 @@ describe("Macro arguments argspec test", () => {
                         content: [{ type: "string", content: "a" }],
                         openMark: "{",
                         closeMark: "}",
+                    },
+                    {
+                        type: "argument",
+                        content: [],
+                        openMark: "",
+                        closeMark: "",
                     },
                     {
                         type: "argument",
