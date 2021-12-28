@@ -24,13 +24,13 @@ describe("Find macros", () => {
 
     it("Can find usepackage imports", () => {
         let ast = latexParser.parse(
-            String.raw`
-\documentclass[12pt,reqno]{article}
+            `
+\\documentclass[12pt,reqno]{article}
 
-\usepackage[usenames]{color}
-\usepackage{amssymb, amsmath}
-\usepackage{amsmath}
-\RequirePackage{hyperref}
+\\usepackage[usenames]{color}
+\\usepackage{amssymb, amsmath}
+\\usepackage{amsmath}
+\\RequirePackage{hyperref}
             `
         );
         expect(tools.getIncludedPackages(ast).map((p) => p.name)).toEqual([

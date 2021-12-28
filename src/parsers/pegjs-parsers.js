@@ -5,6 +5,7 @@ import AlignEnvironmentPegParser from "../grammars/align-environment.pegjs";
 import ArgSpecPegParser from "../grammars/xparse-argspec.pegjs";
 import PgfkeysParser from "../grammars/pgfkeys.pegjs";
 import MacroSubstitutionParser from "../grammars/macro-substitutions.pegjs";
+import LigaturesParser from "../grammars/ligatures.pegjs";
 
 export {
     LatexPegParser,
@@ -12,4 +13,5 @@ export {
     ArgSpecPegParser,
     PgfkeysParser,
     MacroSubstitutionParser,
+    LigaturesParser,
 };

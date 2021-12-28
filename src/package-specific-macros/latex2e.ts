@@ -5,8 +5,8 @@ import { SpecialEnvSpec, SpecialMacroSpec } from "./types";
 export const macros: SpecialMacroSpec = {
     // Special
     "\\": { signature: "!s o" },
-    _: { signature: "m" },
-    "^": { signature: "m" },
+    _: { signature: "m", escapeToken: "" },
+    "^": { signature: "m", escapeToken: "" },
     // \newcommand arg signature from https://www.texdev.net/2020/08/19/the-good-the-bad-and-the-ugly-creating-document-commands
     // List can be found in latex2e.pdf "An unofficial reference manual"
     newcommand: {
@@ -69,7 +69,7 @@ export const macros: SpecialMacroSpec = {
     // Spaces
     stretch: { signature: "m" },
     hspace: { signature: "s m" },
-    vspace: { signature: "s m",renderInfo: { breakAround: true } },
+    vspace: { signature: "s m", renderInfo: { breakAround: true } },
     vfill: { renderInfo: { breakAround: true } },
     indent: { renderInfo: { breakAround: true } },
     phantom: { signature: "m" },

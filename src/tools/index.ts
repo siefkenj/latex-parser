@@ -7,8 +7,10 @@ import {
     walkAst,
 } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
+import { MatcherContext } from "../libs/ast/walkers";
 import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
+import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
 import {
     createMacroExpander,
@@ -35,7 +37,7 @@ export function allMacros(ast: Ast.Ast): Map<string, Ast.Macro[]> {
             ret.set(name, newVal);
             return node;
         },
-        match.macro
+        match.anyMacro
     );
 
     return ret;
@@ -59,7 +61,7 @@ export function allEnvironments(ast: Ast.Ast): Map<string, Ast.Environment[]> {
             ret.set(name, newVal);
             return node;
         },
-        match.environment
+        match.anyEnvironment
     );
 
     return ret;
@@ -188,13 +190,28 @@ export function expandMacros(
             // This type might be incompatible! We take care to flatten the tree before returning it.
             return expander(node) as any;
         },
-        match.macro
+        match.anyMacro
     );
     // After our substitutions, an array might have ended up where it shouldn't have.
     // Make sure to all the arrays before returning.
     ret = walkAst(ret, (array) => array.flat(), Array.isArray);
 
     return ret;
+}
+
+/**
+ * Turn all ligatures into their unicode equivalent. For example,
+ * `---` -> an em-dash and `\^o` to `ô`. This only applies in non-math mode,
+ * since programs like katex will process math ligatures.
+ */
+export function expandUnicodeLigatures(ast: Ast.Ast): Ast.Ast {
+    return walkAst(
+        ast,
+        (nodes) => parseLigatures(nodes),
+        ((node: any, context: MatcherContext) =>
+            Array.isArray(node) &&
+            context?.inMathMode === false) as Ast.TypeGuard<Ast.Node[]>
+    );
 }
 
 /**
@@ -277,7 +294,7 @@ const ast = {
     replaceNode,
     processEnvironment,
     parsePgfkeys,
-    attachMacroArgs
+    attachMacroArgs,
 };
 
-export { createMacroExpander, ast, match };
+export { createMacroExpander, ast, match, walkAst, parseLigatures };

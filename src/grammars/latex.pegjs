@@ -285,7 +285,7 @@ char "letter" = c:[a-zA-Z]
 num "digit" = n:[0-9]
 
 // catcode 12
-punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]]
+punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]`'\"]
 
 // catcode 14, including the newline
 comment_start = "%"
