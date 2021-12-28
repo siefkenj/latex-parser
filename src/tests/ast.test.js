@@ -2,7 +2,12 @@ import util from "util";
 
 import * as latexParser from "../parsers/parser";
 import * as macroUtils from "../libs/macro-utils";
-import { attachMacroArgs, trimRenderInfo } from "../libs/ast";
+import {
+    attachMacroArgs,
+    replaceNode,
+    trimRenderInfo,
+    match,
+} from "../libs/ast";
 
 /* eslint-env jest */
 
@@ -76,8 +81,9 @@ describe("AST tests", () => {
 
     it("Splits and unsplits based on a macro", () => {
         // basic splitting
-        let ast = trimRenderInfo(latexParser.parse("a\\xxx b c\\xxx x y z"))
-            .content;
+        let ast = trimRenderInfo(
+            latexParser.parse("a\\xxx b c\\xxx x y z")
+        ).content;
         expect(macroUtils.splitOnMacro(ast, "xxx")).toEqual({
             segments: [
                 [
@@ -288,6 +294,21 @@ describe("AST tests", () => {
         expect(macroUtils.trim(ast)).toEqual(targetAst);
 
         ast = trimRenderInfo(latexParser.parse("{\n\n \n\n}")).content;
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+    });
+
+    it("Can replace macros", () => {
+        let targetAst = trimRenderInfo(
+            latexParser.parse("\\foo and \\bar")
+        ).content;
+        let insertNode = trimRenderInfo(latexParser.parse("\\bar")).content;
+        let ast = trimRenderInfo(latexParser.parse("\\foo and \\raw")).content;
+
+        ast = replaceNode(
+            ast,
+            () => insertNode,
+            (node) => match.macro(node, "raw")
+        );
         expect(macroUtils.trim(ast)).toEqual(targetAst);
     });
 });

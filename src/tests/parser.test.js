@@ -101,4 +101,27 @@ describe("Basic ast", () => {
         parsed = latexParser.parse("{{{}{}}{}{{{}");
         expect(latexParser.printRaw(parsed)).toEqual("{{{}{}}{}{{{}");
     });
+
+    it("Parses \\^ and \\_ macros correctly (e.g. doesn't attach an argument to them)", () => {
+        let parsed = latexParser.parse("^2");
+        expect(latexParser.printRaw(parsed)).toEqual("^2");
+
+        parsed = latexParser.parse("$^2$");
+        expect(latexParser.printRaw(parsed)).toEqual("$^{2}$");
+
+        parsed = latexParser.parse("\\^2");
+        expect(latexParser.printRaw(parsed)).toEqual("\\^2");
+
+        parsed = latexParser.parse("$\\^2$");
+        expect(latexParser.printRaw(parsed)).toEqual("$\\^2$");
+
+        parsed = latexParser.parse("_2");
+        expect(latexParser.printRaw(parsed)).toEqual("_2");
+
+        parsed = latexParser.parse("$_2$");
+        expect(latexParser.printRaw(parsed)).toEqual("$_{2}$");
+
+        parsed = latexParser.parse("\\_2");
+        expect(latexParser.printRaw(parsed)).toEqual("\\_2");
+    });
 });
