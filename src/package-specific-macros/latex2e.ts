@@ -235,7 +235,11 @@ export const environments: SpecialEnvSpec = {
     document: { processContent: trim },
     array: { signature: "o m", renderInfo: { alignContent: true } },
     description: { signature: "o", processContent: cleanEnumerateBody as any },
-    enumerate: { signature: "o", processContent: cleanEnumerateBody as any },
+    enumerate: {
+        signature: "o",
+        processContent: cleanEnumerateBody as any,
+        renderInfo: { pgfkeysArgs: true },
+    },
     itemize: { signature: "o", processContent: cleanEnumerateBody as any },
     trivlist: { signature: "o", processContent: cleanEnumerateBody as any },
     list: { signature: "m m", processContent: cleanEnumerateBody as any },

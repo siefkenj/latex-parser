@@ -12,6 +12,7 @@ import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
+import { applyAll, lintAll, lints } from "./lint";
 import {
     createMacroExpander,
     newcommandMacroToName,
@@ -297,4 +298,14 @@ const ast = {
     attachMacroArgs,
 };
 
-export { createMacroExpander, ast, match, walkAst, parseLigatures };
+export const fixAllLints = applyAll;
+
+export {
+    createMacroExpander,
+    ast,
+    match,
+    walkAst,
+    parseLigatures,
+    lints,
+    lintAll,
+};

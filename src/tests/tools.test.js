@@ -42,30 +42,3 @@ describe("Find macros", () => {
         ]);
     });
 });
-
-describe("HTML Generation", () => {
-    it("Can generate html-like tags", () => {
-        let content = latexParser.parse("$x^{2}$").content;
-
-        let tag = tools.tagLikeMacro({ tag: "foo" });
-        expect(printRaw(tag)).toEqual("<foo />");
-
-        tag = tools.tagLikeMacro({ tag: "foo", content });
-        expect(printRaw(tag)).toEqual("<foo>$x^{2}$</foo>");
-
-        tag = tools.tagLikeMacro({
-            tag: "foo",
-            content,
-            attributes: { attr1: "val1", attr2: "val2" },
-        });
-        expect(printRaw(tag)).toEqual(
-            '<foo attr1="val1" attr2="val2">$x^{2}$</foo>'
-        );
-
-        tag = tools.tagLikeMacro({
-            tag: "foo",
-            attributes: { attr1: "val1", attr2: "val2" },
-        });
-        expect(printRaw(tag)).toEqual('<foo attr1="val1" attr2="val2" />');
-    });
-});
