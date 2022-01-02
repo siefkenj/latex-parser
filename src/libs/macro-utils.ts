@@ -36,10 +36,11 @@ export function splitOnMacro(
     if (typeof macroName === "string") {
         macroName = [macroName];
     }
-
-    const { segments, separators } = split(ast, (node) =>
-        (macroName as string[]).some((name) => match.macro(node, name))
-    );
+    if (!Array.isArray(macroName)) {
+        throw new Error("Type coercion failed");
+    }
+    const isSeparator = match.createMacroMatcher(macroName);
+    const { segments, separators } = split(ast, isSeparator);
     return { segments, macros: separators as Ast.Macro[] };
 }
 

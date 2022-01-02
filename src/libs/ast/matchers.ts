@@ -1,5 +1,89 @@
+import { EnvInfo, MacroInfo } from ".";
+import {
+    SpecialEnvSpec,
+    SpecialMacroSpec,
+} from "../../package-specific-macros/types";
 import * as Ast from "../ast-types";
 import { printRaw } from "../print-raw";
+
+/**
+ * Creates a macro matching function that uses a `SpecialMacroSpec` or list of macros
+ * and generates a hash for quick lookup.
+ */
+function createMacroMatcher(macros: Ast.Macro[] | string[] | SpecialMacroSpec) {
+    // We first make sure we have a record type with keys being the macro's contents
+    const macrosHash = Array.isArray(macros)
+        ? macros.length > 0
+            ? typeof macros[0] === "string"
+                ? Object.fromEntries(
+                      macros.map((macro) => {
+                          if (typeof macro !== "string") {
+                              throw new Error("Wrong branch of map function");
+                          }
+                          return [macro, {}] as [string, MacroInfo];
+                      })
+                  )
+                : Object.fromEntries(
+                      macros.map((macro) => {
+                          if (typeof macro === "string") {
+                              throw new Error("Wrong branch of map function");
+                          }
+                          if (macro.escapeToken != null) {
+                              return [
+                                  macro.content,
+                                  { escapeToken: macro.escapeToken },
+                              ] as [string, MacroInfo];
+                          }
+                          return [macro.content, {}] as [string, MacroInfo];
+                      })
+                  )
+            : {}
+        : macros;
+
+    return function matchAgainstMacros(node: any | Ast.Macro) {
+        if (node == null || node.type !== "macro") {
+            return false;
+        }
+        // At this point we have a macro type
+        const spec = macrosHash[node.content];
+        if (!spec) {
+            return false;
+        }
+
+        return (
+            spec.escapeToken == null || spec.escapeToken === node.escapeToken
+        );
+    } as Ast.TypeGuard<Ast.Macro>;
+}
+
+/**
+ * Creates a macro matching function that uses a `SpecialMacroSpec` or list of macros
+ * and generates a hash for quick lookup.
+ */
+function createEnvironmentMatcher(macros: string[] | SpecialEnvSpec) {
+    // We first make sure we have a record type with keys being the macro's contents
+    const environmentsHash = Array.isArray(macros)
+        ? Object.fromEntries(
+              macros.map((str) => {
+                  return [str, {}] as [string, EnvInfo];
+              })
+          )
+        : macros;
+
+    return function matchAgainstEnvironments(node: any | Ast.Environment) {
+        if (!match.anyEnvironment(node)) {
+            return false;
+        }
+        // At this point we have an environment type
+        const envName = printRaw(node.env);
+        const spec = environmentsHash[envName];
+        if (!spec) {
+            return false;
+        }
+
+        return true;
+    } as Ast.TypeGuard<Ast.Environment>;
+}
 
 /**
  * Functions to match different types of nodes.
@@ -86,4 +170,6 @@ export const match = {
         }
         return node.type === "displaymath" || node.type === "inlinemath";
     },
+    createMacroMatcher,
+    createEnvironmentMatcher,
 };

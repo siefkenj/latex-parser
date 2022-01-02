@@ -60,4 +60,27 @@ describe("Ligature substitutions", () => {
             "a&$\\&$b"
         );
     });
+    it("expands whitespace ligatures", () => {
+        let ast = trimRenderInfo(latexParser.parse("a\\ b"));
+        expect(latexParser.printRaw(tools.expandUnicodeLigatures(ast))).toEqual(
+            "a b"
+        );
+
+        ast = trimRenderInfo(latexParser.parse("a~b"));
+        expect(latexParser.printRaw(tools.expandUnicodeLigatures(ast))).toEqual(
+            "a\u00A0b"
+        );
+
+        ast = trimRenderInfo(latexParser.parse("a\\,b"));
+        expect(latexParser.printRaw(tools.expandUnicodeLigatures(ast))).toEqual(
+            "a\u2009b"
+        );
+    });
+    it.skip("expands removes extra whitespace after named whitespace commands", () => {
+        let ast;
+        ast = trimRenderInfo(latexParser.parse("a\\quad b"));
+        expect(latexParser.printRaw(tools.expandUnicodeLigatures(ast))).toEqual(
+            "a\u2003b"
+        );
+    });
 });

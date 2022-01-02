@@ -15,9 +15,9 @@ interface Row extends RowItems {
 }
 
 export function createMatchers(rowSepMacros: string[], colSep: string[]) {
+    const isRowSep = match.createMacroMatcher(rowSepMacros);
     return {
-        isRowSep: (node: Ast.Node) =>
-            rowSepMacros.some((sep) => match.macro(node, sep)),
+        isRowSep,
         isColSep: (node: Ast.Node) =>
             colSep.some((sep) => match.string(node, sep)),
         isWhitespace: (node: Ast.Node) => match.whitespace(node),

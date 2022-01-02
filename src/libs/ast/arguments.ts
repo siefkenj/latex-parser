@@ -59,14 +59,7 @@ export function attachMacroArgsInArray(
      * Care is taken when matching because not all macros have
      * `\` as their escape token.
      */
-    function matchesListedMacro(node: Ast.Node): boolean {
-        return Object.entries(macros).some(
-            ([name, info]) =>
-                match.macro(node, name) &&
-                (info.escapeToken == null ||
-                    node.escapeToken === info.escapeToken)
-        );
-    }
+    const matchesListedMacro = match.createMacroMatcher(macros);
 
     function gobbleUntilMacro() {
         // Step backwards until we find the required macro
@@ -345,4 +338,23 @@ export function getArgsInArray(
     }
 
     return { arguments: args, rest };
+}
+
+/**
+ * Extract the contents of a macro's arguments. If an argument was omitted (e.g.,
+ * because it was an optional arg that wasn't included), then `null` is returned.
+ */
+export function argContentsFromMacro(
+    macro: Ast.Macro | Ast.Environment
+): (Ast.Node[] | null)[] {
+    if (!Array.isArray(macro.args)) {
+        return [];
+    }
+
+    return macro.args.map((arg) => {
+        if (arg.openMark === "" && arg.content.length === 0) {
+            return null;
+        }
+        return arg.content;
+    });
 }
