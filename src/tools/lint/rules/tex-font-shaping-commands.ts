@@ -15,6 +15,8 @@ const REPLACEMENTS: Record<string, Ast.Macro> = {
     tt: { type: "macro", content: "ttfamily" },
 };
 
+const isReplaceable = match.createMacroMatcher(REPLACEMENTS);
+
 export const texFontShapingCommandsLint: LintPlugin = {
     description: `Avoid using TeX font changing commands like \\bf, \\it, etc. Prefer LaTeX \\bfseries, \\itshape, etc.. See CTAN l2tabuen Section 2.`,
     lint(ast: Ast.Ast): Lint[] {
@@ -42,11 +44,7 @@ export const texFontShapingCommandsLint: LintPlugin = {
 
                 return REPLACEMENTS[node.content] || node;
             },
-            (node) =>
-                match.anyMacro(node) &&
-                Object.keys(REPLACEMENTS).some((name) =>
-                    match.macro(node, name)
-                )
+            isReplaceable
         );
     },
 };

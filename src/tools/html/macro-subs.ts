@@ -1,14 +1,19 @@
 import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
+import { argContentsFromMacro } from "../../libs/ast/arguments";
+import { printRaw } from "../../libs/print-raw";
 
 /**
  * Returns a function that wrap the first arg of a macro
  * in a <span></span> tag with the specified attributes.
  */
-function wrapInSpanFactory(attributes: Record<string, string>) {
+function wrapInSpanFactory(
+    attributes: Record<string, string>,
+    tagName = "span"
+) {
     return (node: Ast.Macro) =>
         tagLikeMacro({
-            tag: "span",
+            tag: tagName,
             content: node.args ? node.args[0].content : [],
             attributes: { ...attributes },
         });
@@ -24,13 +29,14 @@ function createHeading(tag: string) {
         if (!node.args) {
             return tagLikeMacro({ tag });
         }
-        const starred = node.args[0].content.length > 0;
+        const args = argContentsFromMacro(node);
+        const starred = !!args[0];
         const attributes: Record<string, string> = starred
             ? { class: "starred" }
             : {};
         return tagLikeMacro({
             tag,
-            content: node.args ? node.args[2].content : [],
+            content: args[2] || [],
             attributes,
         });
     };
@@ -55,8 +61,8 @@ export const macroReplacements: Record<
     textsf: wrapInSpanFactory({ class: "textsf" }),
     texttt: wrapInSpanFactory({ class: "texttt" }),
     textsl: wrapInSpanFactory({ class: "textsl" }),
-    textit: wrapInSpanFactory({ class: "textit" }),
-    textbf: wrapInSpanFactory({ class: "textbf" }),
+    textit: wrapInSpanFactory({ class: "textit" }, "i"),
+    textbf: wrapInSpanFactory({ class: "textbf" }, "b"),
     underline: wrapInSpanFactory({ class: "underline" }),
     part: createHeading("h1"),
     chapter: createHeading("h2"),
@@ -79,4 +85,28 @@ export const macroReplacements: Record<
             tag: "br",
             attributes: { class: "bigskip" },
         }),
+    url: (node) => {
+        const args = argContentsFromMacro(node);
+        const url = printRaw(args[0] || "#");
+        return tagLikeMacro({
+            tag: "a",
+            attributes: {
+                class: "url",
+                href: url,
+            },
+            content: [{ type: "string", content: url }],
+        });
+    },
+    href: (node) => {
+        const args = argContentsFromMacro(node);
+        const url = printRaw(args[1] || "#");
+        return tagLikeMacro({
+            tag: "a",
+            attributes: {
+                class: "href",
+                href: url,
+            },
+            content: args[2] || [],
+        });
+    },
 };

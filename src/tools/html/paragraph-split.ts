@@ -19,6 +19,13 @@ function splitForPars(
     let currBody: Ast.Node[] = [];
     nodes = trim(nodes);
 
+    const isParBreakingMacro = match.createMacroMatcher(
+        options.macrosThatBreakPars
+    );
+    const isEnvThatShouldNotBreakPar = match.createEnvironmentMatcher(
+        options.environmentsThatDontBreakPars
+    );
+
     /**
      * Push and clear the contents of `currBody` to the return array.
      * If there are any contents, it should be wrapped in an array.
@@ -31,19 +38,12 @@ function splitForPars(
     }
 
     for (const node of nodes) {
-        if (
-            options.macrosThatBreakPars.some((name) => match.macro(node, name))
-        ) {
+        if (isParBreakingMacro(node)) {
             pushBody();
             ret.push({ content: [node], wrapInPar: false });
             continue;
         }
-        if (
-            match.anyEnvironment(node) &&
-            !options.environmentsThatDontBreakPars.some((name) =>
-                match.environment(node, name)
-            )
-        ) {
+        if (match.anyEnvironment(node) && !isEnvThatShouldNotBreakPar(node)) {
             pushBody();
             ret.push({ content: [node], wrapInPar: false });
             continue;
@@ -59,6 +59,14 @@ function splitForPars(
     return ret;
 }
 
+/**
+ * Wrap paragraphs in `<p>...</p>` tags.
+ *
+ * Paragraphs are inserted at
+ *   * parbreak tokens
+ *   * macros listed in `macrosThatBreakPars`
+ *   * environments not listed in `environmentsThatDontBreakPars`
+ */
 export function wrapPars(
     nodes: Ast.Node[],
     options: {

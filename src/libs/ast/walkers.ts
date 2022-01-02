@@ -15,7 +15,10 @@ export type MatcherContext = { inMathMode: boolean };
  */
 export function walkAst<T extends any>(
     ast: Ast.Ast,
-    callback: (ast: T, context?: MatcherContext) => T,
+    callback: (
+        ast: T,
+        context?: MatcherContext
+    ) => T extends Ast.Node ? Ast.Node : T,
     matcher: (node: any, context?: MatcherContext) => node is T = ((
         node: Ast.Ast
     ) => false) as any,

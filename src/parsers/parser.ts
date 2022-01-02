@@ -9,6 +9,7 @@ import { attachMacroArgs } from "../libs/ast";
 import * as xparseLibs from "../package-specific-macros/xparse";
 import * as latex2eLibs from "../package-specific-macros/latex2e";
 import * as mathtoolsLibs from "../package-specific-macros/mathtools";
+import * as hyperrefLibs from "../package-specific-macros/hyperref";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
@@ -16,6 +17,7 @@ import {
     SpecialEnvSpec,
     SpecialMacroSpec,
 } from "../package-specific-macros/types";
+import { processEnvironments } from "../libs/ast/environments";
 
 const LIB_SPECIAL_MACROS: SpecialMacroSpec = {};
 const LIB_SPECIAL_ENVS: SpecialEnvSpec = {};
@@ -23,13 +25,15 @@ Object.assign(
     LIB_SPECIAL_MACROS,
     latex2eLibs.macros,
     xparseLibs.macros,
-    mathtoolsLibs.macros
+    mathtoolsLibs.macros,
+    hyperrefLibs.macros
 );
 Object.assign(
     LIB_SPECIAL_ENVS,
     latex2eLibs.environments,
     xparseLibs.environments,
-    mathtoolsLibs.environments
+    mathtoolsLibs.environments,
+    hyperrefLibs.environments
 );
 
 // A list of macros to be specially treated. The argument signature
@@ -48,7 +52,6 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
     setlength: { signature: "m m", renderInfo: { breakAround: true } },
     ref: { signature: "s m" },
     cref: { signature: "s m" },
-    pageref: { signature: "s m" },
     cpageref: { signature: "s m" },
     label: { signature: "m" },
     printbibliography: { renderInfo: { breakAround: true } },
@@ -81,11 +84,6 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
     },
     pgfplotstabletypeset: {
         signature: "o m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    // hyperref
-    hypersetup: {
-        signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
     },
     // nicematrix
@@ -190,11 +188,7 @@ function processSpecialEnvironments(
     ast: Ast.Ast,
     specialEnvironments = SPECIAL_ENVIRONMENTS
 ) {
-    for (const [envName, envInfo] of Object.entries(specialEnvironments)) {
-        ast = processEnvironment(ast, envName, envInfo);
-    }
-
-    return ast;
+    return processEnvironments(ast, specialEnvironments);
 }
 
 /**

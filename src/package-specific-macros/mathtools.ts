@@ -1,10 +1,6 @@
 import { SpecialEnvSpec, SpecialMacroSpec } from "./types";
 
 export const macros: SpecialMacroSpec = {
-    DeclareMathOperator: {
-        signature: "s m m",
-        renderInfo: { breakAround: true },
-    },
     mathtoolsset: {
         signature: "m",
         renderInfo: { breakAround: true, pgfkeysArgs: true },
@@ -105,6 +101,12 @@ export const macros: SpecialMacroSpec = {
     frak: { signature: "m" },
     Bdd: { signature: "m" },
     bold: { signature: "m" },
+    // amsopn
+    operatorname: { signature: "s m" },
+    DeclareMathOperator: {
+        signature: "s m m",
+        renderInfo: { breakAround: true },
+    },
 };
 
 export const environments: SpecialEnvSpec = {

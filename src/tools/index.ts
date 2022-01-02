@@ -12,6 +12,7 @@ import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
+import { convertToHtml } from "./html/convert";
 import { applyAll, lintAll, lints } from "./lint";
 import {
     createMacroExpander,
@@ -235,7 +236,7 @@ export function tagLikeMacro({
     // whose open and close braces are the HTML tags.
     const ret: Ast.Macro = { type: "macro", content: "", escapeToken: "" };
     let openMark = `<${tag}>`;
-    if (attributes) {
+    if (attributes && Object.keys(attributes).length > 0) {
         openMark = `<${tag} ${Object.entries(attributes)
             .map(([k, v]) => `${k}="${v}"`)
             .join(" ")}>`;
@@ -308,4 +309,5 @@ export {
     parseLigatures,
     lints,
     lintAll,
+    convertToHtml,
 };

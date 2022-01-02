@@ -93,12 +93,7 @@ const REPLACEMENTS: Record<string, Ast.Macro> = {
     },
 };
 
-function isReplaceable(node: Ast.Node | null): node is Ast.Macro {
-    return (
-        match.anyMacro(node) &&
-        Object.keys(REPLACEMENTS).some((name) => match.macro(node, name))
-    );
-}
+const isReplaceable = match.createMacroMatcher(REPLACEMENTS);
 
 /**
  * Returns true if the `group` is a group that starts with one of the `REPLACEMENT` macros.
@@ -183,10 +178,6 @@ function groupToMacro(group: Ast.Group): Ast.Node[] {
     }
 
     return [...frontMatter, createMacroWithArgs(replacementMacro, content)];
-}
-
-function hoistArgs(nodes: Ast.Node[]): [Ast.Node[], Ast.Node[]] {
-    return [] as any;
 }
 
 function whitespaceAt(nodes: Ast.Node[]): { start: boolean; end: boolean } {

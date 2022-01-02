@@ -22,7 +22,7 @@ describe("Convert to HTML", () => {
     it("Can replace text-style macros", () => {
         let ast = latexParser.parse(String.raw`a \textbf{different} word`);
         expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
-            normalizeHtml(`a <span class="textbf">different</span> word`)
+            normalizeHtml(`a <b class="textbf">different</b> word`)
         );
 
         ast = latexParser.parse(String.raw`a \textsf{different} word`);
@@ -88,6 +88,100 @@ describe("Convert to HTML", () => {
             normalizeHtml(`<p>a b</p>\\begin{foo}x\\end{foo}<p>c</p>`)
         );
     });
+    it("Comments are removed from HTML", () => {
+        let ast = latexParser.parse(`a % foo\nb`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`a b`)
+        );
+
+        ast = latexParser.parse(`a% foo\nb`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`ab`)
+        );
+
+        ast = latexParser.parse(`a% foo\n\nb`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`a\nb`)
+        );
+
+        ast = latexParser.parse(`a % foo\n\nb`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`a\nb`)
+        );
+    });
+    it("Wraps URLs", () => {
+        let ast = latexParser.parse(`a\\url{foo.com}b`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`a<a class="url" href="foo.com">foo.com</a>b`)
+        );
+
+        ast = latexParser.parse(`a\\href{foo.com}{FOO}b`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`a<a class="href" href="foo.com">FOO</a>b`)
+        );
+    });
+    it("Converts enumerate environments", () => {
+        let ast = latexParser.parse(
+            `\\begin{enumerate}\\item a\\item b\\end{enumerate}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<ol class="enumerate"><li><p>a</p></li><li><p>b</p></li></ol>`
+            )
+        );
+
+        // Any content before an \item is ignored
+        ast = latexParser.parse(
+            `\\begin{enumerate}before content\\item a\\item b\\end{enumerate}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<ol class="enumerate"><li><p>a</p></li><li><p>b</p></li></ol>`
+            )
+        );
+
+        // Custom labels are handled
+        ast = latexParser.parse(
+            `\\begin{enumerate}before content\\item[x)] a\\item[] b\\end{enumerate}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`<ol class="enumerate">
+                <li style="list-style-type: 'x) ';"><p>a</p></li>
+                <li style="list-style-type: none;"><p>b</p></li>
+            </ol>`)
+        );
+    });
+    it("Converts itemize environments", () => {
+        let ast = latexParser.parse(
+            `\\begin{itemize}\\item a\\item b\\end{itemize}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<ul class="itemize"><li><p>a</p></li><li><p>b</p></li></ul>`
+            )
+        );
+
+        // Any content before an \item is ignored
+        ast = latexParser.parse(
+            `\\begin{itemize}before content\\item a\\item b\\end{itemize}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<ul class="itemize"><li><p>a</p></li><li><p>b</p></li></ul>`
+            )
+        );
+
+        // Custom labels are handled
+        ast = latexParser.parse(
+            `\\begin{itemize}before content\\item[x)] a\\item[] b\\end{itemize}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`<ul class="itemize">
+                <li style="list-style-type: 'x) ';"><p>a</p></li>
+                <li style="list-style-type: none;"><p>b</p></li>
+            </ul>`)
+        );
+    });
 });
 
 describe("HTML Generation", () => {
@@ -108,6 +202,14 @@ describe("HTML Generation", () => {
         expect(printRaw(tag)).toEqual(
             '<foo attr1="val1" attr2="val2">$x^{2}$</foo>'
         );
+
+        // empty attributes shouldn't add spurious whitespace
+        tag = tools.tagLikeMacro({
+            tag: "foo",
+            content,
+            attributes: {},
+        });
+        expect(printRaw(tag)).toEqual("<foo>$x^{2}$</foo>");
 
         tag = tools.tagLikeMacro({
             tag: "foo",
