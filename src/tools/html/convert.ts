@@ -58,7 +58,10 @@ export function convertToHtml(
             }
             return macroReplacements[node.content](node);
         },
-        (node) => match.macro(node) && !!macroReplacements[node.content]
+        (node, context) =>
+            match.macro(node) &&
+            !!macroReplacements[node.content] &&
+            context?.inMathMode !== true
     );
 
     // Replace special environments

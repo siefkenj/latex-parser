@@ -2,7 +2,8 @@ import util from "util";
 
 import * as latexParser from "../parsers/latex-parser";
 import * as xcolorParser from "../libs/xcolor/xcolor-parser";
-import { computeColor } from "../libs/xcolor/xcolor";
+import { computeColor, xcolorColorToHex } from "../libs/xcolor/xcolor";
+import { xcolorMacroToHex } from "../tools/xcolor";
 
 /* eslint-env jest */
 
@@ -92,5 +93,36 @@ describe("XColor tests", () => {
         colorAst = xcolorParser.parse("yellow>wheel,60");
         color = computeColor(colorAst);
         expect(color.hex()).toEqual("#00FF00");
+    });
+    it("Can compute CSS hex for colors", () => {
+        expect(xcolorColorToHex("blue")).toEqual("#0000FF");
+        expect(xcolorColorToHex("blue!50!black")).toEqual("#000080");
+        expect(xcolorColorToHex("1 1 1", "rgb")).toEqual("#FFFFFF");
+        expect(xcolorColorToHex("1 .5 .25", "rgb")).toEqual("#FF8040");
+        expect(xcolorColorToHex("1 0.5 0.25", "rgb")).toEqual("#FF8040");
+        expect(xcolorColorToHex("1,.5,.25", "rgb")).toEqual("#FF8040");
+        expect(xcolorColorToHex("1 0 0", "cmy")).toEqual("#00FFFF");
+        expect(xcolorColorToHex("1 0 0 .5", "cmyk")).toEqual("#008080");
+        expect(xcolorColorToHex("0 1 .5", "hsb")).toEqual("#800000");
+        expect(xcolorColorToHex(".5 1 .5", "hsb")).toEqual("#008080");
+        expect(xcolorColorToHex("180 1 .5", "Hsb")).toEqual("#008080");
+        expect(xcolorColorToHex(".5", "gray")).toEqual("#808080");
+        expect(xcolorColorToHex("128 8 1", "RGB")).toEqual("#800801");
+        expect(xcolorColorToHex("12FF34", "HTML")).toEqual("#12FF34");
+        expect(xcolorColorToHex("0 240 120", "HSB")).toEqual("#800000");
+        expect(xcolorColorToHex("7.5", "Gray")).toEqual("#808080");
+    });
+    it("Can compute CSS hex for color macros", () => {
+        let ast;
+        ast = latexParser.parse("\\color{blue}").content[0];
+        expect(xcolorMacroToHex(ast).hex).toEqual("#0000FF");
+        ast = latexParser.parse("\\textcolor{blue!50!black}").content[0];
+        expect(xcolorMacroToHex(ast).hex).toEqual("#000080");
+        ast = latexParser.parse("\\color[rgb]{1 1 1}").content[0];
+        expect(xcolorMacroToHex(ast).hex).toEqual("#FFFFFF");
+        ast = latexParser.parse("\\color[rgb]{1 .5 .25}").content[0];
+        expect(xcolorMacroToHex(ast).hex).toEqual("#FF8040");
+        ast = latexParser.parse("\\color[cmyk]{1 0 0 .5}").content[0];
+        expect(xcolorMacroToHex(ast).hex).toEqual("#008080");
     });
 });

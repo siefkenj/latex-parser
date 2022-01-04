@@ -10,6 +10,7 @@ import * as Ast from "../libs/ast-types";
 import { MatcherContext } from "../libs/ast/walkers";
 import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
+import { xcolorColorToHex } from "../libs/xcolor/xcolor";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
 import { convertToHtml } from "./html/convert";
@@ -20,6 +21,7 @@ import {
     newcommandMacroToSpec,
     newcommandMacroToSubstitutionAst,
 } from "./newcommand";
+import { xcolorMacroToHex } from "./xcolor";
 
 /**
  * Returns a set containing all macros in the document.
@@ -310,4 +312,6 @@ export {
     lints,
     lintAll,
     convertToHtml,
+    xcolorColorToHex,
+    xcolorMacroToHex,
 };

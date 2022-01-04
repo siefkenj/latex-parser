@@ -2,9 +2,9 @@
 // Based on the grammar sepcified in http://mirrors.ctan.org/macros/latex/contrib/xcolor/xcolor.pdf
 
 start
-    = m:color EOL { return m; }
-    / m:spec EOL { return m; }
+    = m:spec EOL { return m; }
     / m:spec_list EOL { return m; }
+    / m:color EOL { return m; }
     / m:model_list EOL { return m; }
     / m:color_set_spec EOL { return m; }
     / a:$.* { return { type: "invalid_spec", content: a }; }
@@ -39,13 +39,12 @@ spec_list "color spec list"
         }
 
 spec "color spec"
-    = c:dec r:("," d:dec { return d; })* {
-            return { type: "num_spec", content: [c].concat(r) };
+    = c:$(hex hex hex hex hex hex) {
+            return { type: "hex_spec", content: [c] };
         }
-    / c:dec r:(_+ d:dec { return d; })* {
-            return { type: "num_spec", content: [c].concat(r) };
+    / c:dec r:(("," d:dec { return d; })+ / (sp d:dec { return d; })+)? {
+            return { type: "num_spec", content: r ? [c].concat(r) : [c] };
         }
-    / n:name { return { type: "name_spec", content: n }; }
 
 color "color"
     = c:color_expr fs:func_expr* {
@@ -146,5 +145,9 @@ dec
 int "int" = m:minus? n:num { return m ? -n : n; }
 
 _ "whitespace" = [ \t\n\r]*
+
+sp = [ \t\n\r]+
+
+hex = h:[0-9a-fA-F] { return h.toUpperCase(); }
 
 EOL = !.

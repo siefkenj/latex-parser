@@ -109,15 +109,18 @@ export function walkAst<T extends any>(
  */
 export function replaceNode(
     ast: Ast.Ast,
-    replacer: (node: Ast.Node) => Ast.Node | Ast.Node[] | null,
-    matcher: (node: Ast.Node) => boolean
+    replacer: (
+        node: Ast.Node,
+        context?: MatcherContext
+    ) => Ast.Node | Ast.Node[] | null,
+    matcher: (node: Ast.Node, context?: MatcherContext) => boolean
 ): Ast.Ast {
     return walkAst(
         ast,
-        (array: Ast.Node[]) =>
+        (array: Ast.Node[], context) =>
             array.flatMap((node) => {
-                if (matcher(node)) {
-                    return replacer(node) || [];
+                if (matcher(node, context)) {
+                    return replacer(node, context) || [];
                 } else {
                     return node;
                 }

@@ -7,6 +7,7 @@ import {
     xcolorColorToHex,
 } from "../../libs/xcolor/xcolor";
 import { deleteComments } from "../macro-replacers";
+import { xcolorMacroToHex } from "../xcolor";
 
 /**
  * Returns a function that wrap the first arg of a macro
@@ -121,12 +122,8 @@ export const macroReplacements: Record<
         }),
     textcolor: (node) => {
         const args = argContentsFromMacro(node);
-        const model = args[0] && printRaw(deleteComments(args[0]));
-        const colorStr = printRaw(deleteComments(args[1] || []));
-        let color: string | null = null;
-        try {
-            color = xcolorColorToHex(colorStr, model);
-        } catch (e) {}
+        const computedColor = xcolorMacroToHex(node);
+        const color = computedColor.hex;
 
         if (color) {
             return tagLikeMacro({
@@ -137,10 +134,11 @@ export const macroReplacements: Record<
         } else {
             // If we couldn't compute the color, it's probably a named
             // color that wasn't supplied. In this case, we fall back to a css variable
-            const cssVarName = "--" + colorStr.replace(/[^a-zA-Z0-9-_]/g, "-");
             return tagLikeMacro({
                 tag: "span",
-                attributes: { style: `color: var(${cssVarName});` },
+                attributes: {
+                    style: `color: var(${computedColor.cssVarName});`,
+                },
                 content: args[2] || [],
             });
         }

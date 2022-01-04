@@ -217,4 +217,14 @@ describe("HTML Generation", () => {
         });
         expect(printRaw(tag)).toEqual('<foo attr1="val1" attr2="val2" />');
     });
+
+    it("Macros aren't replaced with html code in math mode", () => {
+        let ast;
+
+        // Custom labels are handled
+        ast = latexParser.parse(`\\[a\\\\b\\]`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`\\[a\\\\b\\]`)
+        );
+    });
 });

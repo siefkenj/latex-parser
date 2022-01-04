@@ -1,4 +1,4 @@
-export type Ast = Node[] | Node;
+export type Ast = Node;
 export type Node =
     | Color
     | InvalidSpec
@@ -7,12 +7,29 @@ export type Node =
     | ColorExtExpr
     | ColorMixExpr
     | WeightedColorExpr
-    | Postfix;
+    | Postfix
+    | ColorSpec
+    | ColorSpecList;
 
-export type XColor = Color;
+export type XColor = Color | ColorSpec | ColorSpecList;
 
 interface AstNode {
     type: string;
+}
+
+interface HexColorSpec extends AstNode {
+    type: "hex_spec";
+    content: [string];
+}
+interface NumColorSpec extends AstNode {
+    type: "num_spec";
+    content: number[];
+}
+
+type ColorSpec = HexColorSpec | NumColorSpec;
+interface ColorSpecList extends AstNode {
+    type: "spec_list";
+    content: ColorSpec[];
 }
 
 interface InvalidSpec extends AstNode {

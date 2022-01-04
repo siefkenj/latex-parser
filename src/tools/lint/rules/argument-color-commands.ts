@@ -3,16 +3,13 @@ import * as Ast from "../../../libs/ast-types";
 import { match } from "../../../libs/ast";
 import { Lint, LintPlugin } from "../types";
 import { cachedMacroLookup } from "../cache";
-import { printRaw } from "../../../libs/print-raw";
 import { tools } from "../../../parsers/latex-parser";
 import {
     firstSignificantNode,
     groupToMacro,
     hasParbreak,
     hasWhitespaceAtEnds,
-    singleArgMacroFactory,
 } from "../../macro-replacers";
-import { argContentsFromMacro } from "../../../libs/ast/arguments";
 
 const REPLACEMENTS: Record<
     string,
