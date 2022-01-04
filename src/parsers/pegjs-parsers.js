@@ -6,6 +6,7 @@ import ArgSpecPegParser from "../grammars/xparse-argspec.pegjs";
 import PgfkeysParser from "../grammars/pgfkeys.pegjs";
 import MacroSubstitutionParser from "../grammars/macro-substitutions.pegjs";
 import LigaturesParser from "../grammars/ligatures.pegjs";
+import XColorParser from "../grammars/xcolor-expressions.pegjs";
 
 export {
     LatexPegParser,
@@ -14,4 +15,5 @@ export {
     PgfkeysParser,
     MacroSubstitutionParser,
     LigaturesParser,
+    XColorParser,
 };

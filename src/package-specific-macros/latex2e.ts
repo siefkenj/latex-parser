@@ -183,8 +183,6 @@ export const macros: SpecialMacroSpec = {
     thispagestyle: { signature: "m", renderInfo: { breakAround: true } },
     // Colors
     definecolor: { signature: "m m m", renderInfo: { breakAround: true } },
-    textcolor: { signature: "o m m", renderInfo: { breakAround: true } },
-    color: { signature: "o m", renderInfo: { breakAround: true } },
     pagecolor: { signature: "o m", renderInfo: { breakAround: true } },
     nopagecolor: { renderInfo: { breakAround: true } },
     multicolumn: { signature: "m m m" },

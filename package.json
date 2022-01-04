@@ -25,9 +25,11 @@
         "build": "mkdirp dist; webpack"
     },
     "dependencies": {
+        "@types/color": "^3.0.2",
         "@types/cssesc": "^3.0.0",
         "@types/prettier": "^2.4.2",
         "@types/trie-prefix-tree": "^1.5.0",
+        "color": "^4.1.0",
         "cssesc": "^3.0.0",
         "prettier": "^2.5.1",
         "trie-prefix-tree": "^1.5.1"

@@ -46,6 +46,14 @@ function enumerateFactory(parentTag = "ol", className = "enumerate") {
     };
 }
 
+function createCenteredElement(env: Ast.Environment) {
+    return tagLikeMacro({
+        tag: "center",
+        attributes: { class: "center" },
+        content: wrapPars(env.content),
+    });
+}
+
 /**
  * Rules for replacing a macro with an html-like macro
  * that will render has html when printed.
@@ -56,4 +64,5 @@ export const environmentReplacements: Record<
 > = {
     enumerate: enumerateFactory("ol"),
     itemize: enumerateFactory("ul", "itemize"),
+    center: createCenteredElement,
 };

@@ -2,6 +2,11 @@ import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
 import { printRaw } from "../../libs/print-raw";
+import {
+    PREDEFINED_XCOLOR_COLORS,
+    xcolorColorToHex,
+} from "../../libs/xcolor/xcolor";
+import { deleteComments } from "../macro-replacers";
 
 /**
  * Returns a function that wrap the first arg of a macro
@@ -108,5 +113,36 @@ export const macroReplacements: Record<
             },
             content: args[2] || [],
         });
+    },
+    "\\": (node) =>
+        tagLikeMacro({
+            tag: "br",
+            attributes: { class: "linebreak" },
+        }),
+    textcolor: (node) => {
+        const args = argContentsFromMacro(node);
+        const model = args[0] && printRaw(deleteComments(args[0]));
+        const colorStr = printRaw(deleteComments(args[1] || []));
+        let color: string | null = null;
+        try {
+            color = xcolorColorToHex(colorStr, model);
+        } catch (e) {}
+
+        if (color) {
+            return tagLikeMacro({
+                tag: "span",
+                attributes: { style: `color: ${color};` },
+                content: args[2] || [],
+            });
+        } else {
+            // If we couldn't compute the color, it's probably a named
+            // color that wasn't supplied. In this case, we fall back to a css variable
+            const cssVarName = "--" + colorStr.replace(/[^a-zA-Z0-9-_]/g, "-");
+            return tagLikeMacro({
+                tag: "span",
+                attributes: { style: `color: var(${cssVarName});` },
+                content: args[2] || [],
+            });
+        }
     },
 };

@@ -7,6 +7,7 @@ import { wrapPars } from "./paragraph-split";
 import { MatcherContext } from "../../libs/ast/walkers";
 import { printRaw } from "../../libs/print-raw";
 import { environmentReplacements } from "./environment-subs";
+import { deleteComments } from "../macro-replacers";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;
@@ -19,21 +20,7 @@ export function convertToHtml(
     let newAst = ast;
 
     // Remove all comments
-    newAst = replaceNode(
-        newAst,
-        (node) => {
-            if (!match.comment(node)) {
-                return node;
-            }
-
-            if (node.leadingWhitespace) {
-                return { type: "whitespace" };
-            }
-
-            return null;
-        },
-        match.comment
-    );
+    newAst = deleteComments(newAst);
 
     const environments = allEnvironments(newAst);
 

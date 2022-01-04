@@ -83,4 +83,15 @@ describe("Lint: Argument font shaping commands", () => {
             printRaw(lints.argumentFontShapingCommandsLint.fixAll(ast))
         ).toEqual("a {b }");
     });
+    it("does not replace shaping commands if they affect a parbreak", () => {
+        let ast = latexParser.parse("a \\bfseries\n\nb");
+        expect(
+            printRaw(lints.argumentFontShapingCommandsLint.fixAll(ast))
+        ).toEqual("a \\bfseries\n\nb");
+
+        ast = latexParser.parse("a {\\bfseries x\n\nb}");
+        expect(
+            printRaw(lints.argumentFontShapingCommandsLint.fixAll(ast))
+        ).toEqual("a {\\bfseries x\n\nb}");
+    });
 });

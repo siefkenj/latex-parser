@@ -10,6 +10,7 @@ import * as xparseLibs from "../package-specific-macros/xparse";
 import * as latex2eLibs from "../package-specific-macros/latex2e";
 import * as mathtoolsLibs from "../package-specific-macros/mathtools";
 import * as hyperrefLibs from "../package-specific-macros/hyperref";
+import * as xcolorLibs from "../package-specific-macros/xcolor";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
@@ -26,14 +27,16 @@ Object.assign(
     latex2eLibs.macros,
     xparseLibs.macros,
     mathtoolsLibs.macros,
-    hyperrefLibs.macros
+    hyperrefLibs.macros,
+    xcolorLibs.macros
 );
 Object.assign(
     LIB_SPECIAL_ENVS,
     latex2eLibs.environments,
     xparseLibs.environments,
     mathtoolsLibs.environments,
-    hyperrefLibs.environments
+    hyperrefLibs.environments,
+    xcolorLibs.environments
 );
 
 // A list of macros to be specially treated. The argument signature
