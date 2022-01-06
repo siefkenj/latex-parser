@@ -7,11 +7,11 @@ import { printRaw } from "../../../libs/print-raw";
 import { tools } from "../../../parsers/latex-parser";
 import {
     firstSignificantNode,
-    groupToMacro,
     hasParbreak,
     hasWhitespaceAtEnds,
     singleArgMacroFactory,
 } from "../../macro-replacers";
+import { replaceStreamingCommand } from "../..";
 
 const REPLACEMENTS: Record<string, (content: Ast.Node[]) => Ast.Macro> = {
     bfseries: singleArgMacroFactory("textbf"),
@@ -108,7 +108,7 @@ export const argumentFontShapingCommandsLint: LintPlugin = {
                     return node;
                 }
 
-                return groupToMacro(node, REPLACEMENTS);
+                return replaceStreamingCommand(node, REPLACEMENTS);
             },
             groupStartsWithMacroAndHasNoParbreak
         );

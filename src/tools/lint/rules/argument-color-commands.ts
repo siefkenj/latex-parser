@@ -6,10 +6,10 @@ import { cachedMacroLookup } from "../cache";
 import { tools } from "../../../parsers/latex-parser";
 import {
     firstSignificantNode,
-    groupToMacro,
     hasParbreak,
     hasWhitespaceAtEnds,
 } from "../../macro-replacers";
+import { replaceStreamingCommand } from "../..";
 
 const REPLACEMENTS: Record<
     string,
@@ -141,7 +141,7 @@ export const argumentColorCommandsLint: LintPlugin = {
                     return node;
                 }
 
-                return groupToMacro(node, REPLACEMENTS);
+                return replaceStreamingCommand(node, REPLACEMENTS);
             },
             groupStartsWithMacroAndHasNoParbreak
         );

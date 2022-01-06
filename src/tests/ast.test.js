@@ -79,6 +79,26 @@ describe("AST tests", () => {
         expect(macroUtils.trim(ast)).toEqual(targetAst);
     });
 
+    it("trims whitespace in front of comments where appropriate", () => {
+        let targetAst = trimRenderInfo(latexParser.parse("%x").content);
+        let ast = trimRenderInfo(latexParser.parse(" %x").content);
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        targetAst = trimRenderInfo(latexParser.parse("x%x").content.slice(1));
+        ast = trimRenderInfo(latexParser.parse("x %x").content.slice(1));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        targetAst = trimRenderInfo(latexParser.parse("%x").content);
+        ast = trimRenderInfo(latexParser.parse("x\n\n%x").content.slice(1));
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+
+        targetAst = trimRenderInfo(latexParser.parse("%x\n y").content);
+        ast = trimRenderInfo(
+            latexParser.parse("x\n\n %x\n y").content.slice(1)
+        );
+        expect(macroUtils.trim(ast)).toEqual(targetAst);
+    });
+
     it("Splits and unsplits based on a macro", () => {
         // basic splitting
         let ast = trimRenderInfo(

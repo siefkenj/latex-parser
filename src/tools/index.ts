@@ -15,6 +15,7 @@ import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
 import { convertToHtml } from "./html/convert";
 import { applyAll, lintAll, lints } from "./lint";
+import { replaceStreamingCommand } from "./macro-replacers";
 import {
     createMacroExpander,
     newcommandMacroToName,
@@ -314,4 +315,5 @@ export {
     convertToHtml,
     xcolorColorToHex,
     xcolorMacroToHex,
+    replaceStreamingCommand,
 };
