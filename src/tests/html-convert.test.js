@@ -182,6 +182,27 @@ describe("Convert to HTML", () => {
             </ul>`)
         );
     });
+    it("Converts tabular environment", () => {
+        let ast = latexParser.parse(
+            `\\begin{tabular}{l l}a & b\\\\c & d\\end{tabular}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<table class="tabular">
+                <tbody>
+                    <tr>
+                        <td>a</td>
+                        <td>b</td>
+                    </tr>
+                    <tr>
+                        <td>c</td>
+                        <td>d</td>
+                    </tr>
+                </tbody>
+            </table>`
+            )
+        );
+    });
 });
 
 describe("HTML Generation", () => {

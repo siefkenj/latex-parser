@@ -2,11 +2,6 @@ import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
 import { printRaw } from "../../libs/print-raw";
-import {
-    PREDEFINED_XCOLOR_COLORS,
-    xcolorColorToHex,
-} from "../../libs/xcolor/xcolor";
-import { deleteComments } from "../macro-replacers";
 import { xcolorMacroToHex } from "../xcolor";
 
 /**
@@ -120,6 +115,14 @@ export const macroReplacements: Record<
             tag: "br",
             attributes: { class: "linebreak" },
         }),
+    vspace: (node) => {
+        const args = argContentsFromMacro(node);
+        return tagLikeMacro({
+            tag: "vspace",
+            attributes: { class: "vspace", amount: printRaw(args[1] || []) },
+            content: [],
+        });
+    },
     textcolor: (node) => {
         const args = argContentsFromMacro(node);
         const computedColor = xcolorMacroToHex(node);
@@ -142,5 +145,27 @@ export const macroReplacements: Record<
                 content: args[2] || [],
             });
         }
+    },
+    textsize: (node) => {
+        const args = argContentsFromMacro(node);
+        const textSize = printRaw(args[0] || []);
+        return tagLikeMacro({
+            tag: "span",
+            attributes: {
+                class: `textsize-${textSize}`,
+            },
+            content: args[1] || [],
+        });
+    },
+    makebox: (node) => {
+        const args = argContentsFromMacro(node);
+        return tagLikeMacro({
+            tag: "span",
+            attributes: {
+                class: `latex-box`,
+                style: "display: inline-block;",
+            },
+            content: args[3] || [],
+        });
     },
 };

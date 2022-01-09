@@ -1,7 +1,8 @@
 import util from "util";
 import { tools } from "../parsers/latex-parser";
-
+import { trimRenderInfo } from "../libs/ast";
 import * as latexParser from "../parsers/parser";
+import { splitStringsIntoSingleChars, wasParsedInMathMode } from "../tools";
 
 const { printRaw } = latexParser;
 /* eslint-env jest */
@@ -39,6 +40,25 @@ describe("Find macros", () => {
             "amssymb",
             "amsmath",
             "amsmath",
+        ]);
+    });
+
+    it("Can split multi-character strings", () => {
+        let ast;
+        ast = trimRenderInfo(latexParser.parse("abc").content);
+        expect(splitStringsIntoSingleChars(ast)).toEqual([
+            { content: "a", type: "string" },
+            { content: "b", type: "string" },
+            { content: "c", type: "string" },
+        ]);
+
+        ast = trimRenderInfo(latexParser.parse("ab\\foo23").content);
+        expect(splitStringsIntoSingleChars(ast)).toEqual([
+            { type: "string", content: "a" },
+            { type: "string", content: "b" },
+            { type: "macro", content: "foo" },
+            { type: "string", content: "2" },
+            { type: "string", content: "3" },
         ]);
     });
 
@@ -244,5 +264,12 @@ describe("Find macros", () => {
             yyy: replacer,
         });
         expect(printRaw(replaced)).toEqual("{b}");
+    });
+
+    it("Detects whether something was parsed in math mode", () => {
+        let ast1 = latexParser.parse("a^2+b").content;
+        let ast2 = latexParser.parseMath("a^2+b");
+        expect(wasParsedInMathMode(ast1)).toBe(false);
+        expect(wasParsedInMathMode(ast2)).toBe(true);
     });
 });

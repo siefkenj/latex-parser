@@ -1,16 +1,17 @@
 import { LatexPegParser as PegParser } from "./pegjs-parsers";
 import {
     cleanEnumerateBody,
-    processEnvironment,
     trim,
     trimEnvironmentContents,
+    match,
 } from "../libs/macro-utils";
-import { attachMacroArgs } from "../libs/ast";
+import { attachMacroArgs, walkAst } from "../libs/ast";
 import * as xparseLibs from "../package-specific-macros/xparse";
 import * as latex2eLibs from "../package-specific-macros/latex2e";
 import * as mathtoolsLibs from "../package-specific-macros/mathtools";
 import * as hyperrefLibs from "../package-specific-macros/hyperref";
 import * as xcolorLibs from "../package-specific-macros/xcolor";
+import * as systemeLibs from "../package-specific-macros/systeme";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
@@ -19,6 +20,7 @@ import {
     SpecialMacroSpec,
 } from "../package-specific-macros/types";
 import { processEnvironments } from "../libs/ast/environments";
+import { wasParsedInMathMode } from "../tools";
 
 const LIB_SPECIAL_MACROS: SpecialMacroSpec = {};
 const LIB_SPECIAL_ENVS: SpecialEnvSpec = {};
@@ -28,7 +30,8 @@ Object.assign(
     xparseLibs.macros,
     mathtoolsLibs.macros,
     hyperrefLibs.macros,
-    xcolorLibs.macros
+    xcolorLibs.macros,
+    systemeLibs.macros
 );
 Object.assign(
     LIB_SPECIAL_ENVS,
@@ -36,7 +39,8 @@ Object.assign(
     xparseLibs.environments,
     mathtoolsLibs.environments,
     hyperrefLibs.environments,
-    xcolorLibs.environments
+    xcolorLibs.environments,
+    systemeLibs.environments
 );
 
 // A list of macros to be specially treated. The argument signature
@@ -187,10 +191,10 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
  * @param {*} ast
  * @returns
  */
-function processSpecialEnvironments(
-    ast: Ast.Ast,
+function processSpecialEnvironments<T extends Ast.Ast>(
+    ast: T,
     specialEnvironments = SPECIAL_ENVIRONMENTS
-) {
+): T {
     return processEnvironments(ast, specialEnvironments);
 }
 
@@ -201,7 +205,10 @@ function processSpecialEnvironments(
  * @param {*} ast
  * @returns
  */
-function attachSpecialMacroArgs(ast: Ast.Ast, specialMacros = SPECIAL_MACROS) {
+function attachSpecialMacroArgs<T extends Ast.Ast>(
+    ast: T,
+    specialMacros = SPECIAL_MACROS
+): T {
     ast = attachMacroArgs(ast, specialMacros);
 
     return ast;
@@ -214,12 +221,14 @@ function attachSpecialMacroArgs(ast: Ast.Ast, specialMacros = SPECIAL_MACROS) {
  *
  * @param {*} node
  */
-function wrapStrings(node: Ast.Ast | string): Ast.Ast {
+function wrapStrings<T extends Ast.Ast | string>(
+    node: T
+): T extends string ? Ast.String : T {
     if (node == null) {
         return node;
     }
     if (typeof node === "string") {
-        return { type: "string", content: node };
+        return { type: "string", content: node } as any;
     }
     if (Array.isArray(node)) {
         return node.map(wrapStrings) as any;
@@ -244,14 +253,14 @@ function wrapStrings(node: Ast.Ast | string): Ast.Ast {
             break;
     }
 
-    const ret = { ...node };
+    const ret: Ast.Node | Ast.Argument = { ...node };
     for (const prop of childProps) {
         if (prop in ret) {
             (ret as any)[prop] = wrapStrings((ret as any)[prop]);
         }
     }
 
-    return ret;
+    return ret as any;
 }
 
 for (const key in SPECIAL_MACROS) {
@@ -276,15 +285,13 @@ for (const key in SPECIAL_ENVIRONMENTS) {
 }
 
 /**
- * Parse the LeTeX string to an AST.
- *
- * @param {string} [str=""] - LaTeX string input
- * @returns - AST for LaTeX string
+ * Return the known special macros and environments. These macros and environments are combined with
+ * those listed in `options`.
  */
-function parse(
-    str = "",
-    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
-) {
+function getSpecialMacrosAndEnvironments(options?: {
+    macros?: SpecialMacroSpec;
+    environments?: SpecialEnvSpec;
+}) {
     const specialMacros: SpecialMacroSpec = {
         ...SPECIAL_MACROS,
         ...LIB_SPECIAL_MACROS,
@@ -300,13 +307,116 @@ function parse(
         Object.assign(specialEnvironments, environments);
     }
 
-    const pegAst = PegParser.parse(str);
-    let ast = wrapStrings(pegAst);
+    return { macros: specialMacros, environments: specialEnvironments };
+}
+
+/**
+ * Attach arguments to macros an environments and process their body as appropriate.
+ */
+function processMacrosAndEnvironments<T extends Ast.Ast>(
+    ast: T,
+    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+): T {
+    const { macros: specialMacros, environments: specialEnvironments } =
+        getSpecialMacrosAndEnvironments(options);
+
     ast = attachSpecialMacroArgs(ast, specialMacros);
     ast = processSpecialEnvironments(ast, specialEnvironments);
-    (ast as any).content = trim((ast as any).content);
+    return ast;
+}
+
+/**
+ * Parse the LeTeX string to an AST assuming that the contents
+ * should be parsed in math mode. This method always returns an array (not a "root" element).
+ *
+ * @param {string} [str=""] - LaTeX string input
+ * @returns - AST for LaTeX string
+ */
+export function parseMath(
+    input: string | Ast.Ast,
+    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+) {
+    const str = typeof input === "string" ? input : printRaw(input);
+    const pegAst: Ast.Node[] = PegParser.parse(str, {
+        startRule: "math",
+    });
+    let ast = wrapStrings(pegAst);
+    ast = processMacrosAndEnvironments(ast, options);
+    return ast;
+}
+
+/**
+ * Parse the LeTeX string to an AST.
+ *
+ * @param {string} [str=""] - LaTeX string input
+ * @returns - AST for LaTeX string
+ */
+export function parse(
+    str = "",
+    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+) {
+    const pegAst: Ast.Root = PegParser.parse(str);
+    let ast = wrapStrings(pegAst);
+    ast = processMacrosAndEnvironments(ast, options);
+    // Now that arguments have been attached to environments and macros, we may need
+    // to re-parse the contents of some environments/macro args in math mode
+    const { macros: specialMacros, environments: specialEnvironments } =
+        getSpecialMacrosAndEnvironments(options);
+
+    const mathEnvironments = Object.fromEntries(
+        Object.entries(specialEnvironments).filter(
+            ([_, spec]) => spec.renderInfo?.inMathMode === true
+        )
+    );
+    const mathEnvMatcher = match.createEnvironmentMatcher(mathEnvironments);
+    ast = walkAst(
+        ast,
+        (node) => {
+            // If we're here, we've matched an environment with contents that should
+            // be parsed in math mode. We may need to re-parse the contents.
+            if (!wasParsedInMathMode(node.content)) {
+                return { ...node, content: parseMath(node.content) };
+            }
+
+            return node;
+        },
+        mathEnvMatcher
+    ) as Ast.Root;
+    const mathMacros = Object.fromEntries(
+        Object.entries(specialMacros).filter(
+            ([_, spec]) => spec.renderInfo?.inMathMode === true
+        )
+    );
+    const mathMacroMatcher = match.createMacroMatcher(mathMacros);
+    ast = walkAst(
+        ast,
+        (node) => {
+            if (!node.args) {
+                return node;
+            }
+            let didProcess = false;
+            const args = node.args.map((arg) => {
+                if (
+                    arg.content.length > 0 &&
+                    !wasParsedInMathMode(arg.content)
+                ) {
+                    didProcess = true;
+                    return { ...arg, content: parseMath(arg.content) };
+                }
+                return arg;
+            });
+            if (!didProcess) {
+                return node;
+            }
+
+            return { ...node, args };
+        },
+        mathMacroMatcher
+    ) as Ast.Root;
+
+    ast.content = trim((ast as Ast.Root).content);
     ast = trimEnvironmentContents(ast);
     return ast;
 }
 
-export { parse, printRaw };
+export { printRaw };

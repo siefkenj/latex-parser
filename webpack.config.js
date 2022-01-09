@@ -26,7 +26,12 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /latex.pegjs$/,
+                use: "pegjs-loader?allowedStartRules[]=document,allowedStartRules[]=math",
+            },
+            {
                 test: /\.pegjs$/,
+                exclude: /latex.pegjs$/,
                 use: "pegjs-loader",
             },
             {

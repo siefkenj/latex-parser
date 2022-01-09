@@ -38,7 +38,7 @@ function groupStartsWithMacroAndHasNoParbreak(
  * Create a macro based on `baseMacro` but with a single mandatory argument
  * consisting of `content`.
  */
-function textColorMacro(content: Ast.Node[], origMacro: Ast.Macro): Ast.Macro {
+export function textColorMacro(content: Ast.Node[], origMacro: Ast.Macro): Ast.Macro {
     // Signature of \color is "o m".
     // We want to carry through the same arguments
     return {

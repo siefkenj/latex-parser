@@ -11,11 +11,11 @@ import { printRaw } from "../libs/print-raw";
 /**
  *
  */
-type MacroReplacementCallback = (
+export type MacroReplacementCallback = (
     content: Ast.Node[],
     originalMacro: Ast.Macro
 ) => Ast.Macro;
-type MacroReplacementHash = Record<string, MacroReplacementCallback>;
+export type MacroReplacementHash = Record<string, MacroReplacementCallback>;
 type Replacer = (nodes: Ast.Node[]) => Ast.Node;
 
 /**

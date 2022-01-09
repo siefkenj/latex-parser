@@ -57,6 +57,7 @@
     "jest": {
         "transform": {
             "\\.js$": "babel-jest",
+            "latex.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor-latex.js",
             "\\.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor.js",
             "^.+\\.tsx?$": "ts-jest"
         }

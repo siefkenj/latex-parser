@@ -185,7 +185,7 @@ export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
  * @param {*} ast
  * @returns
  */
-export function trimEnvironmentContents(ast: Ast.Ast) {
+export function trimEnvironmentContents<T extends Ast.Ast>(ast: T): T {
     return walkAst(
         ast,
         (node) => {
@@ -210,7 +210,7 @@ export function trimEnvironmentContents(ast: Ast.Ast) {
                 node.type === "mathenv")) as Ast.TypeGuard<
             Ast.Environment | Ast.InlineMath
         >
-    );
+    ) as T;
 }
 
 /**
@@ -232,7 +232,7 @@ export class ReferenceMap {
         this.map = new Map();
         walkAst(
             this.ast,
-            (nodeList: Ast.Ast[]) => {
+            (nodeList: Ast.Node[]) => {
                 for (let i = 0; i < nodeList.length; i++) {
                     this.map.set(nodeList[i], {
                         previous: nodeList[i - 1],

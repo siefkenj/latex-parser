@@ -79,6 +79,7 @@ export function wrapPars(
             "section",
             "subsection",
             "subsubsection",
+            "vspace"
         ],
         environmentsThatDontBreakPars: [],
     }

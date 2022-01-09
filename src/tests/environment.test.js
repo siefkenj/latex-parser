@@ -16,7 +16,24 @@ describe("Processing environments tests", () => {
         let targetAst;
         let ast = latexParser.parse("\\begin{xxx}\\end{xxx}");
         let subbedAst = processEnvironment(ast, "xxx", { signature: "m" });
-        expect(subbedAst).toEqual(ast);
+        expect(subbedAst).toEqual({
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [],
+                    args: [
+                        {
+                            type: "argument",
+                            openMark: "",
+                            closeMark: "",
+                            content: [],
+                        },
+                    ],
+                },
+            ],
+        });
 
         ast = latexParser.parse("\\begin{xxx}a b c\\end{xxx}");
         subbedAst = processEnvironment(ast, "xxx", { signature: "m" });
@@ -61,7 +78,30 @@ describe("Processing environments tests", () => {
         let targetAst;
         let ast = latexParser.parse("\\begin{xxx}\\end{xxx}");
         let subbedAst = processEnvironment(ast, "xxx", { signature: "m m" });
-        expect(subbedAst).toEqual(ast);
+        expect(subbedAst).toEqual({
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [],
+                    args: [
+                        {
+                            type: "argument",
+                            openMark: "",
+                            closeMark: "",
+                            content: [],
+                        },
+                        {
+                            type: "argument",
+                            openMark: "",
+                            closeMark: "",
+                            content: [],
+                        },
+                    ],
+                },
+            ],
+        });
 
         ast = latexParser.parse("\\begin{xxx}a b c\\end{xxx}");
         subbedAst = processEnvironment(ast, "xxx", { signature: "m m" });
@@ -110,7 +150,30 @@ describe("Processing environments tests", () => {
         let targetAst;
         let ast = latexParser.parse("\\begin{xxx}\\end{xxx}");
         let subbedAst = processEnvironment(ast, "xxx", { signature: "o m" });
-        expect(subbedAst).toEqual(ast);
+        expect(subbedAst).toEqual({
+            type: "root",
+            content: [
+                {
+                    type: "environment",
+                    env: [{ type: "string", content: "xxx" }],
+                    content: [],
+                    args: [
+                        {
+                            type: "argument",
+                            openMark: "",
+                            closeMark: "",
+                            content: [],
+                        },
+                        {
+                            type: "argument",
+                            openMark: "",
+                            closeMark: "",
+                            content: [],
+                        },
+                    ],
+                },
+            ],
+        });
 
         ast = latexParser.parse("\\begin{xxx}[a] b c\\end{xxx}");
         subbedAst = processEnvironment(ast, "xxx", { signature: "o m" });

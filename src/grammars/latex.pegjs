@@ -18,6 +18,9 @@
 
 document "document" = content:token* { return createNode("root", { content }); }
 
+// This rule is used as the entry rule to parse when you know that the string only contains math
+math "math" = math_token*
+
 token "token"
     = special_macro
     / macro
