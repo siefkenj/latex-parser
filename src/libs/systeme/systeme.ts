@@ -1,4 +1,3 @@
-import { re } from "../../../dist/latex-parser";
 import { deleteComments } from "../../tools/macro-replacers";
 import { match } from "../ast";
 import * as Ast from "../ast-types";
