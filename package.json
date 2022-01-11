@@ -1,7 +1,7 @@
 {
     "name": "latex-ast-parser",
     "description": "JavaScript LaTeX parser and beautifier",
-    "version": "0.6.0",
+    "version": "0.6.2",
     "author": {
         "name": "Jason Siefken",
         "email": "siefkenj@gmail.com"
