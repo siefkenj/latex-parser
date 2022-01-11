@@ -1,4 +1,5 @@
 import * as Ast from "../ast-types";
+import { hasProp } from "../type-guards";
 import { listMathChildren } from "./render-info";
 
 export type MatcherContext = { inMathMode: boolean };
@@ -13,7 +14,7 @@ export type MatcherContext = { inMathMode: boolean };
  * @param {{triggerTime: string}} - "early" indicates that `callback` is called before `walkAst` recurses down the tree. "late" calls `callback` after it has recursed.
  * @returns {object}
  */
-export function walkAst<T extends any>(
+export function walkAst<T extends Ast.Ast>(
     ast: Ast.Ast,
     callback: (
         ast: T,
@@ -38,14 +39,14 @@ export function walkAst<T extends any>(
     if (ast == null) {
         // Early or late, we callback right before getting a null value
         if (matcher(ast, { ...context })) {
-            return callback(ast, { ...context }) as Ast.Ast;
+            return callback(ast, { ...context });
         }
         return ast;
     }
 
     if (options.triggerTime === "early") {
         if (matcher(ast, { ...context })) {
-            (ast as any) = callback(ast, { ...context });
+            ast = callback(ast, { ...context });
         }
     }
 
@@ -54,7 +55,7 @@ export function walkAst<T extends any>(
         // run `callback` after recursion for "late" trigger
         if (options.triggerTime === "late") {
             if (matcher(ast, { ...context })) {
-                (ast as any) = callback(ast, { ...context });
+                ast = callback(ast, { ...context });
             }
         }
         return ast;
@@ -63,7 +64,7 @@ export function walkAst<T extends any>(
     // We don't want to recursively apply to the `content`
     // of all types (e.g., comments and macros), so specify
     // a blacklist.
-    let childProps = ["content", "args"];
+    let childProps: ("content" | "args")[] = ["content", "args"];
     switch (ast.type) {
         case "macro":
             childProps = ["args"];
@@ -81,13 +82,14 @@ export function walkAst<T extends any>(
     let ret = { ...ast };
     const childMathModes = listMathChildren(ret);
     for (const prop of childProps) {
-        if (prop in ret) {
+        if (hasProp(ret, prop)) {
             if (childMathModes.enter.includes(prop)) {
                 context.inMathMode = true;
             } else if (childMathModes.leave.includes(prop)) {
                 context.inMathMode = false;
             }
-            (ret as any)[prop] = reapply((ret as any)[prop]);
+            let x = ret[prop];
+            ret[prop] = reapply(ret[prop]);
         }
     }
     // run `callback` after recursion for "late" trigger
@@ -109,15 +111,18 @@ export function walkAst<T extends any>(
  */
 export function replaceNode(
     ast: Ast.Ast,
-    replacer: (node: Ast.Node) => Ast.Node | Ast.Node[] | null,
-    matcher: (node: Ast.Node) => boolean
+    replacer: (
+        node: Ast.Node,
+        context?: MatcherContext
+    ) => Ast.Node | Ast.Node[] | null,
+    matcher: (node: Ast.Node, context?: MatcherContext) => boolean
 ): Ast.Ast {
     return walkAst(
         ast,
-        (array: Ast.Node[]) =>
+        (array: Ast.Node[], context) =>
             array.flatMap((node) => {
-                if (matcher(node)) {
-                    return replacer(node) || [];
+                if (matcher(node, context)) {
+                    return replacer(node, context) || [];
                 } else {
                     return node;
                 }

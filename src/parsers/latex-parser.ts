@@ -1,5 +1,5 @@
 import * as prettierPluginLatex from "../prettier-plugin-latex";
-import { parse, printRaw } from "./parser";
+import { parse, parseMath, printRaw } from "./parser";
 import {
     parseAlignEnvironment,
     createMatchers,
@@ -12,4 +12,4 @@ const astParsers = {
     utils: { ...macroUtils, createMatchers },
 };
 
-export { parse, printRaw, prettierPluginLatex, astParsers, tools };
+export { parse, parseMath, printRaw, prettierPluginLatex, astParsers, tools };

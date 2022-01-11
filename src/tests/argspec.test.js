@@ -675,6 +675,19 @@ describe("Macro arguments argspec test", () => {
             },
         });
         expect(subbedAst).toEqual(subbedAst2);
+
+        ast = latexParser.parse("\\xxx[a] b c");
+        subbedAst = attachMacroArgs(ast, {
+            xxx: {
+                signature: "o m",
+            },
+        });
+        subbedAst2 = attachMacroArgs(subbedAst, {
+            xxx: {
+                signature: "o m",
+            },
+        });
+        expect(subbedAst).toEqual(subbedAst2);
     });
 
     it("Optional and mandatory arguments parse with no whitespace", () => {

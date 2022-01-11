@@ -17,10 +17,10 @@ import { SpecialMacroSpec } from "../../package-specific-macros/types";
  * @param {object} macroInfo
  * @returns - a new AST
  */
-export function attachMacroArgs(
-    ast: Ast.Ast,
+export function attachMacroArgs<T extends Ast.Ast>(
+    ast: T,
     macros: { [macroName: string]: { signature?: string; renderInfo?: object } }
-) {
+): T {
     // We only gobble arguments when we find a macro in an array, so
     // recurse looking for arrays and then gobble.
     return walkAst(
@@ -31,7 +31,7 @@ export function attachMacroArgs(
         },
         Array.isArray,
         { triggerTime: "late" }
-    );
+    ) as T;
 }
 
 /**
@@ -333,6 +333,13 @@ export function getArgsInArray(
         if (argument) {
             // If we found an argument keep it for later
             args.push(argument);
+        } else {
+            args.push({
+                type: "argument",
+                openMark: "",
+                closeMark: "",
+                content: [],
+            });
         }
         rest = after;
     }

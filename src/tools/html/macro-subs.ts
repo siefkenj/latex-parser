@@ -2,6 +2,7 @@ import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
 import { printRaw } from "../../libs/print-raw";
+import { xcolorMacroToHex } from "../xcolor";
 
 /**
  * Returns a function that wrap the first arg of a macro
@@ -107,6 +108,64 @@ export const macroReplacements: Record<
                 href: url,
             },
             content: args[2] || [],
+        });
+    },
+    "\\": (node) =>
+        tagLikeMacro({
+            tag: "br",
+            attributes: { class: "linebreak" },
+        }),
+    vspace: (node) => {
+        const args = argContentsFromMacro(node);
+        return tagLikeMacro({
+            tag: "vspace",
+            attributes: { class: "vspace", amount: printRaw(args[1] || []) },
+            content: [],
+        });
+    },
+    textcolor: (node) => {
+        const args = argContentsFromMacro(node);
+        const computedColor = xcolorMacroToHex(node);
+        const color = computedColor.hex;
+
+        if (color) {
+            return tagLikeMacro({
+                tag: "span",
+                attributes: { style: `color: ${color};` },
+                content: args[2] || [],
+            });
+        } else {
+            // If we couldn't compute the color, it's probably a named
+            // color that wasn't supplied. In this case, we fall back to a css variable
+            return tagLikeMacro({
+                tag: "span",
+                attributes: {
+                    style: `color: var(${computedColor.cssVarName});`,
+                },
+                content: args[2] || [],
+            });
+        }
+    },
+    textsize: (node) => {
+        const args = argContentsFromMacro(node);
+        const textSize = printRaw(args[0] || []);
+        return tagLikeMacro({
+            tag: "span",
+            attributes: {
+                class: `textsize-${textSize}`,
+            },
+            content: args[1] || [],
+        });
+    },
+    makebox: (node) => {
+        const args = argContentsFromMacro(node);
+        return tagLikeMacro({
+            tag: "span",
+            attributes: {
+                class: `latex-box`,
+                style: "display: inline-block;",
+            },
+            content: args[3] || [],
         });
     },
 };

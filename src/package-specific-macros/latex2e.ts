@@ -166,10 +166,10 @@ export const macros: SpecialMacroSpec = {
     footnotemark: { signature: "o" },
     footnotetext: { signature: "o m", renderInfo: { inParMode: true } },
     // Math Commands
-    sqrt: { signature: "o m" },
-    frac: { signature: "m m" },
+    sqrt: { signature: "o m", renderInfo: { inMathMode: true } },
+    frac: { signature: "m m", renderInfo: { inMathMode: true } },
     stackrel: { signature: "m m" },
-    ensuremath: { signature: "m" },
+    ensuremath: { signature: "m", renderInfo: { inMathMode: true } },
     // Layout commands
     maketitle: { renderInfo: { breakAround: true } },
     doublespacing: { renderInfo: { breakAround: true } },
@@ -183,8 +183,6 @@ export const macros: SpecialMacroSpec = {
     thispagestyle: { signature: "m", renderInfo: { breakAround: true } },
     // Colors
     definecolor: { signature: "m m m", renderInfo: { breakAround: true } },
-    textcolor: { signature: "o m m", renderInfo: { breakAround: true } },
-    color: { signature: "o m", renderInfo: { breakAround: true } },
     pagecolor: { signature: "o m", renderInfo: { breakAround: true } },
     nopagecolor: { renderInfo: { breakAround: true } },
     multicolumn: { signature: "m m m" },

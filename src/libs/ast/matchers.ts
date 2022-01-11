@@ -10,7 +10,9 @@ import { printRaw } from "../print-raw";
  * Creates a macro matching function that uses a `SpecialMacroSpec` or list of macros
  * and generates a hash for quick lookup.
  */
-function createMacroMatcher(macros: Ast.Macro[] | string[] | SpecialMacroSpec) {
+function createMacroMatcher(
+    macros: Ast.Macro[] | string[] | Record<string, unknown>
+) {
     // We first make sure we have a record type with keys being the macro's contents
     const macrosHash = Array.isArray(macros)
         ? macros.length > 0
@@ -50,9 +52,13 @@ function createMacroMatcher(macros: Ast.Macro[] | string[] | SpecialMacroSpec) {
             return false;
         }
 
-        return (
-            spec.escapeToken == null || spec.escapeToken === node.escapeToken
-        );
+        if (typeof spec === "object" && "escapeToken" in spec) {
+            return (
+                (spec as SpecialMacroSpec).escapeToken == null ||
+                (spec as SpecialMacroSpec).escapeToken === node.escapeToken
+            );
+        }
+        return true;
     } as Ast.TypeGuard<Ast.Macro>;
 }
 

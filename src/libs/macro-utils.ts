@@ -40,39 +40,49 @@ export function splitOnMacro(
         throw new Error("Type coercion failed");
     }
     const isSeparator = match.createMacroMatcher(macroName);
-    const { segments, separators } = split(ast, isSeparator);
+    const { segments, separators } = splitOnCondition(ast, isSeparator);
     return { segments, macros: separators as Ast.Macro[] };
 }
 
 /**
  * Split a list of nodes based on whether `splitFunc` returns `true`.
- *
- * @param {[object]} nodes
- * @param {function} [splitFunc=() => false]
- * @returns {{segments: [object], separators: [object]}}
+ * If `onlySplitOnFirstOccurrence` is set to true in the `options` object, then
+ * there will be at most two segments returned.
  */
-function split(
+export function splitOnCondition(
     nodes: Ast.Node[],
-    splitFunc: (node: Ast.Ast) => boolean = () => false
-): { segments: Ast.Ast[][]; separators: Ast.Ast } {
+    splitFunc: (node: Ast.Node) => boolean = () => false,
+    options?: { onlySplitOnFirstOccurrence?: boolean }
+): { segments: Ast.Node[][]; separators: Ast.Node[] } {
     if (!Array.isArray(nodes)) {
         throw new Error(`Can only split an Array, not ${nodes}`);
     }
 
-    const segments = [];
-    const separators = [];
-    let currentSegment = [];
+    const { onlySplitOnFirstOccurrence = false } = options || {};
 
-    for (const node of nodes) {
-        if (splitFunc(node)) {
-            segments.push(currentSegment);
-            separators.push(node);
-            currentSegment = [];
-        } else {
-            currentSegment.push(node);
+    const splitIndices: number[] = [];
+    for (let i = 0; i < nodes.length; i++) {
+        if (splitFunc(nodes[i])) {
+            splitIndices.push(i);
+            if (onlySplitOnFirstOccurrence) {
+                break;
+            }
         }
     }
-    segments.push(currentSegment);
+
+    // Short circuit if there is no splitting to be done
+    if (splitIndices.length === 0) {
+        return { segments: [nodes], separators: [] };
+    }
+
+    let separators = splitIndices.map((i) => nodes[i]);
+    let segments = splitIndices.map((splitEnd, i) => {
+        const splitStart = i === 0 ? 0 : splitIndices[i - 1] + 1;
+        return nodes.slice(splitStart, splitEnd);
+    });
+    segments.push(
+        nodes.slice(splitIndices[splitIndices.length - 1] + 1, nodes.length)
+    );
 
     return { segments, separators };
 }
@@ -80,14 +90,12 @@ function split(
 /**
  * Does the reverse of splitOnMacro
  *
- * @param {{segments: [[object]], macros: [[object]]}} { segments, macros }
- * @returns {[object]}
  */
 export function unsplitOnMacro({
     segments,
     macros,
 }: {
-    segments: Ast.Ast[][];
+    segments: Ast.Node[][];
     macros: Ast.Node[] | Ast.Node[][];
 }) {
     if (segments.length === 0) {
@@ -108,6 +116,22 @@ export function unsplitOnMacro({
     }
 
     return ret;
+}
+
+/**
+ * Joins an array of arrays with the item `sep`
+ */
+export function arrayJoin<T>(array: T[][], sep: T | T[]): T[] {
+    return array.flatMap((item, i) => {
+        if (i === 0) {
+            return item;
+        }
+        if (Array.isArray(sep)) {
+            return [...sep, ...item];
+        } else {
+            return [sep, ...item];
+        }
+    });
 }
 
 /**
@@ -175,7 +199,7 @@ export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
  * @param {*} ast
  * @returns
  */
-export function trimEnvironmentContents(ast: Ast.Ast) {
+export function trimEnvironmentContents<T extends Ast.Ast>(ast: T): T {
     return walkAst(
         ast,
         (node) => {
@@ -200,7 +224,7 @@ export function trimEnvironmentContents(ast: Ast.Ast) {
                 node.type === "mathenv")) as Ast.TypeGuard<
             Ast.Environment | Ast.InlineMath
         >
-    );
+    ) as T;
 }
 
 /**
@@ -222,7 +246,7 @@ export class ReferenceMap {
         this.map = new Map();
         walkAst(
             this.ast,
-            (nodeList: Ast.Ast[]) => {
+            (nodeList: Ast.Node[]) => {
                 for (let i = 0; i < nodeList.length; i++) {
                     this.map.set(nodeList[i], {
                         previous: nodeList[i - 1],

@@ -10,16 +10,19 @@ import * as Ast from "../libs/ast-types";
 import { MatcherContext } from "../libs/ast/walkers";
 import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
+import { xcolorColorToHex } from "../libs/xcolor/xcolor";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
 import { convertToHtml } from "./html/convert";
 import { applyAll, lintAll, lints } from "./lint";
+import { replaceStreamingCommand } from "./macro-replacers";
 import {
     createMacroExpander,
     newcommandMacroToName,
     newcommandMacroToSpec,
     newcommandMacroToSubstitutionAst,
 } from "./newcommand";
+import { xcolorMacroToHex } from "./xcolor";
 
 /**
  * Returns a set containing all macros in the document.
@@ -289,6 +292,36 @@ export function pgfkeysArgToObject(
     );
 }
 
+/**
+ * Splits all multi-character strings into strings that are all single characters.
+ */
+export function splitStringsIntoSingleChars(nodes: Ast.Node[]): Ast.Node[] {
+    return nodes.flatMap((node) =>
+        match.anyString(node)
+            ? (Array.from(node.content).map((c) => ({
+                  type: "string",
+                  content: c,
+              })) as Ast.Node[])
+            : node
+    );
+}
+
+/**
+ * Use a heuristic to decide whether a string was parsed in math mode. The heuristic
+ * looks for strings of length greater than 1 or the failure for "_" and "^" to be parsed
+ * as a macro.
+ */
+export function wasParsedInMathMode(nodes: Ast.Node[]): boolean {
+    return !nodes.some(
+        (node) =>
+            // If there are multi-char strings or ^ and _ have been parsed as strings, we know
+            // that we were not parsed in math mode.
+            (match.anyString(node) && node.content.length > 1) ||
+            match.string(node, "^") ||
+            match.string(node, "_")
+    );
+}
+
 const ast = {
     trimEnvironmentContents,
     trim,
@@ -310,4 +343,7 @@ export {
     lints,
     lintAll,
     convertToHtml,
+    xcolorColorToHex,
+    xcolorMacroToHex,
+    replaceStreamingCommand,
 };

@@ -57,10 +57,10 @@ export function processEnvironment(
  *
  * @returns - a new AST
  */
-export function processEnvironments(
-    ast: Ast.Ast,
+export function processEnvironments<T extends Ast.Ast>(
+    ast: T,
     environments: SpecialEnvSpec
-) {
+): T {
     return walkAst(
         ast,
         (node) => {
@@ -89,5 +89,5 @@ export function processEnvironments(
             return ret;
         },
         match.createEnvironmentMatcher(environments)
-    );
+    ) as T;
 }

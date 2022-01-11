@@ -182,6 +182,27 @@ describe("Convert to HTML", () => {
             </ul>`)
         );
     });
+    it("Converts tabular environment", () => {
+        let ast = latexParser.parse(
+            `\\begin{tabular}{l l}a & b\\\\c & d\\end{tabular}`
+        );
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(
+                `<table class="tabular">
+                <tbody>
+                    <tr>
+                        <td>a</td>
+                        <td>b</td>
+                    </tr>
+                    <tr>
+                        <td>c</td>
+                        <td>d</td>
+                    </tr>
+                </tbody>
+            </table>`
+            )
+        );
+    });
 });
 
 describe("HTML Generation", () => {
@@ -216,5 +237,15 @@ describe("HTML Generation", () => {
             attributes: { attr1: "val1", attr2: "val2" },
         });
         expect(printRaw(tag)).toEqual('<foo attr1="val1" attr2="val2" />');
+    });
+
+    it("Macros aren't replaced with html code in math mode", () => {
+        let ast;
+
+        // Custom labels are handled
+        ast = latexParser.parse(`\\[a\\\\b\\]`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`\\[a\\\\b\\]`)
+        );
     });
 });

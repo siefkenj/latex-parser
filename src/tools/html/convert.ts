@@ -2,11 +2,20 @@ import { replaceNode } from "../../libs/ast";
 import * as Ast from "../../libs/ast-types";
 import { macroReplacements } from "./macro-subs";
 import { match } from "../../libs/ast";
-import { allEnvironments, expandUnicodeLigatures, walkAst } from "..";
+import {
+    allEnvironments,
+    expandUnicodeLigatures,
+    replaceStreamingCommand,
+    walkAst,
+} from "..";
 import { wrapPars } from "./paragraph-split";
 import { MatcherContext } from "../../libs/ast/walkers";
 import { printRaw } from "../../libs/print-raw";
 import { environmentReplacements } from "./environment-subs";
+import { deleteComments } from "../macro-replacers";
+import { isArrayTypeNode } from "typescript";
+import { streamingMacroReplacements } from "./streaming-comands-subs";
+import { katexSpecificMacroReplacements } from "./katex";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;
@@ -19,23 +28,35 @@ export function convertToHtml(
     let newAst = ast;
 
     // Remove all comments
-    newAst = replaceNode(
-        newAst,
-        (node) => {
-            if (!match.comment(node)) {
-                return node;
-            }
-
-            if (node.leadingWhitespace) {
-                return { type: "whitespace" };
-            }
-
-            return null;
-        },
-        match.comment
-    );
-
+    newAst = deleteComments(newAst);
     const environments = allEnvironments(newAst);
+
+    const streamingMacroMatcher = match.createMacroMatcher(
+        streamingMacroReplacements
+    );
+    // All streaming commands need to be converted to their non-streaming forms so that they can
+    // be properly escaped.
+    newAst = walkAst(
+        newAst,
+        (nodes) => {
+            if (
+                (Array.isArray(nodes) &&
+                    !nodes.some((node) => streamingMacroMatcher(node))) ||
+                (match.group(nodes) &&
+                    !nodes.content.some((node) => streamingMacroMatcher(node)))
+            ) {
+                // If the streaming macros don't appear, don't do anything
+                return nodes;
+            }
+            return replaceStreamingCommand(nodes, streamingMacroReplacements);
+        },
+        ((node: any, context: MatcherContext) =>
+            (match.group(node) || Array.isArray(node)) &&
+            context?.inMathMode !== true) as Ast.TypeGuard<
+            Ast.Group | Ast.Node[]
+        >,
+        { triggerTime: "late" }
+    );
 
     // Wrap paragraphs. This needs to be done before `\section{}` etc. commands
     // (i.e.,9 commands that would break a paragraph) are subbed out.
@@ -62,18 +83,6 @@ export function convertToHtml(
         }
     }
 
-    // Replace special macros, e.g. \section{} and friends, with their HTML equivalents
-    newAst = replaceNode(
-        newAst,
-        (node) => {
-            if (!match.macro(node)) {
-                return node;
-            }
-            return macroReplacements[node.content](node);
-        },
-        (node) => match.macro(node) && !!macroReplacements[node.content]
-    );
-
     // Replace special environments
     newAst = walkAst(
         newAst,
@@ -85,6 +94,34 @@ export function convertToHtml(
             return env;
         },
         match.anyEnvironment
+    );
+
+    // Replace special macros, e.g. \section{} and friends, with their HTML equivalents
+    newAst = replaceNode(
+        newAst,
+        (node) => {
+            if (!match.macro(node)) {
+                return node;
+            }
+            return macroReplacements[node.content](node);
+        },
+        (node, context) =>
+            match.macro(node) &&
+            !!macroReplacements[node.content] &&
+            context?.inMathMode !== true
+    );
+
+    // Do KaTeX-specific replacements
+    newAst = replaceNode(
+        newAst,
+        (node) => {
+            if (!match.macro(node)) {
+                return node;
+            }
+            return katexSpecificMacroReplacements[node.content](node);
+        },
+        (node, context) =>
+            match.macro(node) && !!katexSpecificMacroReplacements[node.content]
     );
 
     // This should be done near the end since some macros like `\&` should

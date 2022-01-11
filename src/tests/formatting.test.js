@@ -685,4 +685,26 @@ describe("Prettier tests", () => {
             expect(formatted).toEqual(outStr);
         }
     });
+    it("Macros and Environments with inMathMode=true specified have their contents processed as math", () => {
+        const STRINGS = [
+            {
+                inStr: "\\begin{matrix}a^2\\end{matrix}",
+                outStr: "\\begin{matrix}\n\ta^{2}\n\\end{matrix}",
+            },
+            {
+                inStr: "\\ensuremath{x^2}",
+                outStr: "\\ensuremath{x^{2}}",
+            },
+        ];
+
+        for (const { inStr, outStr } of STRINGS) {
+            const formatted = Prettier.format(inStr, {
+                printWidth: 30,
+                useTabs: true,
+                parser: "latex-parser",
+                plugins: [prettierPluginLatex],
+            });
+            expect(formatted).toEqual(outStr);
+        }
+    });
 });

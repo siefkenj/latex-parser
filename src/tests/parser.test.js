@@ -124,4 +124,10 @@ describe("Basic ast", () => {
         parsed = latexParser.parse("\\_2");
         expect(latexParser.printRaw(parsed)).toEqual("\\_2");
     });
+
+    it("Can parse math mode directly", () => {
+        let parsed;
+        parsed = latexParser.parseMath("^2");
+        expect(latexParser.printRaw(parsed)).toEqual("^{2}");
+    });
 });
