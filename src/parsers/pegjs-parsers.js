@@ -8,6 +8,7 @@ import MacroSubstitutionParser from "../grammars/macro-substitutions.pegjs";
 import LigaturesParser from "../grammars/ligatures.pegjs";
 import XColorParser from "../grammars/xcolor-expressions.pegjs";
 import TabularParser from "../grammars/tabular-spec.pegjs";
+import SystemeParser from "../grammars/systeme-environment.pegjs";
 
 export {
     LatexPegParser,
@@ -18,4 +19,5 @@ export {
     LigaturesParser,
     XColorParser,
     TabularParser,
+    SystemeParser,
 };

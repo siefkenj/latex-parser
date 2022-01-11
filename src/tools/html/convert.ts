@@ -15,6 +15,7 @@ import { environmentReplacements } from "./environment-subs";
 import { deleteComments } from "../macro-replacers";
 import { isArrayTypeNode } from "typescript";
 import { streamingMacroReplacements } from "./streaming-comands-subs";
+import { katexSpecificMacroReplacements } from "./katex";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;
@@ -108,6 +109,19 @@ export function convertToHtml(
             match.macro(node) &&
             !!macroReplacements[node.content] &&
             context?.inMathMode !== true
+    );
+
+    // Do KaTeX-specific replacements
+    newAst = replaceNode(
+        newAst,
+        (node) => {
+            if (!match.macro(node)) {
+                return node;
+            }
+            return katexSpecificMacroReplacements[node.content](node);
+        },
+        (node, context) =>
+            match.macro(node) && !!katexSpecificMacroReplacements[node.content]
     );
 
     // This should be done near the end since some macros like `\&` should

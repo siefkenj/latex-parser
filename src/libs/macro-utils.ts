@@ -90,8 +90,6 @@ export function splitOnCondition(
 /**
  * Does the reverse of splitOnMacro
  *
- * @param {{segments: [[object]], macros: [[object]]}} { segments, macros }
- * @returns {[object]}
  */
 export function unsplitOnMacro({
     segments,
@@ -118,6 +116,22 @@ export function unsplitOnMacro({
     }
 
     return ret;
+}
+
+/**
+ * Joins an array of arrays with the item `sep`
+ */
+export function arrayJoin<T>(array: T[][], sep: T | T[]): T[] {
+    return array.flatMap((item, i) => {
+        if (i === 0) {
+            return item;
+        }
+        if (Array.isArray(sep)) {
+            return [...sep, ...item];
+        } else {
+            return [sep, ...item];
+        }
+    });
 }
 
 /**

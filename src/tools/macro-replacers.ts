@@ -334,7 +334,7 @@ export function hasParbreak(nodes: Ast.Node[]) {
  * ```
  * becomes `x y`
  */
-export function deleteComments(ast: Ast.Ast): Ast.Ast {
+export function deleteComments<T extends Ast.Ast>(ast: T): T {
     return replaceNode(
         ast,
         (node) => {
@@ -349,5 +349,5 @@ export function deleteComments(ast: Ast.Ast): Ast.Ast {
             return null;
         },
         match.comment
-    );
+    ) as T;
 }
