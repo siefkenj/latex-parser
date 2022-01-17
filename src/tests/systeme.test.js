@@ -147,4 +147,21 @@ describe("XColor tests", () => {
             "\\begin{array}{crl}&x+y&=3\\\\-&y+3x&=7\\end{array}"
         );
     });
+
+    it("can preserve systeme delimiters", () => {
+        let parsed, ast;
+        parsed = latexParser.parse("$\\systeme{x+y=3,-y-3x+10=7}$");
+        ast = latexParser.tools.convertToHtml(parsed);
+        expect(printRaw(ast)).toEqual(
+            "$\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}$"
+        );
+
+        parsed = latexParser.parse(
+            "$\\sysdelim{\\{}{.}\\systeme{x+y=3,-y-3x+10=7}$"
+        );
+        ast = latexParser.tools.convertToHtml(parsed);
+        expect(printRaw(ast)).toEqual(
+            "$\\left\\{\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right.$"
+        );
+    });
 });

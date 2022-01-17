@@ -7,6 +7,7 @@ import {
     walkAst,
 } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
+import { argContentsFromMacro } from "../libs/ast/arguments";
 import { MatcherContext } from "../libs/ast/walkers";
 import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
@@ -14,8 +15,10 @@ import { xcolorColorToHex } from "../libs/xcolor/xcolor";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
 import { convertToHtml } from "./html/convert";
+import { KATEX_SUPPORT } from "./html/katex";
+import { wrapPars } from "./html/paragraph-split";
 import { applyAll, lintAll, lints } from "./lint";
-import { replaceStreamingCommand } from "./macro-replacers";
+import { deleteComments, replaceStreamingCommand } from "./macro-replacers";
 import {
     createMacroExpander,
     newcommandMacroToName,
@@ -122,7 +125,7 @@ export function getIncludedPackages(ast: Ast.Ast): IncludedPackage[] {
     return ret;
 }
 
-interface NewCommandSpec {
+export interface NewCommandSpec {
     name: string;
     signature: string;
     substitution: Ast.Ast;
@@ -330,12 +333,19 @@ const ast = {
     processEnvironment,
     parsePgfkeys,
     attachMacroArgs,
+    deleteComments,
+};
+export const html = {
+    convertToHtml,
+    wrapPars,
+    tagLikeMacro,
 };
 
 export const fixAllLints = applyAll;
 
 export {
     createMacroExpander,
+    argContentsFromMacro,
     ast,
     match,
     walkAst,
@@ -346,4 +356,5 @@ export {
     xcolorColorToHex,
     xcolorMacroToHex,
     replaceStreamingCommand,
+    KATEX_SUPPORT,
 };

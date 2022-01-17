@@ -4,6 +4,11 @@ import { listMathChildren } from "./render-info";
 
 export type MatcherContext = { inMathMode: boolean };
 
+interface WalkAstOptions {
+    triggerTime?: "early" | "late";
+    context?: MatcherContext;
+}
+
 /**
  * Walk the AST and replace a node with `callback(node)` whenever
  * `callbackTrigger(node)` returns true.
@@ -23,11 +28,15 @@ export function walkAst<T extends Ast.Ast>(
     matcher: (node: any, context?: MatcherContext) => node is T = ((
         node: Ast.Ast
     ) => false) as any,
-    options: { triggerTime?: "early" | "late"; context?: MatcherContext } = {
-        triggerTime: "early",
-        context: { inMathMode: false },
-    }
+    options?: WalkAstOptions
 ): Ast.Ast {
+    options = Object.assign(
+        {
+            triggerTime: "early",
+            context: { inMathMode: false },
+        },
+        options || {}
+    );
     const context = options.context || { inMathMode: false };
     function reapply(node: Ast.Ast) {
         return walkAst(node, callback, matcher, {
@@ -115,7 +124,8 @@ export function replaceNode(
         node: Ast.Node,
         context?: MatcherContext
     ) => Ast.Node | Ast.Node[] | null,
-    matcher: (node: Ast.Node, context?: MatcherContext) => boolean
+    matcher: (node: Ast.Node, context?: MatcherContext) => boolean,
+    options?: WalkAstOptions
 ): Ast.Ast {
     return walkAst(
         ast,
@@ -127,6 +137,7 @@ export function replaceNode(
                     return node;
                 }
             }),
-        Array.isArray
+        Array.isArray,
+        options
     );
 }

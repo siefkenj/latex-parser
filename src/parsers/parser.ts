@@ -103,6 +103,7 @@ const SPECIAL_MACROS: SpecialMacroSpec = {
     },
 };
 const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
+    index: { signature: "o m" },
     // Enumerate environments
     // XXX TODO, clean up these types
     parts: { signature: "o", processContent: cleanEnumerateBody as any },
