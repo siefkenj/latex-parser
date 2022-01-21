@@ -8,6 +8,8 @@ import KATEX_SUPPORT_LIST from "../../tables/katex-support.json";
 
 const LEFT: Ast.Macro = { type: "macro", content: "left" };
 const RIGHT: Ast.Macro = { type: "macro", content: "right" };
+const DEFAULT_LEFT_DELIM: Ast.Macro = { type: "macro", content: "{" };
+const DEFAULT_RIGHT_DELIM: Ast.String = { type: "string", content: "." };
 
 export const katexSpecificMacroReplacements: Record<
     string,
@@ -33,7 +35,7 @@ export const katexSpecificMacroReplacements: Record<
                 return [LEFT, frontDelim, ret, RIGHT, backDelim];
             }
 
-            return ret;
+            return [LEFT, DEFAULT_LEFT_DELIM, ret, RIGHT, DEFAULT_RIGHT_DELIM];
         } catch (e) {
             return node;
         }

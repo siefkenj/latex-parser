@@ -80,6 +80,10 @@ export function wrapPars(
             "subsection",
             "subsubsection",
             "vspace",
+            "smallskip",
+            "medskip",
+            "bigskip",
+            "hfill"
         ],
         environmentsThatDontBreakPars: [],
     }

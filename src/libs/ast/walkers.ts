@@ -2,12 +2,30 @@ import * as Ast from "../ast-types";
 import { hasProp } from "../type-guards";
 import { listMathChildren } from "./render-info";
 
-export type MatcherContext = { inMathMode: boolean };
+export type MatcherContext = {
+    /**
+     * Whether the node is being processed in math mode.
+     *
+     * This happens when the node is a director or indirect child
+     * of a math environment (e.g. `$abc$`), but not when an environment
+     * re-establishes text mode (e.g. `$\text{abc}$`)
+     */
+    inMathMode: boolean;
+    /**
+     * Whether the node has any ancestor that is processed in math mode.
+     */
+    hasMathModeAncestor: boolean;
+};
 
 interface WalkAstOptions {
     triggerTime?: "early" | "late";
     context?: MatcherContext;
 }
+
+const MATCHER_CONTEXT_DEFAULTS: Readonly<MatcherContext> = {
+    inMathMode: false,
+    hasMathModeAncestor: false,
+};
 
 /**
  * Walk the AST and replace a node with `callback(node)` whenever
@@ -33,11 +51,11 @@ export function walkAst<T extends Ast.Ast>(
     options = Object.assign(
         {
             triggerTime: "early",
-            context: { inMathMode: false },
+            context: MATCHER_CONTEXT_DEFAULTS,
         },
         options || {}
     );
-    const context = options.context || { inMathMode: false };
+    const context = options.context || MATCHER_CONTEXT_DEFAULTS;
     function reapply(node: Ast.Ast) {
         return walkAst(node, callback, matcher, {
             ...options,
@@ -94,10 +112,10 @@ export function walkAst<T extends Ast.Ast>(
         if (hasProp(ret, prop)) {
             if (childMathModes.enter.includes(prop)) {
                 context.inMathMode = true;
+                context.hasMathModeAncestor = true;
             } else if (childMathModes.leave.includes(prop)) {
                 context.inMathMode = false;
             }
-            let x = ret[prop];
             ret[prop] = reapply(ret[prop]);
         }
     }

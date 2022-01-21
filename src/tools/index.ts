@@ -218,7 +218,8 @@ export function expandUnicodeLigatures(ast: Ast.Ast): Ast.Ast {
         (nodes) => parseLigatures(nodes),
         ((node: any, context: MatcherContext) =>
             Array.isArray(node) &&
-            context?.inMathMode === false) as Ast.TypeGuard<Ast.Node[]>
+            context.inMathMode === false &&
+            context.hasMathModeAncestor !== true) as Ast.TypeGuard<Ast.Node[]>
     );
 }
 
