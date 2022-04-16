@@ -48,6 +48,7 @@ const SUBSTITUTION_MAP: Map<string, Ast.String> = new Map([
     ["\\P", makeString("¶")],
     ["\\S", makeString("§")],
     ["\\dots", makeString("…")],
+    ["\\ldots", makeString("…")],
     ["\\pounds", makeString("£")],
     ["\\copyright", makeString("©")],
     ...mappedLigatures,

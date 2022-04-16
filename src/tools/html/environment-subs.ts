@@ -54,7 +54,7 @@ function createCenteredElement(env: Ast.Environment) {
     return tagLikeMacro({
         tag: "center",
         attributes: { class: "center" },
-        content: wrapPars(env.content),
+        content: env.content,
     });
 }
 

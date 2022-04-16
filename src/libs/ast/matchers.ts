@@ -66,7 +66,7 @@ function createMacroMatcher(
  * Creates a macro matching function that uses a `SpecialMacroSpec` or list of macros
  * and generates a hash for quick lookup.
  */
-function createEnvironmentMatcher(macros: string[] | SpecialEnvSpec) {
+function createEnvironmentMatcher(macros: string[] | Record<string, unknown>) {
     // We first make sure we have a record type with keys being the macro's contents
     const environmentsHash = Array.isArray(macros)
         ? Object.fromEntries(

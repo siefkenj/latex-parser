@@ -1,6 +1,8 @@
 import { deleteComments } from "../../tools/macro-replacers";
-import { match } from "../ast";
+import { cloneNode, match, updateRenderInfo, walkAst } from "../ast";
 import * as Ast from "../ast-types";
+import { argContentsFromMacro } from "../ast/arguments";
+import { MatcherContext } from "../ast/walkers";
 import { arrayJoin } from "../macro-utils";
 import { printRaw } from "../print-raw";
 import { parse } from "./systeme-parser";
@@ -295,4 +297,61 @@ export function systemeContentsToArray(
     };
 
     return ret;
+}
+
+/**
+ * Find any systeme definitions, e.g. `\sysdelim{.}{.}`, and attach their information
+ * to the renderInfo of of the systeme macros.
+ *
+ */
+export function attachSystemeSettingsAsRenderInfo(ast: Ast.Ast): Ast.Ast {
+    const systemeMatcher = match.createMacroMatcher(["systeme", "sysdelim"]);
+
+    return walkAst(
+        ast,
+        (nodes) => {
+            // Find the positions of the systeme and sysdelim macros
+            const systemeLocations = nodes.flatMap((node, i) =>
+                match.macro(node, "systeme") ? i : []
+            );
+            const sysdelimLocations = nodes.flatMap((node, i) =>
+                match.macro(node, "sysdelim") ? i : []
+            );
+
+            if (
+                systemeLocations.length === 0 ||
+                sysdelimLocations.length === 0
+            ) {
+                return nodes;
+            }
+
+            const ret = [...nodes];
+            for (const i of systemeLocations) {
+                // Find any sysdelim macros that occur before
+                const lastSysdelim = Math.max(
+                    ...sysdelimLocations.filter((loc) => loc < i)
+                );
+                if (lastSysdelim >= 0) {
+                    const node = cloneNode(ret[i]);
+                    const sysdelimMacro = ret[lastSysdelim];
+                    if (!match.anyMacro(sysdelimMacro)) {
+                        throw new Error(
+                            `Expecting sysdelim macro but found "${printRaw(
+                                sysdelimMacro
+                            )}"`
+                        );
+                    }
+                    const args = argContentsFromMacro(sysdelimMacro);
+                    updateRenderInfo(node, { sysdelims: args });
+                    ret[i] = node;
+                }
+            }
+
+            return ret;
+        },
+        ((node: Ast.Node, context: MatcherContext) =>
+            Array.isArray(node) &&
+            context.inMathMode === true &&
+            node.some((n) => systemeMatcher(n))) as Ast.TypeGuard<Ast.Node[]>
+    );
 }

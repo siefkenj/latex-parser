@@ -70,8 +70,8 @@ function splitForPars(
 export function wrapPars(
     nodes: Ast.Node[],
     options: {
-        macrosThatBreakPars: string[];
-        environmentsThatDontBreakPars: string[];
+        macrosThatBreakPars?: string[];
+        environmentsThatDontBreakPars?: string[];
     } = {
         macrosThatBreakPars: [
             "part",
@@ -79,12 +79,20 @@ export function wrapPars(
             "section",
             "subsection",
             "subsubsection",
-            "vspace"
+            "vspace",
+            "smallskip",
+            "medskip",
+            "bigskip",
+            "hfill"
         ],
         environmentsThatDontBreakPars: [],
     }
 ): Ast.Node[] {
-    const parSplits = splitForPars(nodes, options);
+    const parSplits = splitForPars(nodes, {
+        macrosThatBreakPars: options.macrosThatBreakPars || [],
+        environmentsThatDontBreakPars:
+            options.environmentsThatDontBreakPars || [],
+    });
 
     return parSplits.flatMap((part) => {
         if (part.wrapInPar) {

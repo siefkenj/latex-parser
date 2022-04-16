@@ -73,6 +73,13 @@ const prefixTree = Trie(OPERATOR_NAMES);
  * Otherwise `null` is returned.
  */
 function matchesAtPos(nodes: Ast.Node[], pos: number): string | null {
+    // We don't match words that are in the middle of other letters.
+    // E.g. the `sin` in "lsinl" is not recognized, but the `sin` in "l sin l" would be.
+    const prevNode = nodes[pos - 1];
+    if (match.string(prevNode) && prevNode.content.match(/^[a-zA-Z]/)) {
+        return null;
+    }
+
     let lastPrefix = "";
     let lastWord = "";
     for (let i = 0; pos + i < nodes.length; i++) {
@@ -85,10 +92,18 @@ function matchesAtPos(nodes: Ast.Node[], pos: number): string | null {
         }
         if (prefixTree.isPrefix(lastPrefix + node.content)) {
             lastPrefix += node.content;
+        } else {
+            break;
         }
         if (prefixTree.hasWord(lastPrefix)) {
             lastWord = lastPrefix;
         }
+    }
+
+    // Make sure the next node is not a letter.
+    const nextNode = nodes[pos + lastWord.length];
+    if (match.string(nextNode) && nextNode.content.match(/^[a-zA-Z]/)) {
+        return null;
     }
 
     return lastWord ? lastWord : null;

@@ -9,6 +9,7 @@ import {
     gobbleSingleArgument,
 } from "./arguments";
 import { EnvInfo, MacroInfo } from "./types";
+import * as Ast from "../ast-types";
 
 export { EnvInfo, MacroInfo };
 
@@ -24,3 +25,10 @@ export {
     updateRenderInfo,
     gobbleSingleArgument,
 };
+
+/**
+ * Make a deep copy of the given node.
+ */
+export function cloneNode<T extends Ast.Ast>(node: T): T {
+    return JSON.parse(JSON.stringify(node));
+}

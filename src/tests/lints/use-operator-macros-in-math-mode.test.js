@@ -40,4 +40,18 @@ describe("Lint: Use operator macros in math mode", () => {
             "$a \\arg \\min \\argmin b$"
         );
     });
+    it("operators are not substituted in the middle of strings", () => {
+        let ast = latexParser.parse("$sidsin$");
+        expect(printRaw(lints.useOperatorMacrosInMathMode.fixAll(ast))).toEqual(
+            "$sidsin$"
+        );
+        ast = latexParser.parse("$sinx$");
+        expect(printRaw(lints.useOperatorMacrosInMathMode.fixAll(ast))).toEqual(
+            "$sinx$"
+        );
+        ast = latexParser.parse("$sin4$");
+        expect(printRaw(lints.useOperatorMacrosInMathMode.fixAll(ast))).toEqual(
+            "$\\sin4$"
+        );
+    });
 });

@@ -168,4 +168,6 @@ export const macroReplacements: Record<
             content: args[3] || [],
         });
     },
+    noindent: (node) => ({ type: "string", content: "" }),
+    mbox: wrapInSpanFactory({ class: "mbox" }),
 };

@@ -13,14 +13,24 @@ import { MatcherContext } from "../../libs/ast/walkers";
 import { printRaw } from "../../libs/print-raw";
 import { environmentReplacements } from "./environment-subs";
 import { deleteComments } from "../macro-replacers";
-import { isArrayTypeNode } from "typescript";
-import { streamingMacroReplacements } from "./streaming-comands-subs";
-import { katexSpecificMacroReplacements } from "./katex";
+import { streamingMacroReplacements } from "./streaming-commands-subs";
+import {
+    attachNeededRenderInfo,
+    katexSpecificEnvironmentReplacements,
+    katexSpecificMacroReplacements,
+} from "./katex";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;
 }
 
+/**
+ * Convert `ast` into HTML. Math is left in a katex-renderable form. HTML tags are simulated
+ * by creating an argument with `openMark: "<tag>"` and `closeMark: "</tag>"` and placing this
+ * argument in a macro whose contents and escape symbol are set to the empty string.
+ *
+ * The resulting AST can be converted to a string via `printRaw`.
+ */
 export function convertToHtml(
     ast: Ast.Ast,
     options: ConvertToHtmlOptions = { wrapPars: false }
@@ -112,6 +122,13 @@ export function convertToHtml(
     );
 
     // Do KaTeX-specific replacements
+    const macroMatcher = match.createMacroMatcher(
+        katexSpecificMacroReplacements
+    );
+    const environmentMatcher = match.createEnvironmentMatcher(
+        katexSpecificEnvironmentReplacements
+    );
+    newAst = attachNeededRenderInfo(newAst);
     newAst = replaceNode(
         newAst,
         (node) => {
@@ -120,8 +137,19 @@ export function convertToHtml(
             }
             return katexSpecificMacroReplacements[node.content](node);
         },
-        (node, context) =>
-            match.macro(node) && !!katexSpecificMacroReplacements[node.content]
+        macroMatcher
+    );
+    newAst = replaceNode(
+        newAst,
+        (node) => {
+            if (!match.environment(node)) {
+                return node;
+            }
+            const envName = printRaw(node.env);
+            return katexSpecificEnvironmentReplacements[envName](node);
+        },
+        environmentMatcher,
+        { triggerTime: "late" }
     );
 
     // This should be done near the end since some macros like `\&` should

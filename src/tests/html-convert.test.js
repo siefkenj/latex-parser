@@ -248,4 +248,13 @@ describe("HTML Generation", () => {
             normalizeHtml(`\\[a\\\\b\\]`)
         );
     });
+    it("Ligatures that are nested inside of math mode are not replaced", () => {
+        let ast;
+
+        // Custom labels are handled
+        ast = latexParser.parse(`$a\\text{\\#}b$`);
+        expect(normalizeHtml(printRaw(convertToHtml(ast)))).toEqual(
+            normalizeHtml(`$a\\text{\\#}b$`)
+        );
+    });
 });
