@@ -4,15 +4,7 @@
     }
 
     function createNode(type, extra = {}) {
-        const ret = { type, ...extra };
-        // Add a non-enumerable location property to `ret`. Since it is
-        // non-enumerable, it won't clutter up the syntax tree when printed.
-        Object.defineProperty(ret, "loc", {
-            value: location(),
-            enumerable: false,
-        });
-
-        return ret;
+        return { type, ...extra, position: location() };
     }
 }
 

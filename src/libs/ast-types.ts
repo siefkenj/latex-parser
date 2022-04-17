@@ -10,7 +10,7 @@ export interface GenericNode {
 interface BaseNode {
     type: string;
     _renderInfo?: any;
-    loc?: {
+    position?: {
         start: { offset: number; line: number; column: number };
         end: { offset: number; line: number; column: number };
     };

@@ -3,7 +3,7 @@ import { walkAst } from "./walkers";
 import { match } from "./matchers";
 
 /**
- * Removes any `_renderInfo` tags present in the AST.
+ * Removes any `_renderInfo` and `position` tags present in the AST.
  *
  * @export
  * @param {*} ast
@@ -13,13 +13,16 @@ export function trimRenderInfo(ast: Ast.Ast) {
     return walkAst(
         ast,
         (node) => {
-            const ret = { ...node };
-            delete ret._renderInfo;
-            return ret;
+            const { _renderInfo, position, ...ret } = node;
+            if (ret.type === "environment" || ret.type === "mathenv") {
+                ret.env = trimRenderInfo(ret.env) as Ast.Node[];
+            }
+            if (_renderInfo != null || position != null) {
+                return ret;
+            }
+            return node;
         },
-        ((node) =>
-            node != null &&
-            (node as Ast.Node)._renderInfo != null) as Ast.TypeGuard<Ast.Node>
+        ((node) => node != null) as Ast.TypeGuard<Ast.Node>
     );
 }
 

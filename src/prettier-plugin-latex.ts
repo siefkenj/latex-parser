@@ -16,8 +16,8 @@ const parsers = {
     "latex-parser": {
         parse,
         astFormat: "latex-ast",
-        locStart: (node: Ast.Node) => (node.loc ? node.loc.start.offset : 0),
-        locEnd: (node: Ast.Node) => (node.loc ? node.loc.end.offset : 1),
+        locStart: (node: Ast.Node) => (node.position ? node.position.start.offset : 0),
+        locEnd: (node: Ast.Node) => (node.position ? node.position.end.offset : 1),
     },
 };
 
