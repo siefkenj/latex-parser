@@ -1,6 +1,19 @@
 {
+    function toString(e) {
+        if (typeof e === "string") {
+            return e;
+        }
+        if (typeof e.content === "string") {
+            return e.content;
+        }
+        return e;
+    }
+
     function compare_env(g1, g2) {
-        return g1.content.join("") == g2.content.join("");
+        return (
+            g1.content.map(toString).join("") ===
+            g2.content.map(toString).join("")
+        );
     }
 
     function createNode(type, extra = {}) {
@@ -28,7 +41,7 @@ token "token"
     / number
     / whitespace
     / punctuation
-    / $(!nonchar_token .)+
+    / s:$(!nonchar_token .)+ { return createNode("string", { content: s }); }
     // If all else fails, we allow special tokens. If one of these
     // is matched, it means there is an unbalanced group.
     / begin_group
@@ -59,7 +72,7 @@ math_token "math token"
         }
     / ignore
     / whitespace
-    / .
+    / s:. { return createNode("string", { content: s }); }
 
 nonchar_token "nonchar token"
     = escape
@@ -81,9 +94,11 @@ whitespace "whitespace"
         }
 
 number "number"
-    = a:num+ "." b:num+ { return a.join("") + "." + b.join(""); }
-    / "." b:num+ { return "." + b.join(""); }
-    / a:num+ "." { return a.join("") + "."; }
+    = s:(
+        a:num+ "." b:num+ { return a.join("") + "." + b.join(""); }
+        / "." b:num+ { return "." + b.join(""); }
+        / a:num+ "." { return a.join("") + "."; }
+    ) { return createNode("string", { content: s }); }
 
 special_macro "special macro" // for the special macros like \[ \] and \begin{} \end{} etc.
     // \verb|xxx| and \verb*|xxx|
@@ -221,36 +236,44 @@ begin_env = escape "begin"
 end_env = escape "end"
 
 math_env_name
-    = "equation*"
-    / "equation"
-    / "align*"
-    / "align"
-    / "alignat*"
-    / "alignat"
-    / "gather*"
-    / "gather"
-    / "multline*"
-    / "multline"
-    / "flalign*"
-    / "flalign"
-    / "split"
-    / "math"
-    / "displaymath"
+    = e:(
+        "equation*"
+        / "equation"
+        / "align*"
+        / "align"
+        / "alignat*"
+        / "alignat"
+        / "gather*"
+        / "gather"
+        / "multline*"
+        / "multline"
+        / "flalign*"
+        / "flalign"
+        / "split"
+        / "math"
+        / "displaymath"
+    ) { return createNode("string", { content: e }); }
+
+// FOR THE FOLLOWING ITEMS:
+//
+// Most of the time these are used as a match only. However, in the case
+// of errors, we match them as strings. Therefore, it is useful to have the returned
+// match be a string node.
 
 // catcode 0
-escape "escape" = "\\"
+escape "escape" = "\\" { return createNode("string", { content: "\\" }); }
 
 // catcode 1
-begin_group = "{"
+begin_group = s:"{" { return createNode("string", { content: s }); }
 
 // catcode 2
-end_group = "}"
+end_group = s:"}" { return createNode("string", { content: s }); }
 
 // catcode 3
-math_shift = "$"
+math_shift = s:"$" { return createNode("string", { content: s }); }
 
 // catcode 4
-alignment_tab = "&"
+alignment_tab = s:"&" { return createNode("string", { content: s }); }
 
 // catcode 5 (linux, os x, windows)
 nl "newline"
@@ -259,13 +282,13 @@ nl "newline"
     / "\r\n"
 
 // catcode 6
-macro_parameter = "#"
+macro_parameter = s:"#" { return createNode("string", { content: s }); }
 
 // catcode 7
-superscript = "^"
+superscript = s:"^" { return createNode("string", { content: s }); }
 
 // catcode 8
-subscript = "_"
+subscript = s:"_" { return createNode("string", { content: s }); }
 
 // catcode 9
 ignore = "\0"
@@ -280,7 +303,10 @@ char "letter" = c:[a-zA-Z]
 num "digit" = n:[0-9]
 
 // catcode 12
-punctuation "punctuation" = p:[.,;:\-\*/()!?=+<>\[\]`'\"~]
+punctuation "punctuation"
+    = p:[.,;:\-\*/()!?=+<>\[\]`'\"~] {
+            return createNode("string", { content: p });
+        }
 
 // catcode 14, including the newline
 comment_start = "%"

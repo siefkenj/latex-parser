@@ -215,55 +215,6 @@ function attachSpecialMacroArgs<T extends Ast.Ast>(
     return ast;
 }
 
-/**
- * Recursively wraps all strings in the AST node in
- * a { type: "string", content: <original string> }
- * object.
- *
- * @param {*} node
- */
-function wrapStrings<T extends Ast.Ast | string>(
-    node: T
-): T extends string ? Ast.String : T {
-    if (node == null) {
-        return node;
-    }
-    if (typeof node === "string") {
-        return { type: "string", content: node } as any;
-    }
-    if (Array.isArray(node)) {
-        return node.map(wrapStrings) as any;
-    }
-    // At this point, `node` must be an object
-    // wrap strings that appear in children
-
-    // We don't want the `content` of a type == macro
-    // node to be wrapped, but wrap everything else
-    let childProps = ["content", "args", "env"];
-    switch (node.type) {
-        case "macro":
-            childProps = ["args"];
-            break;
-        case "comment":
-        case "string":
-        case "verb":
-        case "verbatim":
-            childProps = [];
-            break;
-        default:
-            break;
-    }
-
-    const ret: Ast.Node | Ast.Argument = { ...node };
-    for (const prop of childProps) {
-        if (prop in ret) {
-            (ret as any)[prop] = wrapStrings((ret as any)[prop]);
-        }
-    }
-
-    return ret as any;
-}
-
 for (const key in SPECIAL_MACROS) {
     if (key in LIB_SPECIAL_MACROS) {
         console.log(
@@ -341,7 +292,7 @@ export function parseMath(
     const pegAst: Ast.Node[] = PegParser.parse(str, {
         startRule: "math",
     });
-    let ast = wrapStrings(pegAst);
+    let ast = pegAst;
     ast = processMacrosAndEnvironments(ast, options);
     return ast;
 }
@@ -357,7 +308,7 @@ export function parse(
     options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
 ) {
     const pegAst: Ast.Root = PegParser.parse(str);
-    let ast = wrapStrings(pegAst);
+    let ast = pegAst;
     ast = processMacrosAndEnvironments(ast, options);
     // Now that arguments have been attached to environments and macros, we may need
     // to re-parse the contents of some environments/macro args in math mode
