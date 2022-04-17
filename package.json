@@ -25,17 +25,20 @@
         "build": "mkdirp dist; webpack"
     },
     "dependencies": {
+        "@babel/plugin-transform-modules-commonjs": "^7.17.9",
         "@types/color": "^3.0.3",
         "@types/cssesc": "^3.0.0",
         "@types/prettier": "^2.6.0",
         "@types/trie-prefix-tree": "^1.5.0",
         "color": "^4.2.3",
         "cssesc": "^3.0.0",
+        "jest-esm-transformer": "^1.0.0",
         "prettier": "^2.6.2",
-        "trie-prefix-tree": "^1.5.1"
+        "trie-prefix-tree": "^1.5.1",
+        "unified": "^10.1.2"
     },
     "devDependencies": {
-        "@babel/core": "7.17.9",
+        "@babel/core": "^7.17.9",
         "@babel/preset-env": "7.16.11",
         "@types/jest": "^27.4.1",
         "@types/node": "^17.0.24",
@@ -55,8 +58,11 @@
         "webpack-cli": "^4.9.2"
     },
     "jest": {
+        "transformIgnorePatterns": [
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile|unist.*)"
+        ],
         "transform": {
-            "\\.js$": "babel-jest",
+            "\\.m?jsx?$": "jest-esm-transformer",
             "latex.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor-latex.js",
             "\\.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor.js",
             "^.+\\.tsx?$": "ts-jest"
