@@ -10,11 +10,11 @@ export type MatcherContext = {
      * of a math environment (e.g. `$abc$`), but not when an environment
      * re-establishes text mode (e.g. `$\text{abc}$`)
      */
-    inMathMode: boolean;
+    inMathMode?: boolean;
     /**
      * Whether the node has any ancestor that is processed in math mode.
      */
-    hasMathModeAncestor: boolean;
+    hasMathModeAncestor?: boolean;
 };
 
 interface WalkAstOptions {
@@ -116,7 +116,7 @@ export function walkAst<T extends Ast.Ast>(
             } else if (childMathModes.leave.includes(prop)) {
                 context.inMathMode = false;
             }
-            ret[prop] = reapply(ret[prop]);
+            ret[prop] = reapply(ret[prop] as Ast.Ast);
         }
     }
     // run `callback` after recursion for "late" trigger

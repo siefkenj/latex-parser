@@ -1,189 +1,25 @@
-import { LatexPegParser as PegParser } from "./pegjs-parsers";
-import {
-    cleanEnumerateBody,
-    trim,
-    trimEnvironmentContents,
-    match,
-} from "../libs/macro-utils";
-import { attachMacroArgs, walkAst } from "../libs/ast";
-import * as xparseLibs from "../package-specific-macros/xparse";
-import * as latex2eLibs from "../package-specific-macros/latex2e";
-import * as mathtoolsLibs from "../package-specific-macros/mathtools";
-import * as hyperrefLibs from "../package-specific-macros/hyperref";
-import * as xcolorLibs from "../package-specific-macros/xcolor";
-import * as systemeLibs from "../package-specific-macros/systeme";
+import { attachMacroArgs } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
 
 import { printRaw } from "../libs/print-raw";
 import {
-    SpecialEnvSpec,
-    SpecialMacroSpec,
-} from "../package-specific-macros/types";
-import { processEnvironments } from "../libs/ast/environments";
-import { wasParsedInMathMode } from "../tools";
+    EnvInfoRecord,
+    MacroInfoRecord,
+} from "../unified-latex/unified-latex-types";
+import {
+    parseMathMinimal,
+    processLatexToAstViaUnified,
+} from "../unified-latex/unified-latex-util-parse";
+import {
+    environmentInfo,
+    macroInfo,
+} from "../unified-latex/unified-latex-ctan";
+import { processEnvironments } from "../unified-latex/unified-latex-util-environments";
 
-const LIB_SPECIAL_MACROS: SpecialMacroSpec = {};
-const LIB_SPECIAL_ENVS: SpecialEnvSpec = {};
-Object.assign(
-    LIB_SPECIAL_MACROS,
-    latex2eLibs.macros,
-    xparseLibs.macros,
-    mathtoolsLibs.macros,
-    hyperrefLibs.macros,
-    xcolorLibs.macros,
-    systemeLibs.macros
-);
-Object.assign(
-    LIB_SPECIAL_ENVS,
-    latex2eLibs.environments,
-    xparseLibs.environments,
-    mathtoolsLibs.environments,
-    hyperrefLibs.environments,
-    xcolorLibs.environments,
-    systemeLibs.environments
-);
-
-// A list of macros to be specially treated. The argument signature
-// for these macros is given in the `xparse` syntax.
-const SPECIAL_MACROS: SpecialMacroSpec = {
-    textlf: { signature: "m", renderInfo: { inParMode: true } },
-    // Preamble macros
-    RequirePackage: { signature: "o m", renderInfo: { pgfkeysArgs: true } },
-    // \newcommand arg signature from https://www.texdev.net/2020/08/19/the-good-the-bad-and-the-ugly-creating-document-commands
-    DeclareOption: { signature: "m m" },
-    geometry: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    // LaTeX commands
-    setlength: { signature: "m m", renderInfo: { breakAround: true } },
-    ref: { signature: "s m" },
-    cref: { signature: "s m" },
-    cpageref: { signature: "s m" },
-    label: { signature: "m" },
-    printbibliography: { renderInfo: { breakAround: true } },
-    addtocontents: { signature: "m m", renderInfo: { breakAround: true } },
-    addcontentsline: { signature: "m m m", renderInfo: { breakAround: true } },
-    contentsline: { signature: "m m m", renderInfo: { breakAround: true } },
-    bibliography: { signature: "m", renderInfo: { breakAround: true } },
-    bibliographystyle: { signature: "m", renderInfo: { breakAround: true } },
-    caption: { signature: "m", renderInfo: { breakAround: true } },
-    // Tikz
-    pgfkeys: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    tikzoption: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    tikzstyle: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    usetikzlibrary: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    pgfplotsset: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    pgfplotstabletypeset: {
-        signature: "o m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    // nicematrix
-    NiceMatrixOptions: {
-        signature: "m",
-        renderInfo: { breakAround: true, pgfkeysArgs: true },
-    },
-    mymacro: {
-        signature: "o m o",
-    },
-};
-const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
-    index: { signature: "o m" },
-    // Enumerate environments
-    // XXX TODO, clean up these types
-    parts: { signature: "o", processContent: cleanEnumerateBody as any },
-    // Aligned environments
-    tabularx: { signature: "m m", renderInfo: { alignContent: true } },
-    // Math environments
-    displaymath: { renderInfo: { inMathMode: true } },
-    // Typical amsthm environments
-    theorem: { signature: "o" },
-    lemma: { signature: "o" },
-    definition: { signature: "o" },
-    proposition: { signature: "o" },
-    corollary: { signature: "o" },
-    remark: { signature: "!o" },
-    example: { signature: "!o" },
-    // TikZ
-    tikzpicture: { signature: "o", renderInfo: { pgfkeysArgs: true } },
-    axis: { signature: "o", renderInfo: { pgfkeysArgs: true } },
-    // nicematrix
-    NiceTabular: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    NiceMatrixBlock: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    NiceArrayWithDelims: {
-        signature: "m m o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    NiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    pNiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    bNiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    BNiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    vNiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    VNiceArray: {
-        signature: "o m !o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    NiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    pNiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    bNiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    BNiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    vNiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-    VNiceMatrix: {
-        signature: "!o",
-        renderInfo: { pgfkeysArgs: true, alignContent: true },
-    },
-};
+const LIB_SPECIAL_MACROS: MacroInfoRecord = {};
+const LIB_SPECIAL_ENVS: EnvInfoRecord = {};
+Object.assign(LIB_SPECIAL_MACROS, ...Object.values(macroInfo));
+Object.assign(LIB_SPECIAL_ENVS, ...Object.values(environmentInfo));
 
 /**
  * A special environment is one that is listed in `SPECIAL_ENVIRONMENTS`,
@@ -194,9 +30,11 @@ const SPECIAL_ENVIRONMENTS: SpecialEnvSpec = {
  */
 function processSpecialEnvironments<T extends Ast.Ast>(
     ast: T,
-    specialEnvironments = SPECIAL_ENVIRONMENTS
+    specialEnvironments: EnvInfoRecord
 ): T {
-    return processEnvironments(ast, specialEnvironments);
+    ast = JSON.parse(JSON.stringify(ast));
+    processEnvironments(ast, specialEnvironments);
+    return ast;
 }
 
 /**
@@ -208,32 +46,11 @@ function processSpecialEnvironments<T extends Ast.Ast>(
  */
 function attachSpecialMacroArgs<T extends Ast.Ast>(
     ast: T,
-    specialMacros = SPECIAL_MACROS
+    specialMacros: MacroInfoRecord
 ): T {
     ast = attachMacroArgs(ast, specialMacros);
 
     return ast;
-}
-
-for (const key in SPECIAL_MACROS) {
-    if (key in LIB_SPECIAL_MACROS) {
-        console.log(
-            "Duplicate definition of macro",
-            key,
-            SPECIAL_MACROS[key],
-            LIB_SPECIAL_MACROS[key]
-        );
-    }
-}
-for (const key in SPECIAL_ENVIRONMENTS) {
-    if (key in LIB_SPECIAL_ENVS) {
-        console.log(
-            "Duplicate definition of environment",
-            key,
-            SPECIAL_ENVIRONMENTS[key],
-            LIB_SPECIAL_ENVS[key]
-        );
-    }
 }
 
 /**
@@ -241,15 +58,13 @@ for (const key in SPECIAL_ENVIRONMENTS) {
  * those listed in `options`.
  */
 function getSpecialMacrosAndEnvironments(options?: {
-    macros?: SpecialMacroSpec;
-    environments?: SpecialEnvSpec;
+    macros?: MacroInfoRecord;
+    environments?: EnvInfoRecord;
 }) {
-    const specialMacros: SpecialMacroSpec = {
-        ...SPECIAL_MACROS,
+    const specialMacros: MacroInfoRecord = {
         ...LIB_SPECIAL_MACROS,
     };
-    const specialEnvironments: SpecialEnvSpec = {
-        ...SPECIAL_ENVIRONMENTS,
+    const specialEnvironments: EnvInfoRecord = {
         ...LIB_SPECIAL_ENVS,
     };
     // Combine the special macros/environments with the passed in ones
@@ -267,7 +82,7 @@ function getSpecialMacrosAndEnvironments(options?: {
  */
 function processMacrosAndEnvironments<T extends Ast.Ast>(
     ast: T,
-    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+    options?: { macros?: MacroInfoRecord; environments?: EnvInfoRecord }
 ): T {
     const { macros: specialMacros, environments: specialEnvironments } =
         getSpecialMacrosAndEnvironments(options);
@@ -286,12 +101,10 @@ function processMacrosAndEnvironments<T extends Ast.Ast>(
  */
 export function parseMath(
     input: string | Ast.Ast,
-    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+    options?: { macros?: MacroInfoRecord; environments?: EnvInfoRecord }
 ) {
     const str = typeof input === "string" ? input : printRaw(input);
-    const pegAst: Ast.Node[] = PegParser.parse(str, {
-        startRule: "math",
-    });
+    const pegAst = parseMathMinimal(str);
     let ast = pegAst;
     ast = processMacrosAndEnvironments(ast, options);
     return ast;
@@ -305,70 +118,10 @@ export function parseMath(
  */
 export function parse(
     str = "",
-    options?: { macros?: SpecialMacroSpec; environments?: SpecialEnvSpec }
+    options?: { macros?: MacroInfoRecord; environments?: EnvInfoRecord }
 ) {
-    const pegAst: Ast.Root = PegParser.parse(str);
-    let ast = pegAst;
-    ast = processMacrosAndEnvironments(ast, options);
-    // Now that arguments have been attached to environments and macros, we may need
-    // to re-parse the contents of some environments/macro args in math mode
-    const { macros: specialMacros, environments: specialEnvironments } =
-        getSpecialMacrosAndEnvironments(options);
-
-    const mathEnvironments = Object.fromEntries(
-        Object.entries(specialEnvironments).filter(
-            ([_, spec]) => spec.renderInfo?.inMathMode === true
-        )
-    );
-    const mathEnvMatcher = match.createEnvironmentMatcher(mathEnvironments);
-    ast = walkAst(
-        ast,
-        (node) => {
-            // If we're here, we've matched an environment with contents that should
-            // be parsed in math mode. We may need to re-parse the contents.
-            if (!wasParsedInMathMode(node.content)) {
-                return { ...node, content: parseMath(node.content) };
-            }
-
-            return node;
-        },
-        mathEnvMatcher
-    ) as Ast.Root;
-    const mathMacros = Object.fromEntries(
-        Object.entries(specialMacros).filter(
-            ([_, spec]) => spec.renderInfo?.inMathMode === true
-        )
-    );
-    const mathMacroMatcher = match.createMacroMatcher(mathMacros);
-    ast = walkAst(
-        ast,
-        (node) => {
-            if (!node.args) {
-                return node;
-            }
-            let didProcess = false;
-            const args = node.args.map((arg) => {
-                if (
-                    arg.content.length > 0 &&
-                    !wasParsedInMathMode(arg.content)
-                ) {
-                    didProcess = true;
-                    return { ...arg, content: parseMath(arg.content) };
-                }
-                return arg;
-            });
-            if (!didProcess) {
-                return node;
-            }
-
-            return { ...node, args };
-        },
-        mathMacroMatcher
-    ) as Ast.Root;
-
-    ast.content = trim((ast as Ast.Root).content);
-    ast = trimEnvironmentContents(ast);
-    return ast;
+    const file = processLatexToAstViaUnified().processSync({ value: str });
+    return file.result;
 }
 
 export { printRaw };

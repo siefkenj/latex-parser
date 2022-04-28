@@ -9,6 +9,7 @@ import LigaturesParser from "../grammars/ligatures.pegjs";
 import XColorParser from "../grammars/xcolor-expressions.pegjs";
 import TabularParser from "../grammars/tabular-spec.pegjs";
 import SystemeParser from "../grammars/systeme-environment.pegjs";
+import GlueParser from "../grammars/tex-glue.pegjs";
 
 export {
     LatexPegParser,
@@ -20,4 +21,5 @@ export {
     XColorParser,
     TabularParser,
     SystemeParser,
+    GlueParser,
 };

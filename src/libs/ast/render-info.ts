@@ -1,13 +1,10 @@
 import * as Ast from "../ast-types";
 import { walkAst } from "./walkers";
 import { match } from "./matchers";
+import { updateRenderInfo } from "../../unified-latex/unified-latex-util-render-info";
 
 /**
  * Removes any `_renderInfo` and `position` tags present in the AST.
- *
- * @export
- * @param {*} ast
- * @returns
  */
 export function trimRenderInfo(ast: Ast.Ast) {
     return walkAst(
@@ -26,31 +23,15 @@ export function trimRenderInfo(ast: Ast.Ast) {
     );
 }
 
-/**
- * Updates the `._renderInfo` property on a node to include
- * whatever has been supplied to `renderInfo`. If `renderInfo`
- * is null, no update is performed.
- *
- * *This operation is destructive*
- *
- * @param {*} node
- * @param {object|null} renderInfo
- * @returns
- */
-export function updateRenderInfo(
-    node: Ast.Node,
-    renderInfo: object | null | undefined
-) {
-    if (renderInfo != null) {
-        node._renderInfo = { ...(node._renderInfo || {}), ...renderInfo };
-    }
-    return node;
-}
+export { updateRenderInfo };
 
 /**
- * List all child attributes of the current node that should be processed
+ * List all props of the current node that should be processed
  * in math mode or not in math mode. If math mode is not specified in the node's render
  * info, empty lists are returned.
+ *
+ * For example `\text{foo}` will report that `args` should *not* be processed in math mode,
+ * since it's contents should always be processed in text mode.
  */
 export function listMathChildren(node: Ast.Ast): {
     enter: string[];
@@ -73,7 +54,7 @@ export function listMathChildren(node: Ast.Ast): {
     if (match.macro(node)) {
         if (renderInfo.inMathMode === true) {
             return { enter: ["args"], leave: [] };
-        } else {
+        } else if (renderInfo.inMathMode === false) {
             return { enter: [], leave: ["args"] };
         }
     }

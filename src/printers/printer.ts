@@ -1,3 +1,4 @@
+import { Doc } from "prettier";
 import { printRaw } from "../parsers/parser";
 import { ReferenceMap } from "../libs/macro-utils";
 import * as PrettierTypes from "./prettier-types";
@@ -19,7 +20,7 @@ export function printLatexAst(
     path: PrettierTypes.FastPath,
     options: PrettierTypes.Options & { referenceMap?: ReferenceMap },
     print: PrettierTypes.RecursivePrintFunc
-) {
+): Doc {
     const node = path.getValue();
     const { renderInfo } = getNodeInfo(node, options);
 

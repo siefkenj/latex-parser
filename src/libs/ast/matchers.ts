@@ -1,9 +1,6 @@
 import { EnvInfo, MacroInfo } from ".";
-import {
-    SpecialEnvSpec,
-    SpecialMacroSpec,
-} from "../../package-specific-macros/types";
 import * as Ast from "../ast-types";
+import { MacroInfoRecord } from "../ast-types";
 import { printRaw } from "../print-raw";
 
 /**
@@ -54,8 +51,8 @@ function createMacroMatcher(
 
         if (typeof spec === "object" && "escapeToken" in spec) {
             return (
-                (spec as SpecialMacroSpec).escapeToken == null ||
-                (spec as SpecialMacroSpec).escapeToken === node.escapeToken
+                (spec as MacroInfoRecord).escapeToken == null ||
+                (spec as MacroInfoRecord).escapeToken === node.escapeToken
             );
         }
         return true;

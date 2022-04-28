@@ -4,8 +4,8 @@ import { updateRenderInfo } from "./render-info";
 import { EnvInfo } from "./types";
 import { match } from "./matchers";
 import { walkAst } from "./walkers";
-import { SpecialEnvSpec } from "../../package-specific-macros/types";
 import { printRaw } from "../print-raw";
+import { EnvInfoRecord } from "../ast-types";
 
 /**
  * Recursively search for and process an environment. Arguments are
@@ -59,7 +59,7 @@ export function processEnvironment(
  */
 export function processEnvironments<T extends Ast.Ast>(
     ast: T,
-    environments: SpecialEnvSpec
+    environments: EnvInfoRecord
 ): T {
     return walkAst(
         ast,
