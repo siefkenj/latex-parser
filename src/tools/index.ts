@@ -8,12 +8,17 @@ import {
 } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
 import { argContentsFromMacro } from "../libs/ast/arguments";
-import { MatcherContext } from "../libs/ast/walkers";
 import { trimEnvironmentContents } from "../libs/macro-utils";
 import { printRaw } from "../libs/print-raw";
-import { xcolorColorToHex } from "../libs/xcolor/xcolor";
 import { parseLigatures } from "../parsers/ligatures";
 import { parsePgfkeys } from "../parsers/pgfkeys-parser";
+import {
+    xcolorColorToHex,
+    xcolorMacroToHex,
+} from "../unified-latex/unified-latex-ctan/package/xcolor";
+import { splitStringsIntoSingleChars } from "../unified-latex/unified-latex-util-pegjs";
+import { pgfkeysArgToObject } from "../unified-latex/unified-latex-util-pgfkeys";
+import { VisitorContext } from "../unified-latex/unified-latex-util-visit";
 import { convertToHtml } from "./html/convert";
 import { KATEX_SUPPORT } from "./html/katex";
 import { wrapPars } from "./html/paragraph-split";
@@ -25,7 +30,6 @@ import {
     newcommandMacroToSpec,
     newcommandMacroToSubstitutionAst,
 } from "./newcommand";
-import { xcolorMacroToHex } from "./xcolor";
 
 /**
  * Returns a set containing all macros in the document.
@@ -216,7 +220,7 @@ export function expandUnicodeLigatures(ast: Ast.Ast): Ast.Ast {
     return walkAst(
         ast,
         (nodes) => parseLigatures(nodes),
-        ((node: any, context: MatcherContext) =>
+        ((node: any, context: VisitorContext) =>
             Array.isArray(node) &&
             context.inMathMode === false &&
             context.hasMathModeAncestor !== true) as Ast.TypeGuard<Ast.Node[]>
@@ -262,53 +266,7 @@ export function tagLikeMacro({
     return ret;
 }
 
-export function pgfkeysArgToObject(
-    arg: Ast.Argument | Ast.Node[]
-): Record<string, Ast.Node[]> {
-    function parseFront(nodes: Ast.Node[]): string {
-        return printRaw(nodes);
-    }
-    function parseBack(nodes: Ast.Node[] | undefined): Ast.Node[] {
-        if (!nodes) {
-            return [];
-        }
-        // If the only element is a group, we unwrap it
-        if (nodes.length === 1 && match.group(nodes[0])) {
-            return nodes[0].content;
-        }
-        return nodes;
-    }
-
-    let nodeList: Ast.Node[];
-    if (match.argument(arg)) {
-        nodeList = arg.content;
-    } else {
-        nodeList = arg;
-    }
-    const parsedArgs = parsePgfkeys(nodeList);
-    return Object.fromEntries(
-        parsedArgs
-            .filter((part) => part.itemParts)
-            .map((part) => [
-                parseFront(part.itemParts![0]),
-                parseBack(part.itemParts![1]),
-            ])
-    );
-}
-
-/**
- * Splits all multi-character strings into strings that are all single characters.
- */
-export function splitStringsIntoSingleChars(nodes: Ast.Node[]): Ast.Node[] {
-    return nodes.flatMap((node) =>
-        match.anyString(node)
-            ? (Array.from(node.content).map((c) => ({
-                  type: "string",
-                  content: c,
-              })) as Ast.Node[])
-            : node
-    );
-}
+export { pgfkeysArgToObject };
 
 /**
  * Use a heuristic to decide whether a string was parsed in math mode. The heuristic
@@ -325,6 +283,8 @@ export function wasParsedInMathMode(nodes: Ast.Node[]): boolean {
             match.string(node, "_")
     );
 }
+
+export { splitStringsIntoSingleChars };
 
 const ast = {
     trimEnvironmentContents,

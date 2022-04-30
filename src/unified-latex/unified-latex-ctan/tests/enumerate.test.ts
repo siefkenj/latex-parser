@@ -2,9 +2,8 @@ import { VFile } from "unified-lint-rule/lib";
 import util from "util";
 import { trimRenderInfo } from "../../../libs/ast";
 import * as Ast from "../../unified-latex-types";
-import { attachMacroArgs } from "../../unified-latex-util-arguments";
 import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
-import { printRaw } from "../../unified-latex-util-print";
+import { printRaw } from "../../unified-latex-util-print-raw";
 import { cleanEnumerateBody } from "../utils/enumerate";
 
 /* eslint-env jest */

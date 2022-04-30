@@ -1,4 +1,5 @@
 import { cleanEnumerateBody as unifiedCleanEnumerateBody } from "../unified-latex/unified-latex-ctan/utils/enumerate";
+import { decorateArrayForPegjs } from "../unified-latex/unified-latex-util-pegjs";
 import {
     arrayJoin,
     splitOnCondition,
@@ -164,35 +165,6 @@ export function markAlignEnv(node: Ast.Node) {
     return updateRenderInfo(node, { alignedContent: true });
 }
 
-type StringlikeArray = any[] & string;
-
-/**
- * Pegjs operates on strings. However, strings and arrays are very similar!
- * This function adds `charAt`, `charCodeAt`, and `substring` methods to
- * `array` so that `array` can then be fed to a Pegjs generated parser.
- *
- * @param {[object]} array
- * @returns {[object]}
- */
-export function decorateArrayForPegjs(array: any[]): StringlikeArray {
-    (array as any).charAt = function (i: number) {
-        return this[i];
-    };
-    // We don't have a hope of imitating `charCodeAt`, so
-    // make it something that won't interfere
-    (array as any).charCodeAt = () => 0;
-    (array as any).substring = function (i: number, j: number) {
-        return this.slice(i, j);
-    };
-    // This function is called when reporting an error,
-    // so we convert back to a string.
-    (array as any).replace = function (a: string, b: string) {
-        const ret = JSON.stringify(this);
-        return ret.replace(a, b);
-    };
-    return array as StringlikeArray;
-}
-
 export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
     const ret: [T, U][] = [];
     const len = Math.min(array1.length, array2.length);
@@ -201,3 +173,5 @@ export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
     }
     return ret;
 }
+
+export { decorateArrayForPegjs };

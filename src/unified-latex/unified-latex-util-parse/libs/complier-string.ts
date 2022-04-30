@@ -3,7 +3,7 @@ import Prettier from "prettier/standalone";
 import { Plugin } from "unified";
 import { printLatexAst } from "../../../printers/printer";
 import * as Ast from "../../unified-latex-types";
-import { printRaw } from "../../unified-latex-util-print";
+import { printRaw } from "../../unified-latex-util-print-raw";
 
 declare const x: Printer;
 

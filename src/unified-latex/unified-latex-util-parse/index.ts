@@ -8,6 +8,8 @@ export * from "./libs/complier-string";
 export * from "./libs/plugin-from-string";
 export * from "./libs/plugin-from-string-minimal";
 export * from "./libs/parse-minimal";
+export * from "./libs/parse";
+export * from "./libs/parse-math";
 
 export const processLatexViaUnified = () => {
     return unified()

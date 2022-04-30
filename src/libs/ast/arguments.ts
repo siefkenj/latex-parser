@@ -1,5 +1,4 @@
 import * as Ast from "../ast-types";
-import * as ArgSpec from "../argspec-types";
 import { gobbleSingleArgument as unifiedGobbleSingleArgument } from "../../unified-latex/unified-latex-util-arguments/libs/gobble-single-argument";
 import { gobbleArguments } from "../../unified-latex/unified-latex-util-arguments/libs/gobble-arguments";
 import {
@@ -7,6 +6,8 @@ import {
     attachMacroArgs as unifiedAttachMacroArgs,
 } from "../../unified-latex/unified-latex-util-arguments/libs/attach-arguments";
 import { MacroInfoRecord } from "../ast-types";
+import { ArgSpecAst } from "../../unified-latex/unified-latex-util-argspec";
+import { getArgsContent } from "../../unified-latex/unified-latex-util-arguments";
 
 /**
  * Recursively search for and attach the arguments for a
@@ -52,7 +53,7 @@ export function attachMacroArgsInArray(
  */
 export function gobbleSingleArgument(
     nodes: Ast.Node[],
-    argSpec: ArgSpec.Node,
+    argSpec: ArgSpecAst.Node,
     startPos = 0
 ): {
     rest: Ast.Node[];
@@ -91,14 +92,5 @@ export function getArgsInArray(
 export function argContentsFromMacro(
     macro: Ast.Macro | Ast.Environment
 ): (Ast.Node[] | null)[] {
-    if (!Array.isArray(macro.args)) {
-        return [];
-    }
-
-    return macro.args.map((arg) => {
-        if (arg.openMark === "" && arg.content.length === 0) {
-            return null;
-        }
-        return arg.content;
-    });
+    return getArgsContent(macro);
 }

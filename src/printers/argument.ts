@@ -3,7 +3,6 @@ import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
 import {
     getNodeInfo,
-    concat,
     formatDocArray,
     hardline,
     join,
@@ -70,7 +69,7 @@ export function printArgument(
         }
     }
 
-    return concat(rawRet);
+    return rawRet;
 }
 
 /**
@@ -99,10 +98,8 @@ function printPgfkeysArgument(
             // parts are printed using `printRaw`, `hardline` is used in place
             // of "\n"
             const parts = part.itemParts.map((node) =>
-                concat(
-                    printRaw(node, { asArray: true }).map((token) =>
-                        token === linebreak ? hardline : token
-                    )
+                printRaw(node, { asArray: true }).map((token) =>
+                    token === linebreak ? hardline : token
                 )
             );
             const row = join("=", parts);
@@ -112,9 +109,7 @@ function printPgfkeysArgument(
             }
         }
         if (part.trailingComment) {
-            const leadingContent: Doc[] = part.itemParts
-                ? [" "]
-                : [];
+            const leadingContent: Doc[] = part.itemParts ? [" "] : [];
             if (part.leadingParbreak) {
                 // We preserve parbreaks before comments, so if we have
                 // one, insert an extra hardline
@@ -144,15 +139,13 @@ function printPgfkeysArgument(
         leadingComment.push("%" + braces.leadingComment.content, breakParent);
     }
 
-    return group(
-        concat([
-            braces.openMark,
-            ...leadingComment,
-            // If there is no content, we don't want to push an extra `softline`.
-            // This matters because the braces group could still be broken by `leadingComment`
-            content.length > 0 ? indent(concat([softline, ...content])) : "",
-            softline,
-            braces.closeMark,
-        ])
-    );
+    return group([
+        braces.openMark,
+        ...leadingComment,
+        // If there is no content, we don't want to push an extra `softline`.
+        // This matters because the braces group could still be broken by `leadingComment`
+        content.length > 0 ? indent([softline, ...content]) : "",
+        softline,
+        braces.closeMark,
+    ]);
 }

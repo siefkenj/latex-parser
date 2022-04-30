@@ -4,7 +4,7 @@ import { updateRenderInfo } from "../../unified-latex-util-render-info";
 import { gobbleArguments } from "../../unified-latex-util-arguments";
 import { match } from "../../unified-latex-util-match";
 import { visit } from "../../unified-latex-util-visit";
-import { printRaw } from "../../unified-latex-util-print";
+import { printRaw } from "../../unified-latex-util-print-raw";
 
 /**
  * Performs any needed processing on the environment (as specified by `envInfo`)

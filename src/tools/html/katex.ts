@@ -1,10 +1,10 @@
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
+import KATEX_SUPPORT_LIST from "../../tables/katex-support.json";
 import {
     attachSystemeSettingsAsRenderInfo,
     systemeContentsToArray,
-} from "../../libs/systeme/systeme";
-import KATEX_SUPPORT_LIST from "../../tables/katex-support.json";
+} from "../../unified-latex/unified-latex-ctan/package/systeme/libs/systeme";
 
 const LEFT: Ast.Macro = { type: "macro", content: "left" };
 const RIGHT: Ast.Macro = { type: "macro", content: "right" };
@@ -68,7 +68,8 @@ export const katexSpecificEnvironmentReplacements: Record<
  * katex equivalents.
  */
 export function attachNeededRenderInfo(ast: Ast.Ast): Ast.Ast {
-    return attachSystemeSettingsAsRenderInfo(ast);
+    attachSystemeSettingsAsRenderInfo(ast);
+    return ast;
 }
 
 export const KATEX_SUPPORT = {

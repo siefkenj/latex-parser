@@ -2,7 +2,7 @@ import type { Doc } from "prettier";
 import { zip } from "../libs/macro-utils";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
-import { getNodeInfo, fill, concat, ESCAPE, indent } from "./common";
+import { getNodeInfo, fill, ESCAPE, indent } from "./common";
 
 export function printMacro(
     path: PrettierTypes.FastPath,
@@ -39,5 +39,5 @@ export function printMacro(
         return indent(fill([content, ...rawArgs]));
     }
 
-    return concat([content, ...rawArgs]);
+    return [content, ...rawArgs];
 }

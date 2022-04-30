@@ -9,7 +9,6 @@ import {
     walkAst,
 } from "..";
 import { wrapPars } from "./paragraph-split";
-import { MatcherContext } from "../../libs/ast/walkers";
 import { printRaw } from "../../libs/print-raw";
 import { environmentReplacements } from "./environment-subs";
 import { deleteComments } from "../macro-replacers";
@@ -19,6 +18,7 @@ import {
     katexSpecificEnvironmentReplacements,
     katexSpecificMacroReplacements,
 } from "./katex";
+import { VisitorContext } from "../../unified-latex/unified-latex-util-visit";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;
@@ -60,7 +60,7 @@ export function convertToHtml(
             }
             return replaceStreamingCommand(nodes, streamingMacroReplacements);
         },
-        ((node: any, context: MatcherContext) =>
+        ((node: any, context: VisitorContext) =>
             (match.group(node) || Array.isArray(node)) &&
             context?.inMathMode !== true) as Ast.TypeGuard<
             Ast.Group | Ast.Node[]

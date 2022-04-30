@@ -4,7 +4,7 @@ import { Plugin } from "unified";
 import { visit } from "../../unified-latex-util-visit";
 import { match } from "../../unified-latex-util-match";
 import { processEnvironment } from "./process-environment";
-import { printRaw } from "../../unified-latex-util-print";
+import { printRaw } from "../../unified-latex-util-print-raw";
 
 type PluginOptions = { environments: EnvInfoRecord } | undefined;
 

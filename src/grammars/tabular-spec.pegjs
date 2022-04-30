@@ -74,6 +74,7 @@ alignment
     = l { return { type: "alignment", alignment: "left" }; }
     / c { return { type: "alignment", alignment: "center" }; }
     / r { return { type: "alignment", alignment: "right" }; }
+    / X { return { type: "alignment", alignment: "X" }; }
     / a:(p { return "top"; } / m { return "default"; } / b { return "bottom"; })
         _*
         g:group {
@@ -110,6 +111,9 @@ b "b" = tok:. & { return options.matchChar(tok, "b"); }
 w "w" = tok:. & { return options.matchChar(tok, "w"); }
 
 W "W" = tok:. & { return options.matchChar(tok, "W"); }
+
+// Spec from the tabularx package
+X "X" = tok:. & { return options.matchChar(tok, "X"); }
 
 bang "!" = tok:. & { return options.matchChar(tok, "!"); }
 

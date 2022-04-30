@@ -3,7 +3,7 @@ import { arg, m } from "../../../unified-latex-builder";
 import * as Ast from "../../../unified-latex-types";
 import { extractFormattedGlue } from "../../../unified-latex-util-glue";
 import { match } from "../../../unified-latex-util-match";
-import { printRaw } from "../../../unified-latex-util-print";
+import { printRaw } from "../../../unified-latex-util-print-raw";
 import { scan } from "../../../unified-latex-util-scan";
 import { visit } from "../../../unified-latex-util-visit";
 

@@ -1,6 +1,4 @@
 import * as Ast from "../../unified-latex-types";
-import { listMathChildren } from "../../../libs/ast/render-info";
-import { MatcherContext } from "../../../libs/ast/walkers";
 import { match } from "../../unified-latex-util-match";
 import { visit } from "../../unified-latex-util-visit";
 import { processCommaSeparatedList } from "./arguments";

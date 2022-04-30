@@ -6,7 +6,6 @@ import {
     getNodeInfo,
     softline,
     fill,
-    concat,
     hardline,
     line,
     indent,
@@ -27,7 +26,7 @@ export function printInlineMath(
     // We special case this.
     if (node.content.length === 0) {
         // We won't allow an empty math environment to be broken
-        return concat(["$", " ", "$"]);
+        return ["$", " ", "$"];
     }
 
     let content = path.map(print, "content");
@@ -63,10 +62,10 @@ export function printDisplayMath(
         bodyStartToken.pop();
     }
 
-    return concat([
+    return [
         ESCAPE + "[",
-        indent(concat(bodyStartToken.concat(content))),
+        indent(bodyStartToken.concat(content)),
         hardline,
         ESCAPE + "]",
-    ]);
+    ];
 }

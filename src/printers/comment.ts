@@ -1,9 +1,6 @@
 import type { Doc } from "prettier";
 import * as Ast from "../libs/ast-types";
 import * as PrettierTypes from "./prettier-types";
-import {
-    concat,
-} from "./common";
 import { printRaw } from "../parsers/parser";
 
 export function printComment(
@@ -20,9 +17,6 @@ export function printComment(
         leadingWhitespace = " ";
     }
 
-    const content: Doc[] = [
-        leadingWhitespace,
-        "%" + printRaw(node.content),
-    ];
-    return concat(content);
+    const content: Doc[] = [leadingWhitespace, "%" + printRaw(node.content)];
+    return content;
 }

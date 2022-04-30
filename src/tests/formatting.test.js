@@ -562,7 +562,7 @@ describe("Prettier tests", () => {
             expect(formatted).toEqual(outStr);
         }
     });
-    it("Allows indenting of `printRaw` content", () => {
+    it("Allows indenting of `printRaw` content (e.g., content inside of a group)", () => {
         const STRINGS = [
             {
                 inStr: "\\begin{x}{%\n}\\end{x}",

@@ -1,8 +1,8 @@
 import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
-import { printRaw } from "../../libs/print-raw";
-import { xcolorMacroToHex } from "../xcolor";
+import { xcolorMacroToHex } from "../../unified-latex/unified-latex-ctan/package/xcolor";
+import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
 
 /**
  * Returns a function that wrap the first arg of a macro

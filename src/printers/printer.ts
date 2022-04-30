@@ -3,7 +3,7 @@ import { printRaw } from "../parsers/parser";
 import { ReferenceMap } from "../libs/macro-utils";
 import * as PrettierTypes from "./prettier-types";
 
-import { concat, hardline, line, ESCAPE, getNodeInfo } from "./common";
+import { hardline, line, ESCAPE, getNodeInfo } from "./common";
 import { printMacro } from "./macro";
 import { printArgument } from "./argument";
 import { printRoot } from "./root";
@@ -60,23 +60,23 @@ export function printLatexAst(
             const content = printRaw(node.content, {
                 asArray: true,
             }).map((token) => (token === linebreak ? hardline : token));
-            return concat(["{", ...content, "}"]);
+            return ["{", ...content, "}"];
         case "inlinemath":
             return printInlineMath(path, print, options);
         case "macro":
             return printMacro(path, print, options);
         case "parbreak":
-            return concat([hardline, hardline]);
+            return [hardline, hardline];
         case "string":
             return node.content;
         case "verb":
-            return concat([
+            return [
                 ESCAPE,
                 node.env,
                 node.escape,
                 printRaw(node.content),
                 node.escape,
-            ]);
+            ];
         case "verbatim":
             return printVerbatimEnvironment(path, print, options);
         case "whitespace":

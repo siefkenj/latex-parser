@@ -3,7 +3,7 @@ import { EnvInfoRecord, MacroInfoRecord } from "../../unified-latex-types";
 import { Plugin } from "unified";
 import { visit } from "../../unified-latex-util-visit";
 import { match } from "../../unified-latex-util-match";
-import { printRaw } from "../../unified-latex-util-print";
+import { printRaw } from "../../unified-latex-util-print-raw";
 import {
     unifiedLatexReparseMath,
     unifiedLatexReparseMathConstructPlugin,

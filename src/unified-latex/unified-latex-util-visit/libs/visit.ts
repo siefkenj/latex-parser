@@ -1,6 +1,20 @@
 import * as Ast from "../../unified-latex-types";
-import { listMathChildren } from "../../../libs/ast/render-info";
-import { MatcherContext } from "../../../libs/ast/walkers";
+import { listMathChildren } from "./list-math-children";
+
+export type VisitorContext = {
+    /**
+     * Whether the node is being processed in math mode.
+     *
+     * This happens when the node is a director or indirect child
+     * of a math environment (e.g. `$abc$`), but not when an environment
+     * re-establishes text mode (e.g. `$\text{abc}$`)
+     */
+    inMathMode?: boolean;
+    /**
+     * Whether the node has any ancestor that is processed in math mode.
+     */
+    hasMathModeAncestor?: boolean;
+};
 
 type GetGuard<T> = T extends (x: any) => x is infer R ? R : never;
 /**
@@ -79,12 +93,12 @@ type Visitor<T> = (
 type Visitors<T> = { enter?: Visitor<T>; leave?: Visitor<T> };
 
 type VisitOptions = {
-    startingContext?: MatcherContext;
+    startingContext?: VisitorContext;
     test?: (node: Ast.Ast, info: VisitInfo) => boolean;
     includeArrays?: boolean;
 };
 
-const DEFAULT_CONTEXT: MatcherContext = {
+const DEFAULT_CONTEXT: VisitorContext = {
     inMathMode: false,
     hasMathModeAncestor: false,
 };
@@ -109,7 +123,7 @@ export type VisitInfo = {
     /**
      * The LaTeX context of the current match.
      */
-    readonly context: MatcherContext;
+    readonly context: VisitorContext;
 };
 
 /**
