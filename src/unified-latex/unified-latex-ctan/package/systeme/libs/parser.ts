@@ -2,7 +2,7 @@ import * as Ast from "../../../../unified-latex-types";
 import * as SystemeSpec from "./types";
 import { match } from "../../../../unified-latex-util-match";
 import { decorateArrayForPegjs } from "../../../../unified-latex-util-pegjs";
-import { SystemeParser } from "../../../../../parsers/pegjs-parsers";
+import { SystemePegParser } from "../../../../unified-latex-util-pegjs/libs/pegjs-parsers";
 
 type SystemeMatchers = {
     at?: string;
@@ -71,5 +71,5 @@ export function parse(
     ast = decorateArrayForPegjs([...ast]);
     // matchers are passed in via the second argument (the `options` argument)
     // so they are available from within the Pegjs grammar.
-    return SystemeParser.parse(ast, createMatchers(options || {}));
+    return SystemePegParser.parse(ast, createMatchers(options || {}));
 }

@@ -1,12 +1,8 @@
-import Color from "color";
-import { DVI_PS_NAMES, SVG_NAMES, X11_NAMES } from "./predefined-colors";
-import { XColor } from "./types";
-import { parse as xcolorParser } from "./parser";
 import * as Ast from "../../../../unified-latex-types";
 import { getArgsContent } from "../../../../unified-latex-util-arguments";
 import { printRaw } from "../../../../unified-latex-util-print-raw";
 import { xcolorColorToHex } from "./xcolor";
-import { structuredClone } from "../../../../../libs/structured-clone";
+import { structuredClone } from "../../../../structured-clone";
 import { deleteComments } from "../../../../unified-latex-util-comments";
 
 /**

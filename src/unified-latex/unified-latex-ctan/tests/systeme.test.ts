@@ -27,12 +27,6 @@ describe("unified-latex-ctan:systeme", () => {
     let value: string | undefined;
     let file: VFile | undefined;
 
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        return trimRenderInfo((file.result as any).content) as Ast.Node[];
-    }
-
     const SYSTEME_STRINGS = [
         "c",
         "x+y",

@@ -2,10 +2,10 @@ import * as Ast from "../ast-types";
 import { getArgsInArray } from "./arguments";
 import { updateRenderInfo } from "./render-info";
 import { EnvInfo } from "./types";
-import { match } from "./matchers";
 import { walkAst } from "./walkers";
-import { printRaw } from "../print-raw";
 import { EnvInfoRecord } from "../ast-types";
+import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
+import { match } from "../../unified-latex/unified-latex-util-match";
 
 /**
  * Recursively search for and process an environment. Arguments are

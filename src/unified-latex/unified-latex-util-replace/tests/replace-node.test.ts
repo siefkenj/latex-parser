@@ -24,7 +24,8 @@ describe("unified-latex-replace", () => {
     function strToNodes(str: string) {
         value = str;
         file = processLatexToAstViaUnified().processSync({ value });
-        return trimRenderInfo((file.result as any).content) as Ast.Node[];
+        const root = trimRenderInfo(file.result as any) as Ast.Root;
+        return root.content;
     }
 
     it("can replace nodes", () => {

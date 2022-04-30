@@ -1,9 +1,9 @@
 import util from "util";
 
-import * as latexParser from "../../parsers/parser";
 import { lints } from "../../tools/lint";
+import * as latexParser from "../../unified-latex/unified-latex-util-parse";
+import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
 
-const { printRaw } = latexParser;
 /* eslint-env jest */
 
 // Make console.log pretty-print by default

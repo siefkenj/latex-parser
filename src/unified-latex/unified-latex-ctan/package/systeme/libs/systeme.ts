@@ -4,7 +4,7 @@ import { printRaw } from "../../../../unified-latex-util-print-raw";
 import { match } from "../../../../unified-latex-util-match";
 import { arrayJoin } from "../../../../unified-latex-util-split";
 import { parse } from "./parser";
-import { structuredClone } from "../../../../../libs/structured-clone";
+import { structuredClone } from "../../../../structured-clone";
 import { deleteComments } from "../../../../unified-latex-util-comments";
 import { visit } from "../../../../unified-latex-util-visit";
 import { updateRenderInfo } from "../../../../unified-latex-util-render-info";

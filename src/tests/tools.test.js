@@ -1,10 +1,10 @@
 import util from "util";
 import { tools } from "../parsers/latex-parser";
 import { trimRenderInfo } from "../libs/ast";
-import * as latexParser from "../parsers/parser";
 import { splitStringsIntoSingleChars, wasParsedInMathMode } from "../tools";
+import * as latexParser from "../unified-latex/unified-latex-util-parse";
+import { printRaw } from "../unified-latex/unified-latex-util-print-raw";
 
-const { printRaw } = latexParser;
 /* eslint-env jest */
 
 // Make console.log pretty-print by default

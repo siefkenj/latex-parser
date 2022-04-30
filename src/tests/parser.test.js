@@ -1,6 +1,6 @@
 import util from "util";
-
-import * as latexParser from "../parsers/parser";
+import { parse, parseMath } from "../unified-latex/unified-latex-util-parse";
+import { printRaw } from "../unified-latex/unified-latex-util-print-raw";
 
 /* eslint-env jest */
 
@@ -12,19 +12,19 @@ console.log = (...args) => {
 
 describe("Basic parse", () => {
     it("Parses empty string", () => {
-        latexParser.parse("");
+        parse("");
     });
 
     it("Parses inline math", () => {
-        latexParser.parse("$x^2$");
+        parse("$x^2$");
     });
 
     it("Parses displaystyle math", () => {
-        latexParser.parse(String.raw`\[x^2\]`);
+        parse(String.raw`\[x^2\]`);
     });
 
     it("Parses text", () => {
-        latexParser.parse("hi, I am text");
+        parse("hi, I am text");
     });
 });
 
@@ -49,7 +49,7 @@ describe("Basic ast", () => {
             String.raw`\begin{comment}$\end{comment}`,
         ];
         for (const str of FLAT_STRINGS) {
-            expect(latexParser.printRaw(latexParser.parse(str))).toMatch(str);
+            expect(printRaw(parse(str))).toMatch(str);
         }
         const STRINGS_WITH_EXCESS_SPACE = [
             [
@@ -71,63 +71,61 @@ describe("Basic ast", () => {
         ];
 
         for (const [inStr, outStr] of STRINGS_WITH_EXCESS_SPACE) {
-            expect(latexParser.printRaw(latexParser.parse(inStr))).toMatch(
-                outStr
-            );
+            expect(printRaw(parse(inStr))).toMatch(outStr);
         }
     });
 
     it("Puts braces around arguments", () => {
-        const parsed = latexParser.parse("\\mathbb X");
-        expect(latexParser.printRaw(parsed)).toEqual("\\mathbb{X}");
+        const parsed = parse("\\mathbb X");
+        expect(printRaw(parsed)).toEqual("\\mathbb{X}");
     });
 
     it("Parses unbalanced groups/unbalanced math", () => {
-        let parsed = latexParser.parse("{");
-        expect(latexParser.printRaw(parsed)).toEqual("{");
+        let parsed = parse("{");
+        expect(printRaw(parsed)).toEqual("{");
 
-        parsed = latexParser.parse("}");
-        expect(latexParser.printRaw(parsed)).toEqual("}");
+        parsed = parse("}");
+        expect(printRaw(parsed)).toEqual("}");
 
-        parsed = latexParser.parse("$$");
-        expect(latexParser.printRaw(parsed)).toEqual("$$");
+        parsed = parse("$$");
+        expect(printRaw(parsed)).toEqual("$$");
 
-        parsed = latexParser.parse("$$$");
-        expect(latexParser.printRaw(parsed)).toEqual("$$$");
+        parsed = parse("$$$");
+        expect(printRaw(parsed)).toEqual("$$$");
 
-        parsed = latexParser.parse("$$x$");
-        expect(latexParser.printRaw(parsed)).toEqual("$$x$");
+        parsed = parse("$$x$");
+        expect(printRaw(parsed)).toEqual("$$x$");
 
-        parsed = latexParser.parse("{{{}{}}{}{{{}");
-        expect(latexParser.printRaw(parsed)).toEqual("{{{}{}}{}{{{}");
+        parsed = parse("{{{}{}}{}{{{}");
+        expect(printRaw(parsed)).toEqual("{{{}{}}{}{{{}");
     });
 
     it("Parses \\^ and \\_ macros correctly (e.g. doesn't attach an argument to them)", () => {
-        let parsed = latexParser.parse("^2");
-        expect(latexParser.printRaw(parsed)).toEqual("^2");
+        let parsed = parse("^2");
+        expect(printRaw(parsed)).toEqual("^2");
 
-        parsed = latexParser.parse("$^2$");
-        expect(latexParser.printRaw(parsed)).toEqual("$^{2}$");
+        parsed = parse("$^2$");
+        expect(printRaw(parsed)).toEqual("$^{2}$");
 
-        parsed = latexParser.parse("\\^2");
-        expect(latexParser.printRaw(parsed)).toEqual("\\^2");
+        parsed = parse("\\^2");
+        expect(printRaw(parsed)).toEqual("\\^2");
 
-        parsed = latexParser.parse("$\\^2$");
-        expect(latexParser.printRaw(parsed)).toEqual("$\\^2$");
+        parsed = parse("$\\^2$");
+        expect(printRaw(parsed)).toEqual("$\\^2$");
 
-        parsed = latexParser.parse("_2");
-        expect(latexParser.printRaw(parsed)).toEqual("_2");
+        parsed = parse("_2");
+        expect(printRaw(parsed)).toEqual("_2");
 
-        parsed = latexParser.parse("$_2$");
-        expect(latexParser.printRaw(parsed)).toEqual("$_{2}$");
+        parsed = parse("$_2$");
+        expect(printRaw(parsed)).toEqual("$_{2}$");
 
-        parsed = latexParser.parse("\\_2");
-        expect(latexParser.printRaw(parsed)).toEqual("\\_2");
+        parsed = parse("\\_2");
+        expect(printRaw(parsed)).toEqual("\\_2");
     });
 
     it("Can parse math mode directly", () => {
         let parsed;
-        parsed = latexParser.parseMath("^2");
-        expect(latexParser.printRaw(parsed)).toEqual("^{2}");
+        parsed = parseMath("^2");
+        expect(printRaw(parsed)).toEqual("^{2}");
     });
 });

@@ -2,11 +2,11 @@ import util from "util";
 import prettier from "prettier";
 import { tools } from "../parsers/latex-parser";
 
-import * as latexParser from "../parsers/parser";
 import { convertToHtml } from "../tools/html/convert";
 import { wrapPars } from "../tools/html/paragraph-split";
+import * as latexParser from "../unified-latex/unified-latex-util-parse";
+import { printRaw } from "../unified-latex/unified-latex-util-print-raw";
 
-const { printRaw } = latexParser;
 function normalizeHtml(str) {
     return prettier.format(str, { parser: "html" });
 }

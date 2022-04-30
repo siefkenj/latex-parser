@@ -1,8 +1,8 @@
 import type { Plugin, Printer } from "prettier";
 
-import { parse } from "./parsers/parser";
-import { printLatexAst } from "./printers/printer";
-import * as Ast from "./libs/ast-types";
+import { printLatexAst } from "./prettier-plugin-latex/printer";
+import * as Ast from "./unified-latex/unified-latex-types";
+import { parse } from "./unified-latex/unified-latex-util-parse";
 
 const languages = [
     {
@@ -16,8 +16,10 @@ const parsers = {
     "latex-parser": {
         parse,
         astFormat: "latex-ast",
-        locStart: (node: Ast.Node) => (node.position ? node.position.start.offset : 0),
-        locEnd: (node: Ast.Node) => (node.position ? node.position.end.offset : 1),
+        locStart: (node: Ast.Node) =>
+            node.position ? node.position.start.offset : 0,
+        locEnd: (node: Ast.Node) =>
+            node.position ? node.position.end.offset : 1,
     },
 };
 

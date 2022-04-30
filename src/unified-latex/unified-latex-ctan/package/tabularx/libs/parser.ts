@@ -1,4 +1,4 @@
-import { TabularParser } from "../../../../../parsers/pegjs-parsers";
+import { TabularPegParser } from "../../../../unified-latex-util-pegjs/libs/pegjs-parsers";
 import * as Ast from "../../../../unified-latex-types";
 import { match } from "../../../../unified-latex-util-match";
 import {
@@ -31,5 +31,5 @@ export function parseTabularSpec(ast: Ast.Node[]): TabularSpec.TabularColumn[] {
     ast = decorateArrayForPegjs([...ast]);
     // matchers are passed in via the second argument (the `options` argument)
     // so they are available from within the Pegjs grammar.
-    return TabularParser.parse(ast, createMatchers());
+    return TabularPegParser.parse(ast, createMatchers());
 }

@@ -1,7 +1,7 @@
 import { Printer } from "prettier";
 import Prettier from "prettier/standalone";
 import { Plugin } from "unified";
-import { printLatexAst } from "../../../printers/printer";
+import { printLatexAst } from "../../../prettier-plugin-latex/printer/printer";
 import * as Ast from "../../unified-latex-types";
 import { printRaw } from "../../unified-latex-util-print-raw";
 

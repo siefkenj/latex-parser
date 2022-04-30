@@ -1,8 +1,8 @@
 import util from "util";
 
-import * as latexParser from "../parsers/parser";
 import * as macroUtils from "../libs/macro-utils";
 import { replaceNode, trimRenderInfo, match } from "../libs/ast";
+import * as latexParser from "../unified-latex/unified-latex-util-parse";
 
 /* eslint-env jest */
 

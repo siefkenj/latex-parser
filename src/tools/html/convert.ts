@@ -9,7 +9,6 @@ import {
     walkAst,
 } from "..";
 import { wrapPars } from "./paragraph-split";
-import { printRaw } from "../../libs/print-raw";
 import { environmentReplacements } from "./environment-subs";
 import { deleteComments } from "../macro-replacers";
 import { streamingMacroReplacements } from "./streaming-commands-subs";
@@ -19,6 +18,7 @@ import {
     katexSpecificMacroReplacements,
 } from "./katex";
 import { VisitorContext } from "../../unified-latex/unified-latex-util-visit";
+import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;

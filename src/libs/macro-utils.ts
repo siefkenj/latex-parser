@@ -9,7 +9,6 @@ import {
 import {
     walkAst,
     trimRenderInfo,
-    updateRenderInfo,
     match,
     trim,
     processEnvironment,
@@ -152,17 +151,6 @@ export class ReferenceMap {
     getNextNode(node: Ast.Ast): Ast.Node | undefined {
         return (this.map.get(node) || ({} as any)).next;
     }
-}
-
-/**
- * Adds `_renderInfo.alignedContent = true` to the specified node.
- *
- * @export
- * @param {object} node
- * @returns {object}
- */
-export function markAlignEnv(node: Ast.Node) {
-    return updateRenderInfo(node, { alignedContent: true });
 }
 
 export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {

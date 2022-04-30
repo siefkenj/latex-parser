@@ -1,8 +1,7 @@
-import { parseTexGlue, printGlue } from "../../../parsers/glue";
 import * as Ast from "../../unified-latex-types";
 import { match } from "../../unified-latex-util-match";
-
-export { parseTexGlue };
+import { parseTexGlue } from "./parse";
+import { printGlue } from "./print-glue";
 
 /**
  * Finds patterns matching TeX glue in `nodes`. A pretty-formatted version

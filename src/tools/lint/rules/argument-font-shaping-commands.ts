@@ -3,8 +3,8 @@ import * as Ast from "../../../libs/ast-types";
 import { match } from "../../../libs/ast";
 import { Lint, LintPlugin } from "../types";
 import { cachedMacroLookup } from "../cache";
-import { printRaw } from "../../../libs/print-raw";
 import { tools } from "../../../parsers/latex-parser";
+import { printRaw } from "../../../unified-latex/unified-latex-util-print-raw";
 import {
     firstSignificantNode,
     hasParbreak,

@@ -1,4 +1,4 @@
-import { match } from "../../libs/ast/matchers";
+import { match } from "./libs/match";
 
 export { match };
 

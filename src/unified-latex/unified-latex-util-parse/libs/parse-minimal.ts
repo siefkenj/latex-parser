@@ -1,4 +1,4 @@
-import { LatexPegParser } from "../../../parsers/pegjs-parsers";
+import { LatexPegParser } from "../../unified-latex-util-pegjs/libs/pegjs-parsers";
 import * as Ast from "../../unified-latex-types";
 
 /**

@@ -28,7 +28,8 @@ describe("unified-latex-ctan:xcolor", () => {
     function strToNodes(str: string) {
         value = str;
         file = processLatexToAstViaUnified().processSync({ value });
-        return trimRenderInfo((file.result as any).content) as Ast.Node[];
+        const root = trimRenderInfo(file.result as any) as Ast.Root;
+        return root.content;
     }
 
     /**

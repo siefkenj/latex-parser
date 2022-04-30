@@ -9,15 +9,19 @@ import {
 import * as Ast from "../libs/ast-types";
 import { argContentsFromMacro } from "../libs/ast/arguments";
 import { trimEnvironmentContents } from "../libs/macro-utils";
-import { printRaw } from "../libs/print-raw";
-import { parseLigatures } from "../parsers/ligatures";
-import { parsePgfkeys } from "../parsers/pgfkeys-parser";
+import { structuredClone } from "../unified-latex/structured-clone";
 import {
     xcolorColorToHex,
     xcolorMacroToHex,
 } from "../unified-latex/unified-latex-ctan/package/xcolor";
+import { parseLigatures } from "../unified-latex/unified-latex-util-ligatures";
+import { expandMacros as unifiedExpandMacros } from "../unified-latex/unified-latex-util-macros";
 import { splitStringsIntoSingleChars } from "../unified-latex/unified-latex-util-pegjs";
-import { pgfkeysArgToObject } from "../unified-latex/unified-latex-util-pgfkeys";
+import {
+    parsePgfkeys,
+    pgfkeysArgToObject,
+} from "../unified-latex/unified-latex-util-pgfkeys";
+import { printRaw } from "../unified-latex/unified-latex-util-print-raw";
 import { VisitorContext } from "../unified-latex/unified-latex-util-visit";
 import { convertToHtml } from "./html/convert";
 import { KATEX_SUPPORT } from "./html/katex";
@@ -175,40 +179,14 @@ export function getNewCommands(ast: Ast.Ast): NewCommandSpec[] {
  * in it). This function assumes that the appropriate arguments have already been attached
  * to each macro specified. If the macro doesn't have it's arguments attached, its
  * contents will be wholesale replaced with its substitution AST.
- *
- * @export
- * @param {Ast.Ast} ast
- * @param {Record<string, Ast.Ast>} macros
- * @returns {Ast.Ast}
  */
 export function expandMacros(
     ast: Ast.Ast,
-    macros: { name: string; substitution: Ast.Ast }[]
+    macros: { name: string; substitution: Ast.Node[] }[]
 ): Ast.Ast {
-    const expanderCache = new Map(
-        macros.map((spec) => [
-            spec.name,
-            createMacroExpander(spec.substitution),
-        ])
-    );
-    let ret = walkAst(
-        ast,
-        (node) => {
-            const macroName = node.content;
-            const expander = expanderCache.get(macroName);
-            if (!expander) {
-                return node;
-            }
-            // This type might be incompatible! We take care to flatten the tree before returning it.
-            return expander(node) as any;
-        },
-        match.anyMacro
-    );
-    // After our substitutions, an array might have ended up where it shouldn't have.
-    // Make sure to all the arrays before returning.
-    ret = walkAst(ret, (array) => array.flat(), Array.isArray);
-
-    return ret;
+    ast = structuredClone(ast);
+    unifiedExpandMacros(ast, macros);
+    return ast;
 }
 
 /**
