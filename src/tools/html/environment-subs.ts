@@ -1,13 +1,15 @@
 import cssesc from "cssesc";
-import { match, trim } from "../../libs/ast";
+import { match } from "../../libs/ast";
 import { tagLikeMacro } from "..";
 import * as Ast from "../../libs/ast-types";
-import { printRaw } from "../../libs/print-raw";
 import { wrapPars } from "./paragraph-split";
-import { parseAlignEnvironment } from "../../parsers/align-environment-parser";
-import { argContentsFromMacro } from "../../libs/ast/arguments";
-import { parseTabularSpec } from "../../libs/tabular/tabular-spec-parser";
-import { TabularColumn } from "../../libs/tabular/tabular-spec-types";
+import {
+    parseTabularSpec,
+    TabularColumn,
+} from "../../unified-latex/unified-latex-ctan/package/tabularx";
+import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
+import { parseAlignEnvironment } from "../../unified-latex/unified-latex-util-align";
+import { getArgsContent } from "../../unified-latex/unified-latex-util-arguments";
 
 function enumerateFactory(parentTag = "ol", className = "enumerate") {
     return function enumerateToHtml(env: Ast.Environment) {
@@ -60,7 +62,7 @@ function createCenteredElement(env: Ast.Environment) {
 
 function createTableFromTabular(env: Ast.Environment) {
     const tabularBody = parseAlignEnvironment(env.content);
-    const args = argContentsFromMacro(env);
+    const args = getArgsContent(env);
     let columnSpecs: TabularColumn[] = [];
     try {
         columnSpecs = parseTabularSpec(args[1] || []);

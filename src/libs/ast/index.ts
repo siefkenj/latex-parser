@@ -1,4 +1,3 @@
-import { match } from "./matchers";
 import { trim } from "./trim";
 import { replaceNode, walkAst } from "./walkers";
 import { trimRenderInfo, updateRenderInfo } from "./render-info";
@@ -10,6 +9,7 @@ import {
 } from "./arguments";
 import { EnvInfo, MacroInfo } from "./types";
 import * as Ast from "../ast-types";
+import { match } from "../../unified-latex/unified-latex-util-match";
 
 export { EnvInfo, MacroInfo };
 

@@ -1,28 +1,14 @@
+import { VisitorContext } from "../../unified-latex/unified-latex-util-visit";
+import { listMathChildren } from "../../unified-latex/unified-latex-util-visit/libs/list-math-children";
 import * as Ast from "../ast-types";
 import { hasProp } from "../type-guards";
-import { listMathChildren } from "./render-info";
-
-export type MatcherContext = {
-    /**
-     * Whether the node is being processed in math mode.
-     *
-     * This happens when the node is a director or indirect child
-     * of a math environment (e.g. `$abc$`), but not when an environment
-     * re-establishes text mode (e.g. `$\text{abc}$`)
-     */
-    inMathMode: boolean;
-    /**
-     * Whether the node has any ancestor that is processed in math mode.
-     */
-    hasMathModeAncestor: boolean;
-};
 
 interface WalkAstOptions {
     triggerTime?: "early" | "late";
-    context?: MatcherContext;
+    context?: VisitorContext;
 }
 
-const MATCHER_CONTEXT_DEFAULTS: Readonly<MatcherContext> = {
+const MATCHER_CONTEXT_DEFAULTS: Readonly<VisitorContext> = {
     inMathMode: false,
     hasMathModeAncestor: false,
 };
@@ -41,9 +27,9 @@ export function walkAst<T extends Ast.Ast>(
     ast: Ast.Ast,
     callback: (
         ast: T,
-        context?: MatcherContext
+        context?: VisitorContext
     ) => T extends Ast.Node ? Ast.Node : T,
-    matcher: (node: any, context?: MatcherContext) => node is T = ((
+    matcher: (node: any, context?: VisitorContext) => node is T = ((
         node: Ast.Ast
     ) => false) as any,
     options?: WalkAstOptions
@@ -116,7 +102,7 @@ export function walkAst<T extends Ast.Ast>(
             } else if (childMathModes.leave.includes(prop)) {
                 context.inMathMode = false;
             }
-            ret[prop] = reapply(ret[prop]);
+            ret[prop] = reapply(ret[prop] as Ast.Ast);
         }
     }
     // run `callback` after recursion for "late" trigger
@@ -140,9 +126,9 @@ export function replaceNode(
     ast: Ast.Ast,
     replacer: (
         node: Ast.Node,
-        context?: MatcherContext
+        context?: VisitorContext
     ) => Ast.Node | Ast.Node[] | null,
-    matcher: (node: Ast.Node, context?: MatcherContext) => boolean,
+    matcher: (node: Ast.Node, context?: VisitorContext) => boolean,
     options?: WalkAstOptions
 ): Ast.Ast {
     return walkAst(

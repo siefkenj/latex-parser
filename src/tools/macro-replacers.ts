@@ -1,12 +1,7 @@
 import { trim, match, replaceNode } from "../libs/ast";
 import * as Ast from "../libs/ast-types";
 import { trimLeft, trimRight } from "../libs/ast/trim";
-import {
-    splitOnCondition,
-    splitOnMacro,
-    unsplitOnMacro,
-} from "../libs/macro-utils";
-import { printRaw } from "../libs/print-raw";
+import { splitOnCondition, unsplitOnMacro } from "../libs/macro-utils";
 
 /**
  *

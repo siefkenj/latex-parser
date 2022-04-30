@@ -1,7 +1,14 @@
+import { cleanEnumerateBody as unifiedCleanEnumerateBody } from "../unified-latex/unified-latex-ctan/utils/enumerate";
+import { decorateArrayForPegjs } from "../unified-latex/unified-latex-util-pegjs";
+import {
+    arrayJoin,
+    splitOnCondition,
+    splitOnMacro,
+    unsplitOnMacro,
+} from "../unified-latex/unified-latex-util-split";
 import {
     walkAst,
     trimRenderInfo,
-    updateRenderInfo,
     match,
     trim,
     processEnvironment,
@@ -20,119 +27,13 @@ export function hasPreambleCode(nodes: Ast.Node[]) {
     return nodes.some((node) => match.macro(node, "documentclass"));
 }
 
-/**
- * Split an array of AST nodes based on a macro. An object `{segments: [], macros: []}`
- * is returned. The original array is reconstructed as
- * `segments[0] + macros[0] + segments[1] + ...`.
- *
- * @param {[object]} ast
- * @param {(string|[string])} macroName
- * @returns {{segments: [object], macros: [object]}}
- */
-export function splitOnMacro(
-    ast: Ast.Node[],
-    macroName: string | string[]
-): { segments: Ast.Ast[][]; macros: Ast.Macro[] } {
-    if (typeof macroName === "string") {
-        macroName = [macroName];
-    }
-    if (!Array.isArray(macroName)) {
-        throw new Error("Type coercion failed");
-    }
-    const isSeparator = match.createMacroMatcher(macroName);
-    const { segments, separators } = splitOnCondition(ast, isSeparator);
-    return { segments, macros: separators as Ast.Macro[] };
-}
+export { splitOnMacro };
 
-/**
- * Split a list of nodes based on whether `splitFunc` returns `true`.
- * If `onlySplitOnFirstOccurrence` is set to true in the `options` object, then
- * there will be at most two segments returned.
- */
-export function splitOnCondition(
-    nodes: Ast.Node[],
-    splitFunc: (node: Ast.Node) => boolean = () => false,
-    options?: { onlySplitOnFirstOccurrence?: boolean }
-): { segments: Ast.Node[][]; separators: Ast.Node[] } {
-    if (!Array.isArray(nodes)) {
-        throw new Error(`Can only split an Array, not ${nodes}`);
-    }
+export { splitOnCondition };
 
-    const { onlySplitOnFirstOccurrence = false } = options || {};
+export { unsplitOnMacro };
 
-    const splitIndices: number[] = [];
-    for (let i = 0; i < nodes.length; i++) {
-        if (splitFunc(nodes[i])) {
-            splitIndices.push(i);
-            if (onlySplitOnFirstOccurrence) {
-                break;
-            }
-        }
-    }
-
-    // Short circuit if there is no splitting to be done
-    if (splitIndices.length === 0) {
-        return { segments: [nodes], separators: [] };
-    }
-
-    let separators = splitIndices.map((i) => nodes[i]);
-    let segments = splitIndices.map((splitEnd, i) => {
-        const splitStart = i === 0 ? 0 : splitIndices[i - 1] + 1;
-        return nodes.slice(splitStart, splitEnd);
-    });
-    segments.push(
-        nodes.slice(splitIndices[splitIndices.length - 1] + 1, nodes.length)
-    );
-
-    return { segments, separators };
-}
-
-/**
- * Does the reverse of splitOnMacro
- *
- */
-export function unsplitOnMacro({
-    segments,
-    macros,
-}: {
-    segments: Ast.Node[][];
-    macros: Ast.Node[] | Ast.Node[][];
-}) {
-    if (segments.length === 0) {
-        console.warn("Trying to join zero segments");
-        return [];
-    }
-    if (segments.length !== macros.length + 1) {
-        console.warn(
-            "Mismatch between lengths of macros and segments when trying to unsplit"
-        );
-    }
-
-    let ret = segments[0];
-    for (let i = 0; i < macros.length; i++) {
-        // Even though the type of macros[i] is node and not array,
-        // Array.concat still works
-        ret = ret.concat(macros[i]).concat(segments[i + 1]);
-    }
-
-    return ret;
-}
-
-/**
- * Joins an array of arrays with the item `sep`
- */
-export function arrayJoin<T>(array: T[][], sep: T | T[]): T[] {
-    return array.flatMap((item, i) => {
-        if (i === 0) {
-            return item;
-        }
-        if (Array.isArray(sep)) {
-            return [...sep, ...item];
-        } else {
-            return [sep, ...item];
-        }
-    });
-}
+export { arrayJoin };
 
 /**
  * Clean up any whitespace issues in an enumerate environment. In particular,
@@ -149,48 +50,8 @@ export function arrayJoin<T>(array: T[][], sep: T | T[]): T[] {
  * @returns {[object]}
  */
 export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
-    let { segments, macros } = splitOnMacro(ast, itemName);
-    // Trim the content of each block, but make sure there is a space
-    // between each macro and the content. Since the first segment of content
-    // appears *before* any macro, don't add a space there.
-    segments = (segments as Ast.Node[][])
-        .map(trim)
-        .map((content, i) =>
-            i === 0 || (content as any[]).length === 0
-                ? content
-                : [{ type: "whitespace" }].concat(content)
-        ) as Ast.Ast[][];
-
-    // We want a trailing indent for the `\item` nodes. We will
-    // do this with a trick: we will add an argument to the index node
-    // with openMark=" " and closeMark=""
-    let body: any[] = macros.map((node, i) => {
-        const segment = segments[i + 1];
-        const newNode = { ...node } as Ast.Macro;
-        newNode.args = [
-            ...(newNode.args || []),
-            {
-                type: "argument",
-                content: segment,
-                openMark: "",
-                closeMark: "",
-            } as Ast.Argument,
-        ];
-        updateRenderInfo(newNode, { inParMode: true });
-        return newNode;
-    });
-
-    // We want a parbreak between each `\item` block and the preceding
-    // content. We may or may not start with content, so act accordingly
-    if (segments[0].length === 0) {
-        body = body.map((macro, i) =>
-            i === 0 ? macro : [{ type: "parbreak" }, macro]
-        );
-    } else {
-        body = body.map((macro) => [{ type: "parbreak" }, macro]);
-    }
-
-    return [].concat(segments[0] as any, ...body);
+    ast = JSON.parse(JSON.stringify(ast));
+    return unifiedCleanEnumerateBody(ast, itemName);
 }
 
 /**
@@ -292,46 +153,6 @@ export class ReferenceMap {
     }
 }
 
-/**
- * Adds `_renderInfo.alignedContent = true` to the specified node.
- *
- * @export
- * @param {object} node
- * @returns {object}
- */
-export function markAlignEnv(node: Ast.Node) {
-    return updateRenderInfo(node, { alignedContent: true });
-}
-
-type StringlikeArray = any[] & string;
-
-/**
- * Pegjs operates on strings. However, strings and arrays are very similar!
- * This function adds `charAt`, `charCodeAt`, and `substring` methods to
- * `array` so that `array` can then be fed to a Pegjs generated parser.
- *
- * @param {[object]} array
- * @returns {[object]}
- */
-export function decorateArrayForPegjs(array: any[]): StringlikeArray {
-    (array as any).charAt = function (i: number) {
-        return this[i];
-    };
-    // We don't have a hope of imitating `charCodeAt`, so
-    // make it something that won't interfere
-    (array as any).charCodeAt = () => 0;
-    (array as any).substring = function (i: number, j: number) {
-        return this.slice(i, j);
-    };
-    // This function is called when reporting an error,
-    // so we convert back to a string.
-    (array as any).replace = function (a: string, b: string) {
-        const ret = JSON.stringify(this);
-        return ret.replace(a, b);
-    };
-    return array as StringlikeArray;
-}
-
 export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
     const ret: [T, U][] = [];
     const len = Math.min(array1.length, array2.length);
@@ -340,3 +161,5 @@ export function zip<T, U>(array1: T[], array2: U[]): [T, U][] {
     }
     return ret;
 }
+
+export { decorateArrayForPegjs };
