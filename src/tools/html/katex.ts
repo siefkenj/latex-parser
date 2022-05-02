@@ -1,10 +1,10 @@
 import * as Ast from "../../libs/ast-types";
 import { argContentsFromMacro } from "../../libs/ast/arguments";
-import KATEX_SUPPORT_LIST from "../../tables/katex-support.json";
+import KATEX_SUPPORT_LIST from "unified-latex/support-tables/katex-support.json";
 import {
     attachSystemeSettingsAsRenderInfo,
     systemeContentsToArray,
-} from "../../unified-latex/unified-latex-ctan/package/systeme/libs/systeme";
+} from "unified-latex/unified-latex-ctan/package/systeme/libs/systeme";
 
 const LEFT: Ast.Macro = { type: "macro", content: "left" };
 const RIGHT: Ast.Macro = { type: "macro", content: "right" };

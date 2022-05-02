@@ -1,6 +1,6 @@
 import util from "util";
-import { parse, parseMath } from "../unified-latex/unified-latex-util-parse";
-import { printRaw } from "../unified-latex/unified-latex-util-print-raw";
+import { parse, parseMath } from "unified-latex/unified-latex-util-parse";
+import { printRaw } from "unified-latex/unified-latex-util-print-raw";
 
 /* eslint-env jest */
 

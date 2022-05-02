@@ -1,6 +1,6 @@
-import { VisitorContext } from "../../unified-latex/unified-latex-util-visit";
-import { listMathChildren } from "../../unified-latex/unified-latex-util-visit/libs/list-math-children";
-import * as Ast from "../ast-types";
+import { VisitorContext } from "unified-latex/unified-latex-util-visit";
+import { listMathChildren } from "unified-latex/unified-latex-util-visit/libs/list-math-children";
+import * as Ast from "unified-latex/unified-latex-types";
 import { hasProp } from "../type-guards";
 
 interface WalkAstOptions {

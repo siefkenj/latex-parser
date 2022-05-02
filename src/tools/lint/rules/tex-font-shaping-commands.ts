@@ -3,7 +3,7 @@ import * as Ast from "../../../libs/ast-types";
 import { match } from "../../../libs/ast";
 import { Lint, LintPlugin } from "../types";
 import { cachedMacroLookup } from "../cache";
-import { printRaw } from "../../../unified-latex/unified-latex-util-print-raw";
+import { printRaw } from "unified-latex/unified-latex-util-print-raw";
 
 const REPLACEMENTS: Record<string, Ast.Macro> = {
     bf: { type: "macro", content: "bfseries" },

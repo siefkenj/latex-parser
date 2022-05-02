@@ -2,8 +2,8 @@ import {
     trim as trimMutate,
     trimEnd,
     trimStart,
-} from "../../unified-latex/unified-latex-util-trim";
-import * as Ast from "../ast-types";
+} from "unified-latex/unified-latex-util-trim";
+import * as Ast from "unified-latex/unified-latex-types";
 
 /**
  * Trims whitespace and parbreaks from the start and end

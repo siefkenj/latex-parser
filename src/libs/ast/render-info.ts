@@ -1,6 +1,6 @@
 import * as Ast from "../ast-types";
 import { walkAst } from "./walkers";
-import { updateRenderInfo } from "../../unified-latex/unified-latex-util-render-info";
+import { updateRenderInfo } from "unified-latex/unified-latex-util-render-info";
 
 /**
  * Removes any `_renderInfo` and `position` tags present in the AST.

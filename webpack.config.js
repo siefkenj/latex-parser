@@ -6,7 +6,7 @@ module.exports = {
         "latex-parser": "./src/parsers/latex-parser.ts",
     },
     mode: "development",
-    devtool: "source-map",
+    devtool: "inline-source-map",
     output: {
         filename: "[name].js",
         path: path.resolve(__dirname, "dist"),

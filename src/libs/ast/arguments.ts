@@ -1,13 +1,13 @@
 import * as Ast from "../ast-types";
-import { gobbleSingleArgument as unifiedGobbleSingleArgument } from "../../unified-latex/unified-latex-util-arguments/libs/gobble-single-argument";
-import { gobbleArguments } from "../../unified-latex/unified-latex-util-arguments/libs/gobble-arguments";
+import { gobbleSingleArgument as unifiedGobbleSingleArgument } from "unified-latex/unified-latex-util-arguments/libs/gobble-single-argument";
+import { gobbleArguments } from "unified-latex/unified-latex-util-arguments/libs/gobble-arguments";
 import {
     attachMacroArgsInArray as unifiedAttachMacroArgsInArray,
     attachMacroArgs as unifiedAttachMacroArgs,
-} from "../../unified-latex/unified-latex-util-arguments/libs/attach-arguments";
+} from "unified-latex/unified-latex-util-arguments/libs/attach-arguments";
 import { MacroInfoRecord } from "../ast-types";
-import { ArgSpecAst } from "../../unified-latex/unified-latex-util-argspec";
-import { getArgsContent } from "../../unified-latex/unified-latex-util-arguments";
+import { ArgSpecAst } from "unified-latex/unified-latex-util-argspec";
+import { getArgsContent } from "unified-latex/unified-latex-util-arguments";
 
 /**
  * Recursively search for and attach the arguments for a

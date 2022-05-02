@@ -6,10 +6,10 @@ import { wrapPars } from "./paragraph-split";
 import {
     parseTabularSpec,
     TabularColumn,
-} from "../../unified-latex/unified-latex-ctan/package/tabularx";
-import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
-import { parseAlignEnvironment } from "../../unified-latex/unified-latex-util-align";
-import { getArgsContent } from "../../unified-latex/unified-latex-util-arguments";
+} from "unified-latex/unified-latex-ctan/package/tabularx";
+import { printRaw } from "unified-latex/unified-latex-util-print-raw";
+import { parseAlignEnvironment } from "unified-latex/unified-latex-util-align";
+import { getArgsContent } from "unified-latex/unified-latex-util-arguments";
 
 function enumerateFactory(parentTag = "ol", className = "enumerate") {
     return function enumerateToHtml(env: Ast.Environment) {

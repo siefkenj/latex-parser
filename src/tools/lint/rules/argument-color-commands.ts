@@ -1,5 +1,5 @@
 import { replaceNode, trim } from "../../../libs/ast";
-import * as Ast from "../../../libs/ast-types";
+import * as Ast from "unified-latex/unified-latex-types";
 import { match } from "../../../libs/ast";
 import { Lint, LintPlugin } from "../types";
 import { cachedMacroLookup } from "../cache";

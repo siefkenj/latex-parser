@@ -9,7 +9,7 @@ import {
 } from "./arguments";
 import { EnvInfo, MacroInfo } from "./types";
 import * as Ast from "../ast-types";
-import { match } from "../../unified-latex/unified-latex-util-match";
+import { match } from "unified-latex/unified-latex-util-match";
 
 export { EnvInfo, MacroInfo };
 

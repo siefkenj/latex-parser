@@ -1,11 +1,11 @@
-import { cleanEnumerateBody as unifiedCleanEnumerateBody } from "../unified-latex/unified-latex-ctan/utils/enumerate";
-import { decorateArrayForPegjs } from "../unified-latex/unified-latex-util-pegjs";
+import { cleanEnumerateBody as unifiedCleanEnumerateBody } from "unified-latex/unified-latex-ctan/utils/enumerate";
+import { decorateArrayForPegjs } from "unified-latex/unified-latex-util-pegjs";
 import {
     arrayJoin,
     splitOnCondition,
     splitOnMacro,
     unsplitOnMacro,
-} from "../unified-latex/unified-latex-util-split";
+} from "unified-latex/unified-latex-util-split";
 import {
     walkAst,
     trimRenderInfo,

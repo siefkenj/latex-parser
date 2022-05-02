@@ -1,7 +1,7 @@
 import util from "util";
 
 import { walkAst } from "../libs/ast";
-import * as latexParser from "../unified-latex/unified-latex-util-parse";
+import * as latexParser from "unified-latex/unified-latex-util-parse";
 
 /* eslint-env jest */
 

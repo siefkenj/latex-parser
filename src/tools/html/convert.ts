@@ -17,8 +17,8 @@ import {
     katexSpecificEnvironmentReplacements,
     katexSpecificMacroReplacements,
 } from "./katex";
-import { VisitorContext } from "../../unified-latex/unified-latex-util-visit";
-import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
+import { VisitorContext } from "unified-latex/unified-latex-util-visit";
+import { printRaw } from "unified-latex/unified-latex-util-print-raw";
 
 export interface ConvertToHtmlOptions {
     wrapPars?: boolean;

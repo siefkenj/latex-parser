@@ -1,7 +1,7 @@
 import util from "util";
 
-import * as latexParser from "../../unified-latex/unified-latex-util-parse";
-import { printRaw } from "../../unified-latex/unified-latex-util-print-raw";
+import * as latexParser from "unified-latex/unified-latex-util-parse";
+import { printRaw } from "unified-latex/unified-latex-util-print-raw";
 import { lints } from "../../tools/lint";
 
 /* eslint-env jest */
