@@ -4,6 +4,7 @@ import util from "util";
 import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
 import { processLatexToAstViaUnified } from "..";
+import { trim } from "../../unified-latex-util-trim";
 
 /* eslint-env jest */
 
@@ -13,7 +14,7 @@ console.log = (...args) => {
     origLog(...args.map((x) => util.inspect(x, false, 10, true)));
 };
 
-describe("unified-latex-parse", () => {
+describe("unified-latex-util-parse", () => {
     let value: string | undefined;
     let file: VFile | undefined;
 
@@ -24,12 +25,52 @@ describe("unified-latex-parse", () => {
         return root.content;
     }
 
-    it("can parse", () => {
-        value = "$\\frac{ab^2}{5}$";
-        file = processLatexToAstViaUnified().processSync({ value });
+    it("trims whitespace/parbreaks in math environments", () => {
+        // Display math
+        let targetAst = strToNodes("\\[\\]");
 
-        //       console.log(file.result);
-        //    console.log(processLatexToAstViaUnifiedNew().parse({ value }));
-        //console.log(parse(value))
+        let ast = strToNodes("\\[ \\]");
+        expect(ast).toEqual(targetAst);
+
+        ast = strToNodes("\\[\n\\]");
+        expect(ast).toEqual(targetAst);
+
+        // Inline math
+        ast = strToNodes("$ $");
+        expect(ast).toEqual([{ type: "inlinemath", content: [] }]);
+
+        ast = strToNodes("$\n$");
+        expect(ast).toEqual([{ type: "inlinemath", content: [] }]);
+
+        // Environments
+        targetAst = strToNodes("\\begin{equation}\\end{equation}");
+
+        ast = strToNodes("\\begin{equation} \\end{equation}");
+        expect(ast).toEqual(targetAst);
+
+        ast = strToNodes("\\begin{equation}\n \\end{equation}");
+        expect(ast).toEqual(targetAst);
+        // Display math
+    });
+
+    it("merges whitespace and parbreaks", () => {
+        // wrap the parbreak in a group so that it doesn't get trimmed by the parser
+        let targetAst = strToNodes("{\n\n}");
+
+        let ast = strToNodes("{\n}");
+        trim(ast);
+        expect(ast).not.toEqual(targetAst);
+
+        ast = strToNodes("{\n\n\n}");
+        trim(ast);
+        expect(ast).toEqual(targetAst);
+
+        ast = strToNodes("{\n\n \n}");
+        trim(ast);
+        expect(ast).toEqual(targetAst);
+
+        ast = strToNodes("{\n\n \n\n}");
+        trim(ast);
+        expect(ast).toEqual(targetAst);
     });
 });

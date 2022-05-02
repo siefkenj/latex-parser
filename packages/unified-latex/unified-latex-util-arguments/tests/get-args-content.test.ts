@@ -1,10 +1,8 @@
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { attachMacroArgs } from "../libs/attach-arguments";
 import { getArgsContent } from "../libs/get-args-content";
+import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
 
@@ -15,15 +13,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-arguments", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
 
     it("can get args content", () => {
         // Recursively apply substitutions in groups

@@ -1,37 +1,17 @@
 import Prettier from "prettier/standalone";
-import prettierPluginLatex from "../prettier-plugin-latex";
-
-expect.extend({
-    toFormatAs(inStr, outStr, formatter) {
-        if (typeof formatter !== "function") {
-            throw new Error(
-                "Must pass in a formatting function as the second argument when using `toFormatAs`"
-            );
-        }
-        const formatted = formatter(inStr);
-
-        const pass = this.equals(formatted, outStr);
-
-        return {
-            pass,
-            message: () =>
-                `When formatting\n\n${this.utils.EXPECTED_COLOR(
-                    inStr
-                )}\n\nthe output did ${
-                    pass ? "" : "not"
-                } format correctly\n\n${this.utils.printDiffOrStringify(
-                    outStr,
-                    formatted,
-                    "Expected",
-                    "Received"
-                )}`,
-        };
-    },
-});
+import { prettierPluginLatex } from "../libs/prettier-plugin-latex";
+import "../../test-common";
 
 /* eslint-env jest */
 
-describe("Prettier tests", () => {
+describe("unified-latex-prettier", () => {
+    const formatter = (x: string) =>
+        Prettier.format(x, {
+            printWidth: 30,
+            useTabs: true,
+            parser: "latex-parser",
+            plugins: [prettierPluginLatex],
+        });
     it("prints latex code", () => {
         const STRINGS = [
             { inStr: "$x^{21}$", outStr: "$x^{21}$" },
@@ -65,14 +45,6 @@ describe("Prettier tests", () => {
             },
             { inStr: "\\begin{xx}\\end{xx}", outStr: "\\begin{xx}\n\\end{xx}" },
         ];
-
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
 
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
@@ -132,14 +104,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -165,14 +129,6 @@ describe("Prettier tests", () => {
             { inStr: "$\na%\n$", outStr: "$a%\n$" },
             { inStr: "$%xmom\na%\n$", outStr: "$%xmom\na%\n$" },
         ];
-
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
 
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
@@ -213,14 +169,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -235,14 +183,6 @@ describe("Prettier tests", () => {
             { inStr: "\\verb!{! y", outStr: "\\verb!{! y" },
             { inStr: "\\verb!%!\ny", outStr: "\\verb!%! y" },
         ];
-
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
 
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
@@ -292,14 +232,6 @@ describe("Prettier tests", () => {
                 outStr: "\\begin{a}\n\t\\begin{comment}\n\n\n  $\\end{comment}\n\\end{a}",
             },
         ];
-
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
 
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
@@ -367,14 +299,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -440,14 +364,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -473,14 +389,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -498,14 +406,6 @@ describe("Prettier tests", () => {
             },
         ];
 
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
-
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);
         }
@@ -518,14 +418,6 @@ describe("Prettier tests", () => {
                 outStr: "\\mathbb{x%matrix\n}",
             },
         ];
-
-        const formatter = (x) =>
-            Prettier.format(x, {
-                printWidth: 30,
-                useTabs: true,
-                parser: "latex-parser",
-                plugins: [prettierPluginLatex],
-            });
 
         for (const { inStr, outStr } of STRINGS) {
             expect(inStr).toFormatAs(outStr, formatter);

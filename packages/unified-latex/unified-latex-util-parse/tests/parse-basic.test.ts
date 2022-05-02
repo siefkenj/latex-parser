@@ -1,16 +1,18 @@
 import util from "util";
-import { parse, parseMath } from "unified-latex/unified-latex-util-parse";
-import { printRaw } from "unified-latex/unified-latex-util-print-raw";
+import * as Ast from "../../unified-latex-types";
+import { parse } from "../libs/parse";
+import { printRaw } from "../../unified-latex-util-print-raw";
+import { parseMath } from "../libs/parse-math";
 
 /* eslint-env jest */
 
 // Make console.log pretty-print by default
-export const origLog = console.log;
+const origLog = console.log;
 console.log = (...args) => {
     origLog(...args.map((x) => util.inspect(x, false, 10, true)));
 };
 
-describe("Basic parse", () => {
+describe("unified-latex-util-parse", () => {
     it("Parses empty string", () => {
         parse("");
     });
@@ -26,9 +28,7 @@ describe("Basic parse", () => {
     it("Parses text", () => {
         parse("hi, I am text");
     });
-});
 
-describe("Basic ast", () => {
     it("Renders flat strings correctly", () => {
         const FLAT_STRINGS = [
             String.raw`"some words with spaces"`,
@@ -73,11 +73,6 @@ describe("Basic ast", () => {
         for (const [inStr, outStr] of STRINGS_WITH_EXCESS_SPACE) {
             expect(printRaw(parse(inStr))).toMatch(outStr);
         }
-    });
-
-    it("Puts braces around arguments", () => {
-        const parsed = parse("\\mathbb X");
-        expect(printRaw(parsed)).toEqual("\\mathbb{X}");
     });
 
     it("Parses unbalanced groups/unbalanced math", () => {
@@ -127,5 +122,10 @@ describe("Basic ast", () => {
         let parsed;
         parsed = parseMath("^2");
         expect(printRaw(parsed)).toEqual("^{2}");
+    });
+
+    it("Puts braces around arguments", () => {
+        const parsed = parse("\\mathbb X");
+        expect(printRaw(parsed)).toEqual("\\mathbb{X}");
     });
 });

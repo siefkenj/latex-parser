@@ -24,7 +24,7 @@
     ],
     "scripts": {
         "debug": "node --nolazy --inspect-brk=9229 ./dist/latex-parser.js",
-        "test": "jest src",
+        "test": "jest src && npm run test -w unified-latex",
         "watch": "webpack --watch",
         "build": "mkdirp dist; webpack"
     },

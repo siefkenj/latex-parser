@@ -1,12 +1,9 @@
-import { strictEqual } from "assert";
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { printRaw } from "../../unified-latex-util-print-raw";
 import { expandUnicodeLigatures } from "../libs/expand-unicode-ligatures";
 import { parseLigatures } from "../libs/parse";
+import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
 
@@ -17,16 +14,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-ligatures", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("can replace string ligatures", () => {
         let ast = strToNodes("a---b");
         expect(printRaw(parseLigatures(ast))).toEqual("a—b");

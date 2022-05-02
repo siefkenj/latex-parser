@@ -1,67 +1,7 @@
 import Prettier from "prettier/standalone";
-import { printLatexAst } from "../../unified-latex-prettier";
+import { prettierPluginLatex } from "../../unified-latex-prettier";
 import * as Ast from "../../unified-latex-types";
-import { parse } from "../../unified-latex-util-parse";
-
-declare global {
-    namespace jest {
-        interface Matchers<R> {
-            toFormatAs(obj: any, formatter: any): R;
-        }
-    }
-}
-
-expect.extend({
-    toFormatAs(inStr, outStr, formatter) {
-        if (typeof formatter !== "function") {
-            throw new Error(
-                "Must pass in a formatting function as the second argument when using `toFormatAs`"
-            );
-        }
-        const formatted = formatter(inStr);
-
-        const pass = this.equals(formatted, outStr);
-
-        return {
-            pass,
-            message: () =>
-                `When formatting\n\n${this.utils.EXPECTED_COLOR(
-                    inStr
-                )}\n\nthe output did ${
-                    pass ? "" : "not"
-                } format correctly\n\n${this.utils.printDiffOrStringify(
-                    outStr,
-                    formatted,
-                    "Expected",
-                    "Received",
-                    false
-                )}`,
-        };
-    },
-});
-
-// We declare the prettier plugin here rather than import it from `prettier-plugin-latex` to avoid
-// a circular dependency.
-const prettierPluginLatex = {
-    languages: [
-        {
-            name: "latex",
-            extensions: [".tex"],
-            parsers: ["latex-parser"],
-        },
-    ],
-    parsers: {
-        "latex-parser": {
-            parse,
-            astFormat: "latex-ast",
-            locStart: (node: Ast.Node) =>
-                node.position ? node.position.start.offset : 0,
-            locEnd: (node: Ast.Node) =>
-                node.position ? node.position.end.offset : 1,
-        },
-    },
-    printers: { "latex-ast": { print: printLatexAst as any } },
-};
+import "../../test-common";
 
 /* eslint-env jest */
 

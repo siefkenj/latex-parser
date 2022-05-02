@@ -1,9 +1,7 @@
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
+import { strToNodes } from "../../test-common";
 import * as Ast from "../../unified-latex-types";
 import { attachMacroArgs } from "../../unified-latex-util-arguments";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import { splitOnMacro } from "../libs/split-on-macro";
 import { unsplitOnMacro } from "../libs/unsplit-on-macro";
 
@@ -16,16 +14,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-split", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("splits based on a macro", () => {
         // basic splitting
         let ast = strToNodes("a\\xxx b c\\xxx x y z");

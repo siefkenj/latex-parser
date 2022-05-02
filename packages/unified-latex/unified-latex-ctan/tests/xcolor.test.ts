@@ -1,11 +1,6 @@
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
-import {
-    parse,
-    processLatexToAstViaUnified,
-} from "../../unified-latex-util-parse";
+import { parse } from "../../unified-latex-util-parse";
 import * as xcolorParser from "../package/xcolor";
 import {
     computeColor,
@@ -22,16 +17,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-ctan:xcolor", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     /**
      * Parse strings of the form "\macro{args}" and return
      * just the macro (and attached args).

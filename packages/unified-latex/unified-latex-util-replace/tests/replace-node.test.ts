@@ -1,13 +1,10 @@
-import { strictEqual } from "assert";
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { match } from "../../unified-latex-util-match";
 import { replaceNode } from "../libs/replace-node";
 import { s } from "../../unified-latex-builder";
 import { printRaw } from "../../unified-latex-util-print-raw";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
+import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
 
@@ -18,16 +15,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-replace", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("can replace nodes", () => {
         let nodes = strToNodes("a b c {a b} c");
         replaceNode(nodes, (node) => {
@@ -74,5 +61,18 @@ describe("unified-latex-replace", () => {
             }
         });
         expect(printRaw(nodes)).toEqual("$aaaa$");
+    });
+
+    it("can replace macros", () => {
+        let targetAst = strToNodes("\\foo and \\bar");
+        let insertNode = strToNodes("\\bar");
+        let ast = strToNodes("\\foo and \\raw");
+        replaceNode(ast, (node) => {
+            if (match.macro(node, "raw")) {
+                return insertNode;
+            }
+        });
+
+        expect(ast).toEqual(targetAst);
     });
 });

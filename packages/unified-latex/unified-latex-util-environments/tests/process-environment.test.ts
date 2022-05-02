@@ -1,9 +1,7 @@
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { processEnvironments } from "../libs/process-environment";
+import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
 
@@ -14,16 +12,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-environments", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("attach one mandatory argument to an environment", () => {
         let targetAst;
         let ast = strToNodes("\\begin{xxx}\\end{xxx}");
@@ -208,6 +196,59 @@ describe("unified-latex-util-environments", () => {
 
         ast = strToNodes("\\begin{xxx}[a] {b} c\\end{xxx}");
         processEnvironments(ast, { xxx: { signature: "o m" } });
+        expect(ast).toEqual(targetAst);
+    });
+
+    it("environment's body is processed to remove surrounding whitespace", () => {
+        let ast = strToNodes("\\begin{xxx}\n\nx\n\\end{xxx}");
+        let targetAst: Ast.Node[] = [
+            {
+                type: "environment",
+                env: [{ type: "string", content: "xxx" }],
+                content: [{ type: "string", content: "x" }],
+            },
+        ];
+        expect(ast).toEqual(targetAst);
+
+        // parbreaks after sameline leading comments are removed
+        ast = strToNodes("\\begin{xxx}%\n\nx\n\\end{xxx}");
+        targetAst = [
+            {
+                type: "environment",
+                env: [{ type: "string", content: "xxx" }],
+                content: [
+                    {
+                        type: "comment",
+                        content: "",
+                        suffixParbreak: false,
+                        sameline: true,
+                        leadingWhitespace: false,
+                    },
+                    { type: "string", content: "x" },
+                ],
+            },
+        ];
+        expect(ast).toEqual(targetAst);
+
+        // no whitespace is included after sameline leading comment
+        ast = strToNodes("\\begin{xxx}%\nx\n\\end{xxx}");
+        targetAst = [
+            {
+                type: "environment",
+                env: [{ type: "string", content: "xxx" }],
+                content: [
+                    {
+                        type: "comment",
+                        content: "",
+                        suffixParbreak: false,
+                        sameline: true,
+                        leadingWhitespace: false,
+                    },
+                    { type: "string", content: "x" },
+                ],
+            },
+        ];
+
         expect(ast).toEqual(targetAst);
     });
 });

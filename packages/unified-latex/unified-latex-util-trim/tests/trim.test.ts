@@ -1,10 +1,7 @@
-import { strictEqual } from "assert";
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
 import { trim } from "..";
+import { strToNodes } from "../../test-common";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 
 /* eslint-env jest */
 
@@ -141,16 +138,6 @@ const C_POST_TRIM: Ast.Node[] = [
 ];
 
 describe("unified-latex-trim", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("can trim", () => {
         let x = [...A_PRE_TRIM];
         expect(trim(x)).toEqual({ trimmedEnd: 2, trimmedStart: 1 });

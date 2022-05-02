@@ -1,10 +1,7 @@
-import { strictEqual } from "assert";
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { parseAlignEnvironment } from "../libs/parse-align-environment";
+import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
 
@@ -15,16 +12,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-align", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("can parse align environment", () => {
         let nodes = strToNodes("a&b");
         expect(parseAlignEnvironment(nodes)).toEqual([

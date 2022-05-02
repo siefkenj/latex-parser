@@ -1,8 +1,6 @@
-import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { trimRenderInfo } from "../../unified-latex-util-render-info";
+import { strToNodes } from "../../test-common";
 import * as Ast from "../../unified-latex-types";
-import { processLatexToAstViaUnified } from "../../unified-latex-util-parse";
 import { attachMacroArgsInArray } from "../libs/attach-arguments";
 
 /* eslint-env jest */
@@ -14,16 +12,6 @@ console.log = (...args) => {
 };
 
 describe("unified-latex-util-arguments", () => {
-    let value: string | undefined;
-    let file: VFile | undefined;
-
-    function strToNodes(str: string) {
-        value = str;
-        file = processLatexToAstViaUnified().processSync({ value });
-        const root = trimRenderInfo(file.result as any) as Ast.Root;
-        return root.content;
-    }
-
     it("can attach arguments in array", () => {
         // basic capture of arguments
         let nodes = strToNodes("\\xxx a b c");
