@@ -7,19 +7,26 @@ import * as Ast from "../../unified-latex-types";
  * the function will error.
  */
 export function replaceNodeDuringVisit(
-    replacement: Ast.Node | Ast.Argument,
+    replacement: Ast.Node | Ast.Argument | (Ast.Node | Ast.Argument)[],
     info: VisitInfo
 ) {
     const parent = info.parents[0];
     if (!parent) {
         throw new Error(`Cannot replace node: parent not found`);
     }
-    const container = parent[info.key as keyof typeof parent];
+    const container = parent[info.key as keyof typeof parent] as (
+        | Ast.Node
+        | Ast.Argument
+    )[];
     if (!Array.isArray(container)) {
         throw new Error(`Cannot replace node: containing array not found`);
     }
     if (info.index == null) {
         throw new Error(`Cannot replace node: node index undefined`);
     }
-    container[info.index] = replacement;
+    if (!Array.isArray(replacement)) {
+        container[info.index] = replacement;
+    } else {
+        container.splice(info.index, 1, ...replacement);
+    }
 }

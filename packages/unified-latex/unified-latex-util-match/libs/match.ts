@@ -133,6 +133,20 @@ export const match = {
         }
         return node.type === "whitespace";
     },
+    /**
+     * Matches whitespace or a comment with leading whitespace.
+     */
+    whitespaceLike(
+        node: any
+    ): node is Ast.Whitespace | (Ast.Comment & { leadingWhitespace: true }) {
+        if (node == null) {
+            return false;
+        }
+        return (
+            node.type === "whitespace" ||
+            (node.type === "whitespace" && node.leadingWhitespace === true)
+        );
+    },
     string(node: any, value?: string): node is Ast.String {
         if (node == null) {
             return false;

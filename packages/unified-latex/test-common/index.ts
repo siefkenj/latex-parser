@@ -40,6 +40,9 @@ expect.extend({
     },
 });
 
+/**
+ * Parse a string directly into an `Ast.Node[]` array.
+ */
 export function strToNodes(str: string) {
     let value: string | undefined;
     let file: VFile | undefined;
@@ -47,4 +50,15 @@ export function strToNodes(str: string) {
     file = processLatexToAstViaUnified().processSync({ value });
     const root = trimRenderInfo(file.result as any) as Ast.Root;
     return root.content;
+}
+
+/**
+ * Parse a string directly into an `Ast.Node[]` array but don't trim
+ * any whitespace.
+ */
+export function strToNodesRaw(str: string) {
+    let file: VFile | undefined;
+    file = processLatexToAstViaUnified().processSync({ value: `{${str}}` });
+    const root = trimRenderInfo(file.result as any) as Ast.Root;
+    return (root.content[0] as Ast.Group).content;
 }
