@@ -4,7 +4,7 @@ import { match } from "../../unified-latex-util-match";
 import { visit } from "../../unified-latex-util-visit";
 import { trim, trimEnd, trimStart } from "./trim";
 
-type PluginOptions = undefined;
+type PluginOptions = void;
 
 /**
  * Unified plugin to trim the whitespace from the start/end of any environments, including

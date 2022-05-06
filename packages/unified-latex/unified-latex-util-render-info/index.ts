@@ -32,3 +32,16 @@ export function trimRenderInfo(ast: Ast.Ast) {
     });
     return ast;
 }
+
+// NOTE: The docstring comment must be the last item in the index.ts file!
+/**
+ * ## What is this?
+ *
+ * Functions to help modify the `_renderInfo` of a `unified-latex` Abstract Syntax Tree (AST).
+ *
+ * ## When should I use this?
+ *
+ * If you want to compare the structure of an AST without position information or extra information
+ * that is kept for pretty-printing, these functions can be used to remove/modify the `_renderInfo`
+ * of an `Ast.Node`.
+ */

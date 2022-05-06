@@ -94,7 +94,14 @@ type Visitors<T> = { enter?: Visitor<T>; leave?: Visitor<T> };
 
 type VisitOptions = {
     startingContext?: VisitorContext;
+    /**
+     * Type guard for types that are passed to the `visitor` function.
+     */
     test?: (node: Ast.Ast, info: VisitInfo) => boolean;
+    /**
+     * Whether arrays will be sent to the `visitor` function. If falsy,
+     * only nodes will be past to `visitor`.
+     */
     includeArrays?: boolean;
 };
 

@@ -48,3 +48,18 @@ export const environmentInfo = {
     xcolor: xcolor.environments,
     xparse: xparse.environments,
 };
+
+// NOTE: The docstring comment must be the last item in the index.ts file!
+/**
+ * ## What is this?
+ *
+ * Macro/environment definitions and utilities for specific LaTeX packages from CTAN.
+ *
+ * Note: basic LaTeX macro/environment definitions come from the `latex2e` package, even though
+ * this is technically not a CTAN "package".
+ *
+ * ## When should I use this?
+ *
+ * If you want information about special functions/macros from particular CTAN packages, or
+ * you need to parse special environments.
+ */

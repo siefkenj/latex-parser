@@ -5,12 +5,12 @@ import { decorateArrayForPegjs } from "../../unified-latex-util-pegjs";
 
 // The types returned by the grammar
 
-interface Item {
+export type Item = {
     itemParts?: Ast.Node[][];
     trailingComment: Ast.Comment | null;
     trailingComma?: boolean;
     leadingParbreak?: boolean;
-}
+};
 
 export function createMatchers() {
     return {
