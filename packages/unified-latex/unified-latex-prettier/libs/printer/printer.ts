@@ -1,4 +1,4 @@
-import { Doc } from "prettier";
+import type { Doc } from "prettier";
 import * as PrettierTypes from "./prettier-types";
 
 import { hardline, line, ESCAPE, getNodeInfo } from "./common";

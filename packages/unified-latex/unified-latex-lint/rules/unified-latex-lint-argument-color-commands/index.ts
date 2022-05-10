@@ -1,5 +1,5 @@
 import { lintRule } from "unified-lint-rule";
-import { arg, m, s } from "../../../unified-latex-builder";
+import { m, s } from "../../../unified-latex-builder";
 import { printRaw } from "../../../unified-latex-util-print-raw";
 import * as Ast from "../../../unified-latex-types";
 import { match } from "../../../unified-latex-util-match";
@@ -9,39 +9,14 @@ import { replaceStreamingCommand } from "../../../unified-latex-util-replace/lib
 import { replaceNodeDuringVisit } from "../../utils/replace-node";
 import { hasParbreak } from "../../utils/has-parbreak";
 import { trimEnd, trimStart } from "../../../unified-latex-util-trim";
+import { colorToTextcolorMacro } from "../../../unified-latex-ctan/package/xcolor";
 
 const REPLACEMENTS: Record<
     string,
     (content: Ast.Node | Ast.Node[], originalMacro: Ast.Macro) => Ast.Macro
 > = {
-    color: textColorMacro,
+    color: colorToTextcolorMacro,
 };
-
-/**
- * Create a `\textcolor` macro. Color arguments are taken from `origMacro`.
- */
-function textColorMacro(
-    content: Ast.Node | Ast.Node[],
-    origMacro: Ast.Macro
-): Ast.Macro {
-    if (!Array.isArray(content)) {
-        content = [content];
-    }
-    // Signature of \color is "o m".
-    // We want to carry through the same arguments
-    const args = (
-        origMacro.args
-            ? origMacro.args
-            : [arg([], { closeMark: "", openMark: "" }), arg([])]
-    ).concat(arg(content));
-
-    return {
-        type: "macro",
-        content: "textcolor",
-        args,
-        _renderInfo: { inParMode: true },
-    };
-}
 
 const isReplaceable = match.createMacroMatcher(REPLACEMENTS);
 

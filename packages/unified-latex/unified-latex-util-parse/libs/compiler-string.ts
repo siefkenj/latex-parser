@@ -1,4 +1,3 @@
-import { Printer } from "prettier";
 import Prettier from "prettier/standalone";
 import { Plugin } from "unified";
 import { printLatexAst } from "../../unified-latex-prettier";

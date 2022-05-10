@@ -1,15 +1,15 @@
 import cssesc from "cssesc";
-import { match } from "../../libs/ast";
-import { tagLikeMacro } from "..";
-import * as Ast from "../../libs/ast-types";
-import { wrapPars } from "./paragraph-split";
 import {
     parseTabularSpec,
     TabularColumn,
-} from "unified-latex/unified-latex-ctan/package/tabularx";
-import { printRaw } from "unified-latex/unified-latex-util-print-raw";
-import { parseAlignEnvironment } from "unified-latex/unified-latex-util-align";
-import { getArgsContent } from "unified-latex/unified-latex-util-arguments";
+} from "../../../unified-latex-ctan/package/tabularx";
+import { htmlLike } from "../../../unified-latex-html-like";
+import * as Ast from "../../../unified-latex-types";
+import { parseAlignEnvironment } from "../../../unified-latex-util-align";
+import { getArgsContent } from "../../../unified-latex-util-arguments";
+import { match } from "../../../unified-latex-util-match";
+import { printRaw } from "../../../unified-latex-util-print-raw";
+import { wrapPars } from "../wrap-pars";
 
 function enumerateFactory(parentTag = "ol", className = "enumerate") {
     return function enumerateToHtml(env: Ast.Environment) {
@@ -21,7 +21,8 @@ function enumerateFactory(parentTag = "ol", className = "enumerate") {
                 return [];
             }
 
-            const attributes: Record<string, string> = {};
+            const attributes: Record<string, string | Record<string, string>> =
+                {};
             // Figure out if there any manually-specified item labels. If there are,
             // we need to specify a custom list-style-type.
             // We test the open mark to see if an optional argument was actually supplied
@@ -29,33 +30,34 @@ function enumerateFactory(parentTag = "ol", className = "enumerate") {
             // typing `\item[]` is a common way to make a list item without a marker/bullet
             if (node.args[0].openMark === "[") {
                 const formattedLabel = cssesc(printRaw(node.args[0].content));
-                // Note the space at the end is important.
-                const styleString = formattedLabel
-                    ? `list-style-type: '${formattedLabel} ';`
-                    : "list-style-type: none;";
-                attributes.style = styleString;
+                attributes.style = {
+                    // Note the space after `formattedLabel`. That is on purpose!
+                    "list-style-type": formattedLabel
+                        ? `'${formattedLabel} '`
+                        : "none",
+                };
             }
 
             const body = node.args[1].content;
-            return tagLikeMacro({
+            return htmlLike({
                 tag: "li",
                 content: wrapPars(body),
                 attributes,
             });
         });
 
-        return tagLikeMacro({
+        return htmlLike({
             tag: parentTag,
-            attributes: { class: className },
+            attributes: { className },
             content,
         });
     };
 }
 
 function createCenteredElement(env: Ast.Environment) {
-    return tagLikeMacro({
+    return htmlLike({
         tag: "center",
-        attributes: { class: "center" },
+        attributes: { className: "center" },
         content: env.content,
     });
 }
@@ -71,36 +73,36 @@ function createTableFromTabular(env: Ast.Environment) {
     const tableBody = tabularBody.map((row) => {
         const content = row.cells.map((cell, i) => {
             const columnSpec = columnSpecs[i];
-            const styles = [];
+            const styles: Record<string, string> = {};
             if (columnSpec) {
                 const { alignment } = columnSpec;
                 if (alignment.alignment === "center") {
-                    styles.push("text-align: center;");
+                    styles["text-align"] = "center";
                 }
                 if (alignment.alignment === "right") {
-                    styles.push("text-align: right;");
+                    styles["text-align"] = "right";
                 }
                 if (
                     columnSpec.pre_dividers.some(
                         (div) => div.type === "vert_divider"
                     )
                 ) {
-                    styles.push("border-left: 1px solid;");
+                    styles["border-left"] = "1px solid";
                 }
                 if (
                     columnSpec.post_dividers.some(
                         (div) => div.type === "vert_divider"
                     )
                 ) {
-                    styles.push("border-right: 1px solid;");
+                    styles["border-right"] = "1px solid";
                 }
             }
-            return tagLikeMacro(
-                styles.length > 0
+            return htmlLike(
+                Object.keys(styles).length > 0
                     ? {
                           tag: "td",
                           content: cell,
-                          attributes: { style: styles.join(" ") },
+                          attributes: { style: styles },
                       }
                     : {
                           tag: "td",
@@ -108,18 +110,18 @@ function createTableFromTabular(env: Ast.Environment) {
                       }
             );
         });
-        return tagLikeMacro({ tag: "tr", content });
+        return htmlLike({ tag: "tr", content });
     });
 
-    return tagLikeMacro({
+    return htmlLike({
         tag: "table",
         content: [
-            tagLikeMacro({
+            htmlLike({
                 tag: "tbody",
                 content: tableBody,
             }),
         ],
-        attributes: { class: "tabular" },
+        attributes: { className: "tabular" },
     });
 }
 

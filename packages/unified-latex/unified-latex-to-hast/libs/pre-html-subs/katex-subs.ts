@@ -1,10 +1,10 @@
-import * as Ast from "../../libs/ast-types";
-import { argContentsFromMacro } from "../../libs/ast/arguments";
-import KATEX_SUPPORT_LIST from "unified-latex/support-tables/katex-support.json";
 import {
     attachSystemeSettingsAsRenderInfo,
     systemeContentsToArray,
-} from "unified-latex/unified-latex-ctan/package/systeme/libs/systeme";
+} from "../../../unified-latex-ctan/package/systeme/libs/systeme";
+import * as Ast from "../../../unified-latex-types";
+import { getArgsContent } from "../../../unified-latex-util-arguments";
+import KATEX_SUPPORT_LIST from "../../../support-tables/katex-support.json";
 
 const LEFT: Ast.Macro = { type: "macro", content: "left" };
 const RIGHT: Ast.Macro = { type: "macro", content: "right" };
@@ -17,7 +17,7 @@ export const katexSpecificMacroReplacements: Record<
 > = {
     systeme: (node) => {
         try {
-            const args = argContentsFromMacro(node);
+            const args = getArgsContent(node);
             const whitelistedVariables = (args[1] || undefined) as
                 | (Ast.String | Ast.Macro)[]
                 | undefined;
@@ -67,9 +67,8 @@ export const katexSpecificEnvironmentReplacements: Record<
  * Attach `renderInfo` needed for converting some macros into their
  * katex equivalents.
  */
-export function attachNeededRenderInfo(ast: Ast.Ast): Ast.Ast {
+export function attachNeededRenderInfo(ast: Ast.Ast) {
     attachSystemeSettingsAsRenderInfo(ast);
-    return ast;
 }
 
 export const KATEX_SUPPORT = {

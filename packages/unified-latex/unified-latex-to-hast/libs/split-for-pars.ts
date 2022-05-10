@@ -1,6 +1,6 @@
-import { tagLikeMacro } from "..";
-import { match, trim } from "../../libs/ast";
-import * as Ast from "../../libs/ast-types";
+import * as Ast from "../../unified-latex-types";
+import { match } from "../../unified-latex-util-match";
+import { trim } from "../../unified-latex-util-trim";
 
 /**
  * Takes an array of nodes and splits it into chunks that should be wrapped
@@ -8,7 +8,7 @@ import * as Ast from "../../libs/ast-types";
  * unless they are specified, and macros are included in a par unless they are excluded.
  *
  */
-function splitForPars(
+export function splitForPars(
     nodes: Ast.Node[],
     options: {
         macrosThatBreakPars: string[];
@@ -17,7 +17,7 @@ function splitForPars(
 ): { content: Ast.Node[]; wrapInPar: boolean }[] {
     const ret: { content: Ast.Node[]; wrapInPar: boolean }[] = [];
     let currBody: Ast.Node[] = [];
-    nodes = trim(nodes);
+    trim(nodes);
 
     const isParBreakingMacro = match.createMacroMatcher(
         options.macrosThatBreakPars
@@ -32,7 +32,8 @@ function splitForPars(
      */
     function pushBody() {
         if (currBody.length > 0) {
-            ret.push({ content: trim(currBody), wrapInPar: true });
+            trim(currBody);
+            ret.push({ content: currBody, wrapInPar: true });
             currBody = [];
         }
     }
@@ -57,48 +58,4 @@ function splitForPars(
     pushBody();
 
     return ret;
-}
-
-/**
- * Wrap paragraphs in `<p>...</p>` tags.
- *
- * Paragraphs are inserted at
- *   * parbreak tokens
- *   * macros listed in `macrosThatBreakPars`
- *   * environments not listed in `environmentsThatDontBreakPars`
- */
-export function wrapPars(
-    nodes: Ast.Node[],
-    options: {
-        macrosThatBreakPars?: string[];
-        environmentsThatDontBreakPars?: string[];
-    } = {
-        macrosThatBreakPars: [
-            "part",
-            "chapter",
-            "section",
-            "subsection",
-            "subsubsection",
-            "vspace",
-            "smallskip",
-            "medskip",
-            "bigskip",
-            "hfill"
-        ],
-        environmentsThatDontBreakPars: [],
-    }
-): Ast.Node[] {
-    const parSplits = splitForPars(nodes, {
-        macrosThatBreakPars: options.macrosThatBreakPars || [],
-        environmentsThatDontBreakPars:
-            options.environmentsThatDontBreakPars || [],
-    });
-
-    return parSplits.flatMap((part) => {
-        if (part.wrapInPar) {
-            return tagLikeMacro({ tag: "p", content: part.content });
-        } else {
-            return part.content;
-        }
-    });
 }

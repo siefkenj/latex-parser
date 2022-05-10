@@ -30,6 +30,8 @@
         "@types/trie-prefix-tree": "^1.5.0",
         "color": "^4.2.3",
         "cssesc": "^3.0.0",
+        "hast": "^1.0.0",
+        "hast-util-to-html": "^8.0.3",
         "jest-esm-transformer": "^1.0.0",
         "prettier": "^2.6.2",
         "trie-prefix-tree": "^1.5.1",
@@ -62,7 +64,7 @@
     },
     "jest": {
         "transformIgnorePatterns": [
-            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile|unist.*)"
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile.*|unist.*|hast.*|property-information|html-void-elements|.*-separated-tokens|.*entities.*|ccount|rehype*|string-width|strip-ansi|ansi-regex|supports-color)"
         ],
         "transform": {
             "\\.m?jsx?$": "jest-esm-transformer",

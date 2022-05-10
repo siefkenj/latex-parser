@@ -145,12 +145,12 @@ export function replaceStreamingCommand(
         if (segments.length > 1) {
             segments.forEach((segment, i) => {
                 if (i === 0) {
-                    return trimEnd(segment);
+                    trimEnd(segment);
+                } else if (i === segments.length - 1) {
+                    trimStart(segment);
+                } else {
+                    trim(segment);
                 }
-                if (i === segments.length - 1) {
-                    return trimStart(segment);
-                }
-                return trim(segment);
             });
         }
 
@@ -165,7 +165,7 @@ export function replaceStreamingCommand(
 
 /**
  * Given a sequence of replacer functions `[f, g, h]` return
- * `f \circ g \circ h`
+ * `h \circ g \circ f`
  *
  * @param {((nodes: Ast.Node[]) => Ast.Node)[]} replacers
  * @returns {(nodes: Ast.Node[]) => Ast.Node}
@@ -176,7 +176,7 @@ function composeReplacers(replacers: Replacer[]): Replacer {
     }
     return (nodes: Ast.Node[]) => {
         let ret = nodes;
-        for (let i = replacers.length - 1; i >= 0; i--) {
+        for (let i = 0; i < replacers.length; i++) {
             const func = replacers[i];
             ret = func(ret);
         }

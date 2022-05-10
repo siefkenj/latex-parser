@@ -1,3 +1,6 @@
+import { unified } from "unified";
+import { VFile } from "vfile";
+import rehypeStringify from "rehype-stringify";
 import {
     attachMacroArgs,
     match,
@@ -23,17 +26,20 @@ import {
 } from "unified-latex/unified-latex-util-pgfkeys";
 import { printRaw } from "unified-latex/unified-latex-util-print-raw";
 import { VisitorContext } from "unified-latex/unified-latex-util-visit";
-import { convertToHtml } from "./html/convert";
-import { KATEX_SUPPORT } from "./html/katex";
-import { wrapPars } from "./html/paragraph-split";
-import { applyAll, lintAll, lints } from "./lint";
-import { deleteComments, replaceStreamingCommand } from "./macro-replacers";
 import {
     createMacroExpander,
     newcommandMacroToName,
     newcommandMacroToSpec,
     newcommandMacroToSubstitutionAst,
 } from "./newcommand";
+import {
+    unifiedLatexToHast,
+    wrapPars,
+    KATEX_SUPPORT,
+} from "unified-latex/unified-latex-to-hast";
+import { deleteComments } from "unified-latex/unified-latex-util-comments";
+import { replaceStreamingCommand } from "unified-latex/unified-latex-util-replace";
+import { lints } from "unified-latex/unified-latex-lint";
 
 /**
  * Returns a set containing all macros in the document.
@@ -262,6 +268,25 @@ export function wasParsedInMathMode(nodes: Ast.Node[]): boolean {
     );
 }
 
+function ensureRoot(ast: Ast.Node | Ast.Node[]): Ast.Root {
+    if (Array.isArray(ast)) {
+        return { type: "root", content: ast };
+    } else if (ast.type === "root") {
+        return ast;
+    } else {
+        return { type: "root", content: [ast] };
+    }
+}
+
+/**
+ * Convert a latex AST to an HTML string.
+ */
+function convertToHtml(ast: Ast.Node | Ast.Node[]): string {
+    let root = ensureRoot(ast);
+    const processed = unified().use(unifiedLatexToHast).runSync(root);
+    return unified().use(rehypeStringify).stringify(processed);
+}
+
 export { splitStringsIntoSingleChars };
 
 const ast = {
@@ -280,7 +305,39 @@ export const html = {
     tagLikeMacro,
 };
 
-export const fixAllLints = applyAll;
+export const fixAllLints = <T extends Ast.Node | Ast.Node[]>(tree: T): T => {
+    let root = ensureRoot(tree);
+    let processor = unified();
+    for (const lint of Object.values(lints)) {
+        processor = processor.use(lint as any, { fix: true });
+    }
+    const ret: Ast.Root = processor.runSync(root) as any;
+    // We'd like to return the same type of node that we received.
+    if (Array.isArray(tree)) {
+        return ret.content as any;
+    }
+    if (tree.type === "root") {
+        return ret as any;
+    }
+    return ret.content[0] as any;
+};
+
+/**
+ * Run all lints and report the errors
+ *
+ * @param {(Ast.Node | Ast.Node[])} tree
+ * @returns
+ */
+const lintAll = (tree: Ast.Node | Ast.Node[]) => {
+    tree = ensureRoot(tree);
+    let file = new VFile();
+    let processor = unified();
+    for (const lint of Object.values(lints)) {
+        processor = processor.use(lint as any);
+    }
+    processor.runSync(tree, file);
+    return file.messages.map((m) => m.reason);
+};
 
 export {
     createMacroExpander,
@@ -289,8 +346,8 @@ export {
     match,
     walkAst,
     parseLigatures,
-    lints,
     lintAll,
+    lints,
     convertToHtml,
     xcolorColorToHex,
     xcolorMacroToHex,
