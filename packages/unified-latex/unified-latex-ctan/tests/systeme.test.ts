@@ -1,10 +1,7 @@
 import { VFile } from "unified-lint-rule/lib";
 import util from "util";
-import { tools } from "../../../../src/parsers/latex-parser";
-import {
-    parse,
-    parseMath,
-} from "../../unified-latex-util-parse";
+import { convertToHtml } from "../../unified-latex-to-hast";
+import { parse, parseMath } from "../../unified-latex-util-parse";
 import { printRaw } from "../../unified-latex-util-print-raw";
 import * as systemeParser from "../package/systeme";
 import {
@@ -155,22 +152,25 @@ describe("unified-latex-ctan:systeme", () => {
     });
 
     it("can preserve systeme delimiters", () => {
-        let parsed, ast;
+        let parsed, html;
         parsed = parse("$\\systeme{x+y=3,-y-3x+10=7}$");
-        ast = tools.convertToHtml(parsed);
-        expect(printRaw(ast)).toEqual(
-            "$\\left\\{\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right.$"
+        html = convertToHtml(parsed);
+        expect(html).toEqual(
+            // "$\\left\\{\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right.$"
+            '<span class="inline-math">\\left\\{\\begin{array}{crcrcrl}&#x26;x&#x26;+&#x26;y&#x26;&#x26;&#x26;=3\\\\-&#x26;3x&#x26;-&#x26;y&#x26;+&#x26;10&#x26;=7\\end{array}\\right.</span>'
         );
 
         parsed = parse("$\\sysdelim{\\{}{.}\\systeme{x+y=3,-y-3x+10=7}$");
-        ast = tools.convertToHtml(parsed);
-        expect(printRaw(ast)).toEqual(
-            "$\\left\\{\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right.$"
+        html = convertToHtml(parsed);
+        expect(html).toEqual(
+            // "$\\left\\{\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right.$"
+            '<span class="inline-math">\\left\\{\\begin{array}{crcrcrl}&#x26;x&#x26;+&#x26;y&#x26;&#x26;&#x26;=3\\\\-&#x26;3x&#x26;-&#x26;y&#x26;+&#x26;10&#x26;=7\\end{array}\\right.</span>'
         );
         parsed = parse("$\\sysdelim{[}{]}\\systeme{x+y=3,-y-3x+10=7}$");
-        ast = tools.convertToHtml(parsed);
-        expect(printRaw(ast)).toEqual(
-            "$\\left[\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right]$"
+        html = convertToHtml(parsed);
+        expect(html).toEqual(
+            // "$\\left[\\begin{array}{crcrcrl}&x&+&y&&&=3\\\\-&3x&-&y&+&10&=7\\end{array}\\right]$"
+            '<span class="inline-math">\\left[\\begin{array}{crcrcrl}&#x26;x&#x26;+&#x26;y&#x26;&#x26;&#x26;=3\\\\-&#x26;3x&#x26;-&#x26;y&#x26;+&#x26;10&#x26;=7\\end{array}\\right]</span>'
         );
     });
 });

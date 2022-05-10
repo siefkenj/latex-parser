@@ -38,7 +38,7 @@ export function replaceNode(
         ) {
             // A null return means that we delete the current node
             info.containingArray.splice(info.index, 1);
-            return;
+            return info.index;
         }
 
         if (!Array.isArray(replacement)) {

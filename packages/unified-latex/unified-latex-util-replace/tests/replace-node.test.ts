@@ -33,6 +33,22 @@ describe("unified-latex-replace", () => {
             }
         });
         expect(printRaw(nodes)).toEqual(" b c { b} c");
+
+        nodes = strToNodes("$abc$");
+        replaceNode(nodes, (node) => {
+            if (match.string(node, "a")) {
+                return [];
+            }
+        });
+        expect(printRaw(nodes)).toEqual("$bc$");
+
+        nodes = strToNodes("$aabc$");
+        replaceNode(nodes, (node) => {
+            if (match.string(node, "a")) {
+                return [];
+            }
+        });
+        expect(printRaw(nodes)).toEqual("$bc$");
     });
 
     it("can replace with multiple nodes", () => {

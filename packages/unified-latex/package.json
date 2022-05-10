@@ -68,8 +68,8 @@
         ],
         "transform": {
             "\\.m?jsx?$": "jest-esm-transformer",
-            "latex.pegjs$": "<rootDir>/../../src/tests/pegjs-preprocessor-latex.js",
-            "\\.pegjs$": "<rootDir>/../../src/tests/pegjs-preprocessor.js",
+            "latex.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor-latex.js",
+            "\\.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor.js",
             "^.+\\.tsx?$": "ts-jest"
         }
     },
