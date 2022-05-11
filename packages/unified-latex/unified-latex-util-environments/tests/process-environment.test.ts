@@ -19,7 +19,7 @@ describe("unified-latex-util-environments", () => {
         expect(ast).toEqual([
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [],
                 args: [
                     {
@@ -37,7 +37,7 @@ describe("unified-latex-util-environments", () => {
         targetAst = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [
                     { type: "whitespace" },
                     { type: "string", content: "b" },
@@ -76,7 +76,7 @@ describe("unified-latex-util-environments", () => {
         expect(ast).toEqual([
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [],
                 args: [
                     {
@@ -100,7 +100,7 @@ describe("unified-latex-util-environments", () => {
         targetAst = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [
                     { type: "whitespace" },
                     { type: "string", content: "c" },
@@ -143,7 +143,7 @@ describe("unified-latex-util-environments", () => {
         expect(ast).toEqual([
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [],
                 args: [
                     {
@@ -167,7 +167,7 @@ describe("unified-latex-util-environments", () => {
         targetAst = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [
                     { type: "whitespace" },
                     { type: "string", content: "c" },
@@ -204,7 +204,7 @@ describe("unified-latex-util-environments", () => {
         let targetAst: Ast.Node[] = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [{ type: "string", content: "x" }],
             },
         ];
@@ -215,7 +215,7 @@ describe("unified-latex-util-environments", () => {
         targetAst = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [
                     {
                         type: "comment",
@@ -235,7 +235,7 @@ describe("unified-latex-util-environments", () => {
         targetAst = [
             {
                 type: "environment",
-                env: [{ type: "string", content: "xxx" }],
+                env: "xxx",
                 content: [
                     {
                         type: "comment",

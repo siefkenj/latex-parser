@@ -6,14 +6,18 @@
         if (typeof e.content === "string") {
             return e.content;
         }
+        if (e && e.type === "whitespace") {
+            return " ";
+        }
         return e;
     }
 
     function compare_env(g1, g2) {
-        return (
-            g1.content.map(toString).join("") ===
-            g2.content.map(toString).join("")
-        );
+        const g1Name =
+            typeof g1 === "string" ? g1 : g1.content.map(toString).join("");
+        const g2Name =
+            typeof g2 === "string" ? g2 : g2.content.map(toString).join("");
+        return g1Name === g2Name;
     }
 
     function createNode(type, extra = {}) {
@@ -177,18 +181,26 @@ group "group"
             return createNode("group", { content: x });
         }
 
+// Match a group but return its contents as a raw string.
+// This is used for environment matching
+group_contents_as_string = g:group { return text().slice(1, -1); }
+
 environment "environment"
     = begin_env
-        env:group
+        env:group_contents_as_string
         env_comment:sameline_comment?
         body:(
-            !(end_env end_env:group & { return compare_env(env, end_env); })
+            !(
+                    end_env
+                        end_env:group_contents_as_string
+                        & { return compare_env(env, end_env); }
+                )
                 x:token { return x; }
         )*
         end_env
-        group {
+        group_contents_as_string {
             return createNode("environment", {
-                env: env.content,
+                env,
                 content: env_comment ? [env_comment, ...body] : body,
             });
         }

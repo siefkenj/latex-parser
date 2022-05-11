@@ -1,8 +1,6 @@
 import util from "util";
 import * as Ast from "../../unified-latex-types";
-import {
-    attachMacroArgs,
-} from "../libs/attach-arguments";
+import { attachMacroArgs } from "../libs/attach-arguments";
 import { strToNodes } from "../../test-common";
 
 /* eslint-env jest */
@@ -82,11 +80,7 @@ describe("unified-latex-util-arguments", () => {
         expect(nodes).toEqual([
             {
                 type: "environment",
-                env: [
-                    { type: "macro", content: "xxx" },
-                    { type: "whitespace" },
-                    { type: "string", content: "a" },
-                ],
+                env: "\\xxx a",
                 content: [
                     { type: "string", content: "b" },
                     {
