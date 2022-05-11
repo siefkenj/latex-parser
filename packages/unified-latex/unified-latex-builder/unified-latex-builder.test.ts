@@ -53,12 +53,12 @@ describe("unified-latex-builder", () => {
     it("can build environment", () => {
         expect(env("foo", [])).toEqual({
             type: "environment",
-            env: [{ type: "string", content: "foo" }],
+            env: "foo",
             content: [],
         });
         expect(env("foo", ["bar", "baz"])).toEqual({
             type: "environment",
-            env: [{ type: "string", content: "foo" }],
+            env: "foo",
             content: [
                 { type: "string", content: "bar" },
                 { type: "string", content: "baz" },
@@ -66,7 +66,7 @@ describe("unified-latex-builder", () => {
         });
         expect(env("foo", "fun", "faz")).toEqual({
             type: "environment",
-            env: [{ type: "string", content: "foo" }],
+            env: "foo",
             content: [{ type: "string", content: "fun" }],
             args: [
                 {

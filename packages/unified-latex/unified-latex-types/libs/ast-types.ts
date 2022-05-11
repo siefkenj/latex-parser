@@ -54,7 +54,7 @@ export interface Macro extends BaseNode {
 
 export interface Environment extends ContentNode {
     type: "environment" | "mathenv";
-    env: Node[];
+    env: string;
     args?: Argument[];
 }
 

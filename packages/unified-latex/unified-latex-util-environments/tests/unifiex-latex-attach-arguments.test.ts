@@ -38,6 +38,7 @@ describe("unified-latex-util-environments", () => {
         expect(root.content).toEqual([
             {
                 type: "environment",
+                env: "xxx",
                 args: [
                     {
                         closeMark: "}",
@@ -51,7 +52,6 @@ describe("unified-latex-util-environments", () => {
                     { type: "whitespace" },
                     { content: "b", type: "string" },
                 ],
-                env: [{ content: "xxx", type: "string" }],
             },
         ]);
     });

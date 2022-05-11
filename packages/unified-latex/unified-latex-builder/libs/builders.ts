@@ -206,7 +206,7 @@ export function env(
     const args = normalizeArgumentsList(envArgs, "[", "]");
     const ret: Ast.Environment = {
         type: "environment",
-        env: [s(name)],
+        env: name,
         content: body.map(normalizeNode),
     };
     if (args.length > 0) {

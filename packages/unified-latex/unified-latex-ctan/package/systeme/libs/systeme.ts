@@ -288,7 +288,7 @@ export function systemeContentsToArray(
 
     const ret: Ast.Environment = {
         type: "environment",
-        env: [{ type: "string", content: "array" }],
+        env: "array",
         args: [
             {
                 type: "argument",

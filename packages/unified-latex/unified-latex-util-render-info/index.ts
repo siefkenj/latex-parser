@@ -24,9 +24,6 @@ export function updateRenderInfo(
  */
 export function trimRenderInfo(ast: Ast.Ast) {
     visit(ast, (node) => {
-        if (node.type === "environment" || node.type === "mathenv") {
-            node.env = trimRenderInfo(node.env) as Ast.Node[];
-        }
         delete node._renderInfo;
         delete node.position;
     });
