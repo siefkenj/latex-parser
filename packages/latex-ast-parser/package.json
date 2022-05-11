@@ -1,8 +1,7 @@
 {
-    "name": "latex-ast-parser-shell",
-    "description": "Shell project for projects in the `packages/` directory",
-    "version": "0.0.0",
-    "private": true,
+    "name": "latex-ast-parser",
+    "description": "JavaScript LaTeX parser and beautifier",
+    "version": "0.9.0",
     "author": {
         "name": "Jason Siefken",
         "email": "siefkenj@gmail.com"
@@ -13,14 +12,21 @@
         "parser",
         "prettier"
     ],
+    "main": "dist/latex-parser.js",
+    "types": "dist/src/parsers/latex-parser.d.ts",
+    "files": [
+        "dist/latex-parser.js",
+        "dist/src"
+    ],
     "workspaces": [
         "packages/unified-latex",
-        "packages/latex-ast-parser",
         "packages/prettier-plugin-latex"
     ],
     "scripts": {
-        "test": "npm run test -w unified-latex -w latex-ast-parser -w prettier-plugin-latex",
-        "build": "npm run build -w unified-latex -w latex-ast-parser -w prettier-plugin-latex"
+        "debug": "node --nolazy --inspect-brk=9229 ./dist/latex-parser.js",
+        "test": "jest src",
+        "watch": "webpack --watch",
+        "build": "mkdirp dist; webpack"
     },
     "dependencies": {
         "@babel/plugin-transform-modules-commonjs": "^7.17.9",
@@ -75,6 +81,17 @@
         "typescript-json-schema": "^0.53.0",
         "webpack": "5.72.0",
         "webpack-cli": "^4.9.2"
+    },
+    "jest": {
+        "transformIgnorePatterns": [
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile.*|unist.*|hast.*|property-information|html-void-elements|.*-separated-tokens|.*entities.*|ccount|rehype*|string-width|strip-ansi|ansi-regex|supports-color)"
+        ],
+        "transform": {
+            "\\.m?jsx?$": "jest-esm-transformer",
+            "latex.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor-latex.js",
+            "\\.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor.js",
+            "^.+\\.tsx?$": "ts-jest"
+        }
     },
     "repository": {
         "type": "git",

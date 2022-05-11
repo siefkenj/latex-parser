@@ -1,0 +1,76 @@
+{
+    "name": "prettier-plugin-latex",
+    "description": "A Prettier plugin to reformat LaTeX source",
+    "version": "1.0.0",
+    "author": {
+        "name": "Jason Siefken",
+        "email": "siefkenj@gmail.com"
+    },
+    "keywords": [
+        "pegjs",
+        "latex",
+        "parser"
+    ],
+    "type": "commonjs",
+    "files": [
+        "./dist/prettier-plugin-latex/**"
+    ],
+    "main": "./dist/prettier-plugin-latex/src/index.js",
+    "scripts": {
+        "debug": "node --nolazy --inspect-brk=9229 ./dist/latex-parser.js",
+        "test": "jest",
+        "watch": "webpack --watch",
+        "build": "mkdirp dist; webpack"
+    },
+    "dependencies": {
+        "jest-esm-transformer": "^1.0.0",
+        "prettier": "^2.6.2",
+        "rehype-stringify": "^9.0.3"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.17.9",
+        "@babel/preset-env": "7.16.11",
+        "@types/jest": "^27.4.1",
+        "@types/node": "^17.0.24",
+        "babel-jest": "^27.5.1",
+        "babel-loader": "8.2.4",
+        "esbuild-runner": "^2.2.1",
+        "eslint": "^8.13.0",
+        "jest": "27.5.1",
+        "mkdirp": "1.0.4",
+        "pegjs": "0.10.0",
+        "pegjs-loader": "^0.5.6",
+        "prettier-plugin-pegjs": "^0.5.0",
+        "ts-jest": "^27.1.4",
+        "ts-loader": "^9.2.8",
+        "ts-node": "^10.7.0",
+        "tslib": "^2.3.1",
+        "typescript": "^4.6.3",
+        "typescript-json-schema": "^0.53.0",
+        "webpack": "5.72.0",
+        "webpack-cli": "^4.9.2"
+    },
+    "jest": {
+        "transformIgnorePatterns": [
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile|unist.*)"
+        ],
+        "transform": {
+            "\\.m?jsx?$": "jest-esm-transformer",
+            "latex.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor-latex.js",
+            "\\.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor.js",
+            "^.+\\.tsx?$": "ts-jest"
+        }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/siefkenj/latex-parser.git"
+    },
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/siefkenj/latex-parser/issues"
+    },
+    "homepage": "https://github.com/siefkenj/latex-parser#readme",
+    "engines": {
+        "node": ">= 10.0"
+    }
+}
