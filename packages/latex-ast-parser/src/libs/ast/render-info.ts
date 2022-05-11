@@ -10,9 +10,6 @@ export function trimRenderInfo(ast: Ast.Ast) {
         ast,
         (node) => {
             const { _renderInfo, position, ...ret } = node;
-            if (ret.type === "environment" || ret.type === "mathenv") {
-                ret.env = trimRenderInfo(ret.env) as Ast.Node[];
-            }
             if (_renderInfo != null || position != null) {
                 return ret;
             }
