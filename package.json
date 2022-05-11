@@ -1,7 +1,7 @@
 {
     "name": "latex-ast-parser-shell",
-    "description": "JavaScript LaTeX parser and beautifier",
-    "version": "0.9.0",
+    "description": "Shell project for projects in the `packages/` directory",
+    "version": "0.0.0",
     "private": true,
     "author": {
         "name": "Jason Siefken",
@@ -20,7 +20,7 @@
     ],
     "scripts": {
         "test": "npm run test -w unified-latex -w latex-ast-parser -w prettier-plugin-latex",
-        "build": "mkdirp dist; webpack"
+        "build": "npm run build -w unified-latex -w latex-ast-parser -w prettier-plugin-latex"
     },
     "dependencies": {
         "@babel/plugin-transform-modules-commonjs": "^7.17.9",
@@ -75,17 +75,6 @@
         "typescript-json-schema": "^0.53.0",
         "webpack": "5.72.0",
         "webpack-cli": "^4.9.2"
-    },
-    "jest": {
-        "transformIgnorePatterns": [
-            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile|unist.*)"
-        ],
-        "transform": {
-            "\\.m?jsx?$": "jest-esm-transformer",
-            "latex.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor-latex.js",
-            "\\.pegjs$": "<rootDir>/src/tests/pegjs-preprocessor.js",
-            "^.+\\.tsx?$": "ts-jest"
-        }
     },
     "repository": {
         "type": "git",

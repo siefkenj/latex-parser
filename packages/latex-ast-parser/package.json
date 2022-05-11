@@ -84,7 +84,7 @@
     },
     "jest": {
         "transformIgnorePatterns": [
-            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile|unist.*)"
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile.*|unist.*|hast.*|property-information|html-void-elements|.*-separated-tokens|.*entities.*|ccount|rehype*|string-width|strip-ansi|ansi-regex|supports-color)"
         ],
         "transform": {
             "\\.m?jsx?$": "jest-esm-transformer",

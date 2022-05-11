@@ -80,20 +80,20 @@ describe("Find macros", () => {
         }
         ast = latexParser.parse(String.raw`a\macro b`).content;
         replaced = tools.replaceStreamingCommand(ast, { macro: replacer });
-        expect(printRaw(replaced)).toEqual("a \\REPLACEDmacro{b}");
+        expect(printRaw(replaced)).toEqual("a\\REPLACEDmacro{b}");
 
         ast = latexParser.parse(String.raw`a\mmm b z`).content;
         replaced = tools.replaceStreamingCommand(ast, {
             mmm: replacer,
         });
-        expect(printRaw(replaced)).toEqual("a \\REPLACEDmmm{b z}");
+        expect(printRaw(replaced)).toEqual("a\\REPLACEDmmm{b z}");
 
         ast = latexParser.parse("a\\mmm b\n\nz").content;
         replaced = tools.replaceStreamingCommand(ast, {
             mmm: replacer,
         });
         expect(printRaw(replaced)).toEqual(
-            "a \\REPLACEDmmm{b}\n\n\\REPLACEDmmm{z}"
+            "a\\REPLACEDmmm{b}\n\n\\REPLACEDmmm{z}"
         );
 
         ast = latexParser.parse(String.raw`a\mmm b\yyy z`).content;
@@ -102,7 +102,7 @@ describe("Find macros", () => {
             yyy: replacer,
         });
         expect(printRaw(replaced)).toEqual(
-            "a \\REPLACEDmmm{b \\REPLACEDyyy{z}}"
+            "a\\REPLACEDmmm{b\\REPLACEDyyy{z}}"
         );
 
         ast = latexParser.parse("a\\mmm b\n\n\\yyy7").content;
@@ -111,7 +111,7 @@ describe("Find macros", () => {
             yyy: replacer,
         });
         expect(printRaw(replaced)).toEqual(
-            "a \\REPLACEDmmm{b}\n\n\\REPLACEDmmm{\\REPLACEDyyy{7}}"
+            "a\\REPLACEDmmm{b}\n\n\\REPLACEDmmm{\\REPLACEDyyy{7}}"
         );
     });
 
@@ -209,7 +209,7 @@ describe("Find macros", () => {
         replaced = tools.replaceStreamingCommand(ast[1], {
             mmm: replacer,
         });
-        expect(printRaw(replaced)).toEqual("\\Rmmm{b}");
+        expect(printRaw(replaced)).toEqual(" \\Rmmm{b}");
 
         ast = latexParser.parse("a\n{%x\n\\mmm b}").content;
         replaced = tools.replaceStreamingCommand(ast[2], {

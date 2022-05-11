@@ -38,7 +38,7 @@ import {
     KATEX_SUPPORT,
 } from "unified-latex/unified-latex-to-hast";
 import { deleteComments } from "unified-latex/unified-latex-util-comments";
-import { replaceStreamingCommand } from "unified-latex/unified-latex-util-replace";
+import { replaceStreamingCommand as unifiedReplaceStreamingCommand } from "unified-latex/unified-latex-util-replace";
 import { lints } from "unified-latex/unified-latex-lint";
 
 /**
@@ -338,6 +338,27 @@ const lintAll = (tree: Ast.Node | Ast.Node[]) => {
     processor.runSync(tree, file);
     return file.messages.map((m) => m.reason);
 };
+
+/**
+ * Given a group or a node array, look for streaming commands (e.g., `\bfseries`) and replace them
+ * with the specified macro. The "arguments" of the streaming command are passed to `replacements[macroName](...)`.
+ * By default, this command will split at parbreaks (since commands like `\textbf{...} do not accept parbreaks in their
+ * contents).
+ */
+function replaceStreamingCommand(
+    ast: Ast.Group | Ast.Node[],
+    replacements: Record<
+        string,
+        (content: Ast.Node[], origMacro: Ast.Macro) => Ast.Node | Ast.Node[]
+    >
+) {
+    const isStreamingCommand = match.createMacroMatcher(replacements);
+    const replacer = (content: Ast.Node[], origMacro: Ast.Macro) => {
+        return replacements[origMacro.content](content, origMacro);
+    };
+    ast = structuredClone(ast);
+    return unifiedReplaceStreamingCommand(ast, isStreamingCommand, replacer);
+}
 
 export {
     createMacroExpander,

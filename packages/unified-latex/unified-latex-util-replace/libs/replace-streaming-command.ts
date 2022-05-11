@@ -63,6 +63,11 @@ export function replaceStreamingCommand(
         streamingCommand: Ast.Macro
     ) => Ast.Node | Ast.Node[]
 ): Ast.Node[] {
+    if (typeof isStreamingCommand !== "function") {
+        throw new Error(
+            `'isStreamingCommand' must be a function, not '${typeof isStreamingCommand}'`
+        );
+    }
     let processedContent: Ast.Node[] = [];
     if (match.group(ast)) {
         processedContent = replaceStreamingCommandInGroup(

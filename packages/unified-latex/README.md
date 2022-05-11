@@ -1,12 +1,7 @@
-# latex-parser
-Monorepo for `unified-latex`, `prettier-plugin-latex`, and friends, which are tools that
-generate an AST for and beautify LaTeX code
+# unified-latex
+A collection of plugins for dealing with LaTeX AST with the [Unifiedjs](https://unifiedjs.com/) framework.
 
-Most of the action lies in the
-  - `packages/unified-latex/`
-directory, where you'll find plugins for [Unifiedjs](https://unifiedjs.com/) and standalone tools for parsing
-LaTeX to an Abstract Syntax Tree (AST). Though *parsing* LaTeX isn't possible
-since it effectively has no grammar, *unified-latex* makes some
+Though *parsing* LaTeX without executing it isn't possible, *unified-latex* makes some
 practical assumptions. It should work on your code, unless you do complicated things like redefine control sequences
 or embed complicated TeX-style macros.
 
@@ -20,16 +15,8 @@ processing stage).
 
 ## Development
 
-You should develop in each project's subfolder in the `packages/` directory.
-These packages are set up as `npm` _workspaces_.
-
 If you have `node.js` and `npm` installed, run
 ```
-	npm install
-```
-in **this (the root)** directory. Then you may 
-```
-cd packages/unified-latex
 npm install
 npm run build
 ```
