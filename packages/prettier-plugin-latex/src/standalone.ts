@@ -11,6 +11,7 @@ export function prettyPrint(text: string, options?: Options): string {
     return Prettier.format(text, {
         parser: "latex-parser",
         plugins: [prettierPluginLatex],
+        useTabs: true,
         ...(options || {}),
     });
 }
