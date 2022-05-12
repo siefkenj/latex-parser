@@ -16,13 +16,13 @@ Object.assign(entries, {
     "structured-clone/index": "./structured-clone/index.ts",
 });
 
-export default {
+const emsConfig = {
     entry: entries,
     mode: "development",
     devtool: "inline-source-map",
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "dist/unified-latex"),
+        path: path.resolve(__dirname, "dist/"),
         library: { type: "module" },
         globalObject: `(() => {
             if (typeof self !== 'undefined') {
@@ -37,7 +37,7 @@ export default {
         })()`,
     },
     optimization: {
-        splitChunks: { chunks: "all" },
+        //splitChunks: { chunks: "all" },
     },
     module: {
         rules: [
@@ -64,3 +64,26 @@ export default {
         outputModule: true,
     },
 };
+
+export default [
+    emsConfig,
+    {
+        ...emsConfig,
+        output: {
+            filename: "[name].cjs",
+            path: path.resolve(__dirname, "dist/"),
+            library: { type: "commonjs" },
+            globalObject: `(() => {
+            if (typeof self !== 'undefined') {
+                return self;
+            } else if (typeof window !== 'undefined') {
+                return window;
+            } else if (typeof global !== 'undefined') {
+                return global;
+            } else {
+                return Function('return this')();
+            }
+        })()`,
+        },
+    },
+];
