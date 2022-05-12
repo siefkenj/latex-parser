@@ -16,10 +16,10 @@ import {
 import {
     linebreak,
     printRaw,
-} from "unified-latex/unified-latex-util-print-raw";
-import { parsePgfkeys } from "unified-latex/unified-latex-util-pgfkeys";
-import { match } from "unified-latex/unified-latex-util-match";
-import { trim } from "unified-latex/unified-latex-util-trim";
+} from "../../../unified-latex-util-print-raw";
+import { parsePgfkeys } from "../../../unified-latex-util-pgfkeys";
+import { match } from "../../../unified-latex-util-match";
+import { trim } from "../../../unified-latex-util-trim";
 
 export function printArgument(
     path: PrettierTypes.AstPath,

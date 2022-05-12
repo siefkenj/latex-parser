@@ -2,6 +2,7 @@
     "name": "latex-ast-parser",
     "description": "JavaScript LaTeX parser and beautifier",
     "version": "1.0.0",
+    "private": true,
     "author": {
         "name": "Jason Siefken",
         "email": "siefkenj@gmail.com"
@@ -12,16 +13,8 @@
         "parser",
         "prettier"
     ],
-    "main": "dist/latex-parser.js",
-    "types": "dist/src/parsers/latex-parser.d.ts",
-    "files": [
-        "dist/latex-parser.js",
-        "dist/src"
-    ],
-    "workspaces": [
-        "packages/unified-latex",
-        "packages/prettier-plugin-latex"
-    ],
+    "main": "latex-parser.js",
+    "types": "src/parsers/latex-parser.d.ts",
     "scripts": {
         "debug": "node --nolazy --inspect-brk=9229 ./dist/latex-parser.js",
         "test": "jest src",

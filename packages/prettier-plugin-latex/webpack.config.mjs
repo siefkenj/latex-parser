@@ -8,15 +8,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default {
     entry: {
-        "index": "./src/index",
-        "standalone": "./src/standalone",
+        index: "./src/commonjs-export.cjs",
+        standalone: "./src/standalone",
     },
     mode: "development",
     devtool: "inline-source-map",
     output: {
         filename: "[name].js",
         path: path.resolve(__dirname, "dist/prettier-plugin-latex/src"),
-        library: { type: "umd", name: "PrettierPluginLatex" },
+        library: { type: "commonjs" },
         globalObject: `(() => {
             if (typeof self !== 'undefined') {
                 return self;
@@ -30,7 +30,7 @@ export default {
         })()`,
     },
     optimization: {
-        splitChunks: { chunks: "all" },
+        // splitChunks: { chunks: "all" },
     },
     module: {
         rules: [
@@ -47,7 +47,6 @@ export default {
                 test: /\.tsx?$/,
                 loader: "ts-loader",
                 exclude: /node_modules/,
-                options: { compilerOptions: { outDir: "./dist" } },
             },
         ],
     },

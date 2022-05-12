@@ -1,4 +1,4 @@
-/**x
+/**
  * Autogenerate documentation for source files. This assumes a very specific format.
  *
  * run with
