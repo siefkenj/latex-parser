@@ -1,7 +1,7 @@
 import Prettier from "prettier/standalone";
 import prettierPluginLatex from ".";
-import { parse, parseMath } from "unified-latex/unified-latex-util-parse";
-import { printRaw } from "unified-latex/unified-latex-util-print-raw";
+import { parse, parseMath } from "@unified-latex/unified-latex-util-parse";
+import { printRaw } from "@unified-latex/unified-latex-util-print-raw";
 import { Options } from "prettier";
 
 /**

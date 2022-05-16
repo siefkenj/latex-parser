@@ -1,4 +1,4 @@
-import { prettierPluginLatex } from "unified-latex/unified-latex-prettier";
+import { prettierPluginLatex } from "@unified-latex/unified-latex-prettier";
 
 const options = {};
 const defaultOptions = { useTabs: true };
