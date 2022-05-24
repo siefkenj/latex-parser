@@ -1,6 +1,6 @@
-import { VisitorContext } from "unified-latex/unified-latex-util-visit";
-import { listMathChildren } from "unified-latex/unified-latex-util-visit/libs/list-math-children";
-import * as Ast from "unified-latex/unified-latex-types";
+import { VisitorContext } from "@unified-latex/unified-latex-util-visit";
+import { match } from "@unified-latex/unified-latex-util-match";
+import * as Ast from "@unified-latex/unified-latex-types";
 import { hasProp } from "../type-guards";
 
 interface WalkAstOptions {
@@ -12,6 +12,41 @@ const MATCHER_CONTEXT_DEFAULTS: Readonly<VisitorContext> = {
     inMathMode: false,
     hasMathModeAncestor: false,
 };
+
+function listMathChildren(node: Ast.Ast): {
+    enter: string[];
+    leave: string[];
+} {
+    const NULL_RETURN = { enter: [], leave: [] };
+    if (Array.isArray(node)) {
+        return NULL_RETURN;
+    }
+    if (match.math(node)) {
+        // When we enter a math environment, our content is always
+        // considered math mode
+        return { enter: ["content"], leave: [] };
+    }
+
+    const renderInfo: { inMathMode?: boolean } = node._renderInfo || {};
+    if (renderInfo.inMathMode == null) {
+        return NULL_RETURN;
+    }
+    if (match.macro(node)) {
+        if (renderInfo.inMathMode === true) {
+            return { enter: ["args"], leave: [] };
+        } else if (renderInfo.inMathMode === false) {
+            return { enter: [], leave: ["args"] };
+        }
+    }
+    if (match.environment(node)) {
+        if (renderInfo.inMathMode === true) {
+            return { enter: ["content"], leave: [] };
+        } else {
+            return { enter: [], leave: ["content"] };
+        }
+    }
+    return NULL_RETURN;
+}
 
 /**
  * Walk the AST and replace a node with `callback(node)` whenever

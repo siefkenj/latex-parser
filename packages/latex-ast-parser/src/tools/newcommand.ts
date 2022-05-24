@@ -3,7 +3,7 @@ import {
     newcommandMacroToName,
     newcommandMacroToSpec,
     newcommandMacroToSubstitutionAst,
-} from "unified-latex/unified-latex-util-macros";
+} from "@unified-latex/unified-latex-util-macros";
 
 export { newcommandMacroToSpec };
 

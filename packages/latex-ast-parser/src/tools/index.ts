@@ -9,23 +9,23 @@ import {
     trim,
     walkAst,
 } from "../libs/ast";
-import * as Ast from "unified-latex/unified-latex-types";
+import * as Ast from "@unified-latex/unified-latex-types";
 import { argContentsFromMacro } from "../libs/ast/arguments";
 import { trimEnvironmentContents } from "../libs/macro-utils";
-import { structuredClone } from "unified-latex/structured-clone";
+import { structuredClone } from "@unified-latex/structured-clone";
 import {
     xcolorColorToHex,
     xcolorMacroToHex,
-} from "unified-latex/unified-latex-ctan/package/xcolor";
-import { parseLigatures } from "unified-latex/unified-latex-util-ligatures";
-import { expandMacros as unifiedExpandMacros } from "unified-latex/unified-latex-util-macros";
-import { splitStringsIntoSingleChars } from "unified-latex/unified-latex-util-pegjs";
+} from "@unified-latex/unified-latex-ctan/package/xcolor";
+import { parseLigatures } from "@unified-latex/unified-latex-util-ligatures";
+import { expandMacros as unifiedExpandMacros } from "@unified-latex/unified-latex-util-macros";
+import { splitStringsIntoSingleChars } from "@unified-latex/unified-latex-util-pegjs";
 import {
     parsePgfkeys,
     pgfkeysArgToObject,
-} from "unified-latex/unified-latex-util-pgfkeys";
-import { printRaw } from "unified-latex/unified-latex-util-print-raw";
-import { VisitorContext } from "unified-latex/unified-latex-util-visit";
+} from "@unified-latex/unified-latex-util-pgfkeys";
+import { printRaw } from "@unified-latex/unified-latex-util-print-raw";
+import { VisitorContext } from "@unified-latex/unified-latex-util-visit";
 import {
     createMacroExpander,
     newcommandMacroToName,
@@ -36,10 +36,10 @@ import {
     unifiedLatexToHast,
     wrapPars,
     KATEX_SUPPORT,
-} from "unified-latex/unified-latex-to-hast";
-import { deleteComments } from "unified-latex/unified-latex-util-comments";
-import { replaceStreamingCommand as unifiedReplaceStreamingCommand } from "unified-latex/unified-latex-util-replace";
-import { lints } from "unified-latex/unified-latex-lint";
+} from "@unified-latex/unified-latex-to-hast";
+import { deleteComments } from "@unified-latex/unified-latex-util-comments";
+import { replaceStreamingCommand as unifiedReplaceStreamingCommand } from "@unified-latex/unified-latex-util-replace";
+import { lints } from "@unified-latex/unified-latex-lint";
 
 /**
  * Returns a set containing all macros in the document.
@@ -191,7 +191,11 @@ export function expandMacros(
     macros: { name: string; substitution: Ast.Node[] }[]
 ): Ast.Ast {
     ast = structuredClone(ast);
-    unifiedExpandMacros(ast, macros);
+    const formattedMacros = macros.map((m) => ({
+        name: m.name,
+        body: m.substitution,
+    }));
+    unifiedExpandMacros(ast, formattedMacros);
     return ast;
 }
 

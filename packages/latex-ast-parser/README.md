@@ -2,8 +2,9 @@
 
 Generate an AST and beautify LaTeX code
 
-**Note**: You should use `unified-latex` and the `unifiedjs` infrastructure if you want to
-do serious AST manipulations. This library is a wrapper around the basic functions in `unified-latex`.
+**Note**: You should use [`unified-latex`](https://github.com/siefkenj/unified-latex) and the `unifiedjs`
+infrastructure if you want to do serious AST manipulations. 
+This library is a legacy wrapper around some basic functions in `unified-latex`.
 
 _latex-parser_ parses a typical LaTeX document and
 then pretty-prints it. Though _parsing_ LaTeX isn't possible
@@ -40,5 +41,6 @@ in the local playground repository. This will mirror your development version of
 
 ## Related Projects
 
+-   [`unified-latex`](https://github.com/siefkenj/unified-latex) the backend for this project.
 -   Some code was borrowed from Michael Brade's `LaTeX.js` project https://github.com/michael-brade/LaTeX.js
 -   Prettier is a code-formatting library https://prettier.io/

@@ -29,6 +29,7 @@ import fs from "node:fs/promises";
     // by adding back "exports" in a clever way, we can allow for directory-style importing without
     // having to change the package type away from "module"
     distPackage.exports = {
+        ".": "./latex-parser.js",
         "./*js": "./*js",
         "./*": {
             import: "./*/index.js",
