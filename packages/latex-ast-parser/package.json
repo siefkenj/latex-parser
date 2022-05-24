@@ -1,7 +1,7 @@
 {
     "name": "latex-ast-parser",
     "description": "JavaScript LaTeX parser and beautifier",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "private": true,
     "author": {
         "name": "Jason Siefken",
@@ -19,15 +19,31 @@
         "debug": "node --nolazy --inspect-brk=9229 ./dist/latex-parser.js",
         "test": "jest src",
         "watch": "webpack --watch",
-        "build": "mkdirp dist; webpack"
+        "build": "mkdirp dist && webpack && node scripts/make-package.mjs && cp ./README.md ./dist/"
     },
     "dependencies": {
         "@babel/plugin-transform-modules-commonjs": "^7.17.9",
         "@types/color": "^3.0.3",
         "@types/cssesc": "^3.0.0",
         "@types/hast": "^2.3.4",
-        "@types/prettier": "^2.6.0",
+        "@types/prettier": "^2.6.1",
         "@types/trie-prefix-tree": "^1.5.0",
+        "@unified-latex/structured-clone": "^1.0.5",
+        "@unified-latex/unified-latex-ctan": "^1.0.11",
+        "@unified-latex/unified-latex-lint": "^1.0.11",
+        "@unified-latex/unified-latex-to-hast": "^1.0.11",
+        "@unified-latex/unified-latex-types": "^1.0.11",
+        "@unified-latex/unified-latex-util-align": "^1.0.11",
+        "@unified-latex/unified-latex-util-comments": "^1.0.11",
+        "@unified-latex/unified-latex-util-ligatures": "^1.0.11",
+        "@unified-latex/unified-latex-util-macros": "^1.0.11",
+        "@unified-latex/unified-latex-util-parse": "^1.0.11",
+        "@unified-latex/unified-latex-util-pegjs": "^1.0.11",
+        "@unified-latex/unified-latex-util-pgfkeys": "^1.0.11",
+        "@unified-latex/unified-latex-util-print-raw": "^1.0.11",
+        "@unified-latex/unified-latex-util-replace": "^1.0.11",
+        "@unified-latex/unified-latex-util-split": "^1.0.11",
+        "@unified-latex/unified-latex-util-visit": "^1.0.11",
         "color": "^4.2.3",
         "cssesc": "^3.0.0",
         "hast": "^1.0.0",
@@ -55,6 +71,7 @@
         "esbuild-runner": "^2.2.1",
         "eslint": "^8.13.0",
         "jest": "27.5.1",
+        "jest-webpack-resolver": "^0.3.0",
         "mdast-builder": "^1.1.1",
         "mdast-util-inject": "^1.1.0",
         "mkdirp": "1.0.4",
@@ -77,14 +94,15 @@
     },
     "jest": {
         "transformIgnorePatterns": [
-            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile.*|unist.*|hast.*|property-information|html-void-elements|.*-separated-tokens|.*entities.*|ccount|rehype*|string-width|strip-ansi|ansi-regex|supports-color)"
+            "node_modules/(?!unified|bail|is-plain-obj|trough|vfile.*|unist.*|hast.*|property-information|html-void-elements|.*-separated-tokens|.*entities.*|ccount|rehype*|string-width|strip-ansi|ansi-regex|supports-color|@unified-latex|web-namespaces|zwitch)"
         ],
         "transform": {
             "\\.m?jsx?$": "jest-esm-transformer",
             "latex.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor-latex.js",
             "\\.pegjs$": "<rootDir>/../../tests/pegjs-preprocessor.js",
             "^.+\\.tsx?$": "ts-jest"
-        }
+        },
+        "modulePathIgnorePatterns": ["/dist/"]
     },
     "repository": {
         "type": "git",

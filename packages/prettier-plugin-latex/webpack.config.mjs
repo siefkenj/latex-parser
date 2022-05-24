@@ -15,7 +15,7 @@ export default {
     devtool: "inline-source-map",
     output: {
         filename: "[name].js",
-        path: path.resolve(__dirname, "dist/prettier-plugin-latex/src"),
+        path: path.resolve(__dirname, "dist/"),
         library: { type: "commonjs" },
         globalObject: `(() => {
             if (typeof self !== 'undefined') {

@@ -1,11 +1,10 @@
-import { cleanEnumerateBody as unifiedCleanEnumerateBody } from "unified-latex/unified-latex-ctan/utils/enumerate";
-import { decorateArrayForPegjs } from "unified-latex/unified-latex-util-pegjs";
+import { decorateArrayForPegjs } from "@unified-latex/unified-latex-util-pegjs";
 import {
     arrayJoin,
     splitOnCondition,
     splitOnMacro,
     unsplitOnMacro,
-} from "unified-latex/unified-latex-util-split";
+} from "@unified-latex/unified-latex-util-split";
 import {
     walkAst,
     trimRenderInfo,
@@ -34,25 +33,6 @@ export { splitOnCondition };
 export { unsplitOnMacro };
 
 export { arrayJoin };
-
-/**
- * Clean up any whitespace issues in an enumerate environment. In particular,
- *      * Remove any leading or ending whitespace
- *      * Ensure there is a par between occurrences of `\item`
- *      * Ensure there is whitespace after each occurrence of `\item` provided there is content there
- * `itemName` can be used to set what the "item" macro is called.
- *
- * This function attaches content following a `\item` to the `\item` macro with
- * `openMark` and `closeMark` set to empty. This allows hanging-indents to be rendered.
- *
- * @param {[object]} ast
- * @param {string} [itemName="item"]
- * @returns {[object]}
- */
-export function cleanEnumerateBody(ast: Ast.Node[], itemName = "item") {
-    ast = JSON.parse(JSON.stringify(ast));
-    return unifiedCleanEnumerateBody(ast, itemName);
-}
 
 /**
  * Remove any whitespace from the start and end of environment bodies.

@@ -5,11 +5,10 @@ import { processEnvironment } from "./environments";
 import {
     attachMacroArgs,
     attachMacroArgsInArray,
-    gobbleSingleArgument,
 } from "./arguments";
 import { EnvInfo, MacroInfo } from "./types";
 import * as Ast from "../ast-types";
-import { match } from "unified-latex/unified-latex-util-match";
+import { match } from "@unified-latex/unified-latex-util-match";
 
 export { EnvInfo, MacroInfo };
 
@@ -23,7 +22,6 @@ export {
     attachMacroArgs,
     attachMacroArgsInArray,
     updateRenderInfo,
-    gobbleSingleArgument,
 };
 
 /**
